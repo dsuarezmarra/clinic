@@ -53,6 +53,25 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Diagnóstico de variables de entorno
+app.get('/api/env-check', (req, res) => {
+  const envVars = {
+    SUPABASE_URL: process.env.SUPABASE_URL ? `✅ ${process.env.SUPABASE_URL.substring(0, 30)}...` : '❌ NO configurada',
+    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? `✅ Configurada (${process.env.SUPABASE_SERVICE_KEY.length} chars)` : '❌ NO configurada',
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? `✅ Configurada (${process.env.SUPABASE_ANON_KEY.length} chars)` : '❌ NO configurada',
+    DATABASE_URL: process.env.DATABASE_URL ? '✅ Configurada' : '❌ NO configurada',
+    USE_SUPABASE: process.env.USE_SUPABASE || '❌ NO configurada',
+    NODE_ENV: process.env.NODE_ENV || 'development',
+    FRONTEND_URL: process.env.FRONTEND_URL || '❌ NO configurada'
+  };
+  
+  res.json({
+    message: 'Diagnóstico de variables de entorno',
+    variables: envVars,
+    allEnvKeys: Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')).sort()
+  });
+});
+
 // Test endpoint directo a Supabase (sin middleware)
 app.get('/api/test-direct', async (req, res) => {
   try {
@@ -66,7 +85,8 @@ app.get('/api/test-direct', async (req, res) => {
       return res.status(500).json({
         error: 'Variables de entorno no configuradas',
         SUPABASE_URL: !!process.env.SUPABASE_URL,
-        SUPABASE_SERVICE_KEY: !!process.env.SUPABASE_SERVICE_KEY
+        SUPABASE_SERVICE_KEY: !!process.env.SUPABASE_SERVICE_KEY,
+        allEnvKeys: Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')).sort()
       });
     }
     
