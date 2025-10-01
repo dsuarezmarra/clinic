@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "clinic-backend",
   "builds": [
     {
       "src": "src/index.js",
@@ -9,21 +8,11 @@
   ],
   "routes": [
     {
-      "src": "/health",
-      "dest": "src/index.js"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "src/index.js"
-    },
-    {
-      "src": "/uploads/(.*)",
+      "src": "/(.*)",
       "dest": "src/index.js"
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "PORT": "3000"
-  },
-  "regions": ["cdg1"]
+    "NODE_ENV": "production"
+  }
 }
