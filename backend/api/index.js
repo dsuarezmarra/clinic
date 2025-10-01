@@ -77,39 +77,27 @@ app.get('/api/test-direct', async (req, res) => {
   try {
     const { createClient } = require('@supabase/supabase-js');
     
-    console.log('🧪 Test directo a Supabase...');
-    console.log('   SUPABASE_URL:', process.env.SUPABASE_URL ? '✅' : '❌');
-    console.log('   SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '✅' : '❌');
+    const url = (process.env.SUPABASE_URL || '').trim();
+    const key = (process.env.SUPABASE_SERVICE_KEY || '').trim();
     
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    console.log('🧪 Test directo a Supabase...');
+    console.log('   URL length:', url.length, 'chars');
+    console.log('   KEY length:', key.length, 'chars');
+    console.log('   URL:', url.substring(0, 40) + '...');
+    console.log('   KEY starts:', key.substring(0, 20) + '...');
+    
+    if (!url || !key) {
       return res.status(500).json({
         error: 'Variables de entorno no configuradas',
-        SUPABASE_URL: !!process.env.SUPABASE_URL,
-        SUPABASE_SERVICE_KEY: !!process.env.SUPABASE_SERVICE_KEY,
-        allEnvKeys: Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')).sort()
+        urlLength: url.length,
+        keyLength: key.length
       });
     }
     
-    const supabase = createClient(
-      process.env.SUPABASE_URL.trim(),
-      process.env.SUPABASE_SERVICE_KEY.trim(),
-      {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false
-        },
-        db: {
-          schema: 'public'
-        },
-        global: {
-          headers: {
-            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY.trim()}`,
-            'apikey': process.env.SUPABASE_SERVICE_KEY.trim(),
-            'Prefer': 'return=representation'
-          }
-        }
-      }
-    );
+    // Crear cliente con la configuración más simple posible
+    const supabase = createClient(url, key);
+    
+    console.log('✅ Cliente Supabase creado');
     
     const { data, error, count } = await supabase
       .from('patients')
@@ -117,10 +105,12 @@ app.get('/api/test-direct', async (req, res) => {
       .limit(5);
     
     if (error) {
-      console.error('❌ Error de Supabase:', error);
+      console.error('❌ Error de Supabase:', JSON.stringify(error));
       return res.status(500).json({
         error: 'Error consultando Supabase',
-        details: error
+        details: error,
+        urlUsed: url.substring(0, 40) + '...',
+        keyLength: key.length
       });
     }
     
@@ -137,7 +127,7 @@ app.get('/api/test-direct', async (req, res) => {
     return res.status(500).json({
       error: 'Excepción en servidor',
       message: err.message,
-      stack: err.stack
+      stack: process.env.NODE_ENV === 'production' ? undefined : err.stack
     });
   }
 });
