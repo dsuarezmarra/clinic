@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://clinic-backend-nhnmjiesx-davids-projects-8fa96e54.vercel.app/api',
+  apiUrl: 'https://clinic-backend-elrxywxbl-davids-projects-8fa96e54.vercel.app/api',
   appName: 'Clínica Masaje Corporal Deportivo',
   version: '1.0.0'
 };
