@@ -85,7 +85,7 @@ router.get('/patients/:patientId/files', async (req, res) => {
   try {
     const { patientId } = req.params;
     
-    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=uploadedAt.desc`;
+    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
     
     res.json(files || []);
@@ -95,20 +95,23 @@ router.get('/patients/:patientId/files', async (req, res) => {
   }
 });
 
-// POST /api/patients/:patientId/files - Subir archivo (sin Supabase Storage)
+// POST /api/patients/:patientId/files - Subir archivo
 router.post('/patients/:patientId/files', async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { fileName, fileType, fileSize, base64Data } = req.body;
+    const { originalName, storedPath, mimeType, size, category, description, checksum } = req.body;
     
-    // Guardar metadata en la tabla patient_files
+    // Guardar metadata en la tabla patient_files usando las columnas correctas
     const fileData = {
       patientId,
-      fileName,
-      fileType,
-      fileSize,
-      base64Data, // Guardamos directamente en la BD (solo para archivos pequeños)
-      uploadedAt: new Date().toISOString()
+      originalName: originalName || 'archivo.dat',
+      storedPath: storedPath || '',
+      mimeType: mimeType || 'application/octet-stream',
+      size: size || 0,
+      category: category || 'otro',
+      description: description || '',
+      checksum: checksum || null,
+      createdAt: new Date().toISOString()
     };
     
     const { data } = await supabaseFetch('patient_files', {
@@ -419,6 +422,16 @@ router.get('/credits', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching credits:', error);
+    // Si la tabla no existe, devolver resumen vacío
+    if (error.message?.includes('does not exist') || error.message?.includes('relation')) {
+      return res.json({
+        patientId: req.query.patientId,
+        totalUnits: 0,
+        usedUnits: 0,
+        remainingUnits: 0,
+        packs: []
+      });
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -580,7 +593,7 @@ router.get('/files/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
     
-    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=uploadedAt.desc`;
+    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
     
     res.json(files || []);
@@ -594,15 +607,18 @@ router.get('/files/patient/:patientId', async (req, res) => {
 router.post('/files/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { fileName, fileType, fileSize, base64Data } = req.body;
+    const { originalName, storedPath, mimeType, size, category, description, checksum } = req.body;
     
     const fileData = {
       patientId,
-      fileName,
-      fileType,
-      fileSize,
-      base64Data,
-      uploadedAt: new Date().toISOString()
+      originalName: originalName || 'archivo.dat',
+      storedPath: storedPath || '',
+      mimeType: mimeType || 'application/octet-stream',
+      size: size || 0,
+      category: category || 'otro',
+      description: description || '',
+      checksum: checksum || null,
+      createdAt: new Date().toISOString()
     };
     
     const { data } = await supabaseFetch('patient_files', {
@@ -622,7 +638,7 @@ router.get('/files/:fileId/download', async (req, res) => {
   try {
     const { fileId } = req.params;
     
-    const endpoint = `patient_files?id=eq.${fileId}&select=fileName,fileType,base64Data`;
+    const endpoint = `patient_files?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
     const { data: files } = await supabaseFetch(endpoint);
     
     if (!files || files.length === 0) {
@@ -631,9 +647,9 @@ router.get('/files/:fileId/download', async (req, res) => {
     
     const file = files[0];
     res.json({
-      fileName: file.fileName,
-      fileType: file.fileType,
-      base64Data: file.base64Data
+      originalName: file.originalName,
+      mimeType: file.mimeType,
+      storedPath: file.storedPath
     });
   } catch (error) {
     console.error('Error downloading file:', error);
@@ -666,7 +682,7 @@ router.delete('/files/:fileId', async (req, res) => {
 // GET /api/config - Obtener configuración
 router.get('/config', async (req, res) => {
   try {
-    const endpoint = `app_config?select=*&limit=1`;
+    const endpoint = `configurations?select=*&limit=1`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -706,13 +722,13 @@ router.put('/config', async (req, res) => {
     const configData = req.body;
     
     // Verificar si existe una configuración
-    const checkEndpoint = `app_config?select=id&limit=1`;
+    const checkEndpoint = `configurations?select=id&limit=1`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     let result;
     if (existing && existing.length > 0) {
       // Actualizar
-      const updateEndpoint = `app_config?id=eq.${existing[0].id}`;
+      const updateEndpoint = `configurations?id=eq.${existing[0].id}`;
       const { data } = await supabaseFetch(updateEndpoint, {
         method: 'PATCH',
         body: JSON.stringify(configData)
@@ -720,7 +736,7 @@ router.put('/config', async (req, res) => {
       result = data[0];
     } else {
       // Crear
-      const { data } = await supabaseFetch('app_config', {
+      const { data } = await supabaseFetch('configurations', {
         method: 'POST',
         body: JSON.stringify(configData)
       });
@@ -757,19 +773,19 @@ router.post('/config/reset', async (req, res) => {
       }
     };
     
-    const checkEndpoint = `app_config?select=id&limit=1`;
+    const checkEndpoint = `configurations?select=id&limit=1`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     let result;
     if (existing && existing.length > 0) {
-      const updateEndpoint = `app_config?id=eq.${existing[0].id}`;
+      const updateEndpoint = `configurations?id=eq.${existing[0].id}`;
       const { data } = await supabaseFetch(updateEndpoint, {
         method: 'PATCH',
         body: JSON.stringify(defaultConfig)
       });
       result = data[0];
     } else {
-      const { data } = await supabaseFetch('app_config', {
+      const { data } = await supabaseFetch('configurations', {
         method: 'POST',
         body: JSON.stringify(defaultConfig)
       });
@@ -789,7 +805,7 @@ router.get('/config/working-hours/:date', async (req, res) => {
     const { date } = req.params;
     
     // Obtener configuración
-    const endpoint = `app_config?select=workingHours&limit=1`;
+    const endpoint = `configurations?select=workingHours&limit=1`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -814,7 +830,7 @@ router.get('/config/working-hours/:date', async (req, res) => {
 // GET /api/config/prices - Obtener precios
 router.get('/config/prices', async (req, res) => {
   try {
-    const endpoint = `app_config?select=prices&limit=1`;
+    const endpoint = `configurations?select=prices&limit=1`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -838,14 +854,14 @@ router.put('/config/prices', async (req, res) => {
   try {
     const prices = req.body;
     
-    const checkEndpoint = `app_config?select=id&limit=1`;
+    const checkEndpoint = `configurations?select=id&limit=1`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     if (!existing || existing.length === 0) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
     
-    const updateEndpoint = `app_config?id=eq.${existing[0].id}`;
+    const updateEndpoint = `configurations?id=eq.${existing[0].id}`;
     const { data } = await supabaseFetch(updateEndpoint, {
       method: 'PATCH',
       body: JSON.stringify({ prices })
