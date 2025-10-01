@@ -16,11 +16,13 @@ Vercel ha activado automáticamente la protección de despliegue. Necesitas desa
 ## 📍 URLs de tu Aplicación
 
 ### ✅ Frontend (Aplicación Web)
+
 - **URL**: https://clinic-frontend-5ox0ulz7i-davids-projects-8fa96e54.vercel.app
 - **Estado**: ✅ Ready (Desplegado)
 - **Dashboard**: https://vercel.com/davids-projects-8fa96e54/clinic-frontend
 
 ### ✅ Backend (API)
+
 - **URL**: https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app
 - **Endpoint Health**: https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app/health
 - **Estado**: ✅ Ready (Desplegado)
@@ -67,6 +69,7 @@ NODE_ENV=production
 ### 2️⃣ Verificar que Funcione
 
 #### Probar el Backend:
+
 ```powershell
 # Desde PowerShell
 $env:NODE_TLS_REJECT_UNAUTHORIZED="0"
@@ -76,6 +79,7 @@ curl https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app/health
 **Respuesta esperada**: `{"status":"ok","timestamp":"..."}`
 
 #### Probar el Frontend:
+
 1. Abre en tu navegador: https://clinic-frontend-5ox0ulz7i-davids-projects-8fa96e54.vercel.app
 2. Verifica que cargue la interfaz de la clínica
 3. Intenta crear una cita de prueba
@@ -93,6 +97,7 @@ Si quieres usar tu propio dominio (ej: `clinica.tudominio.com`):
 5. Vercel generará un certificado SSL automáticamente
 
 **Después de configurar el dominio**:
+
 - Actualiza `FRONTEND_URL` en las variables de entorno del backend
 - Redeploy el backend
 
@@ -100,13 +105,13 @@ Si quieres usar tu propio dominio (ej: `clinica.tudominio.com`):
 
 ## 📊 Resumen del Despliegue
 
-| Componente | Estado | URL |
-|------------|--------|-----|
+| Componente       | Estado        | URL                                                                   |
+| ---------------- | ------------- | --------------------------------------------------------------------- |
 | Frontend Angular | ✅ Desplegado | https://clinic-frontend-5ox0ulz7i-davids-projects-8fa96e54.vercel.app |
-| Backend Node.js | ✅ Desplegado | https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app |
-| Base de Datos | ✅ Supabase | Configurar en variables de entorno |
-| SSL/HTTPS | ✅ Automático | Certificado de Vercel |
-| CDN Global | ✅ Activo | Vercel Edge Network |
+| Backend Node.js  | ✅ Desplegado | https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app  |
+| Base de Datos    | ✅ Supabase   | Configurar en variables de entorno                                    |
+| SSL/HTTPS        | ✅ Automático | Certificado de Vercel                                                 |
+| CDN Global       | ✅ Activo     | Vercel Edge Network                                                   |
 
 ---
 
@@ -133,6 +138,7 @@ vercel --prod
 ```
 
 O usa el script automatizado:
+
 ```powershell
 .\scripts\deploy-vercel-fixed.ps1
 ```
@@ -152,15 +158,18 @@ O usa el script automatizado:
 ## 🆘 Solución de Problemas
 
 ### El frontend no carga
+
 1. Verifica que el backend tenga las variables de entorno configuradas
 2. Revisa los logs en: https://vercel.com/davids-projects-8fa96e54/clinic-backend
 3. Verifica la conexión a Supabase
 
 ### Error de CORS
+
 1. Asegúrate de que `FRONTEND_URL` en el backend coincida con la URL real del frontend
 2. Redeploy el backend después de cambiar variables
 
 ### Error en la base de datos
+
 1. Verifica que `DATABASE_URL` y `DIRECT_URL` sean correctas
 2. Comprueba que Supabase esté activo: https://supabase.com/dashboard
 3. Verifica que las tablas existan ejecutando las migraciones si es necesario
