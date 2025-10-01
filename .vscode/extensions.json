@@ -1,0 +1,15 @@
+{
+    "recommendations": [
+        "ms-vscode.vscode-json",
+        "ms-typescript.vscode-typescript-next",
+        "angular.ng-template",
+        "ms-vscode.vscode-node-debug2",
+        "bradlc.vscode-tailwindcss",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-vscode.vscode-npm",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode-remote.remote-containers"
+    ]
+}

@@ -1,0 +1,42 @@
+{
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Backend",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/backend/src/index.js",
+        "console": "integratedTerminal",
+        "restart": true,
+        "runtimeExecutable": "nodemon",
+        "skipFiles": [
+          "<node_internals>/**"
+        ],
+        "envFile": "${workspaceFolder}/backend/.env"
+      },
+      {
+        "name": "Debug Frontend",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/frontend/node_modules/@angular/cli/bin/ng",
+        "args": [
+          "serve",
+          "--port",
+          "4300"
+        ],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}/frontend"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "Debug Full Stack",
+        "configurations": [
+          "Debug Backend",
+          "Debug Frontend"
+        ]
+      }
+    ]
+  }
+}
