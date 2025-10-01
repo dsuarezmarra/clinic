@@ -132,6 +132,68 @@ app.get('/api/test-direct', async (req, res) => {
   }
 });
 
+// Test endpoint usando fetch directo (sin SDK)
+app.get('/api/test-fetch', async (req, res) => {
+  try {
+    const url = (process.env.SUPABASE_URL || '').trim();
+    const key = (process.env.SUPABASE_SERVICE_KEY || '').trim();
+    
+    console.log('🧪 Test con fetch directo...');
+    console.log('   URL:', url);
+    console.log('   KEY length:', key.length);
+    
+    if (!url || !key) {
+      return res.status(500).json({
+        error: 'Variables no configuradas',
+        urlLength: url.length,
+        keyLength: key.length
+      });
+    }
+    
+    const apiUrl = `${url}/rest/v1/patients?select=id,firstName,lastName,dni,phone&limit=5`;
+    
+    console.log('   Calling:', apiUrl);
+    
+    const response = await fetch(apiUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'count=exact'
+      }
+    });
+    
+    console.log('   Response status:', response.status);
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      return res.status(response.status).json({
+        error: 'Error from Supabase',
+        status: response.status,
+        data: data
+      });
+    }
+    
+    const countHeader = response.headers.get('content-range');
+    const count = countHeader ? parseInt(countHeader.split('/')[1]) : data.length;
+    
+    return res.json({
+      success: true,
+      total: count,
+      patients: data
+    });
+    
+  } catch (err) {
+    console.error('💥 Exception:', err);
+    return res.status(500).json({
+      error: 'Exception',
+      message: err.message
+    });
+  }
+});
+
 // Importar rutas solo si hay DB configurada
 if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
   try {
