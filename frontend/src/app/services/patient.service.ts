@@ -45,12 +45,25 @@ export class PatientService {
 
   // Crear nuevo paciente
   createPatient(patient: CreatePatientRequest): Observable<Patient> {
-    return this.http.post<Patient>(this.apiUrl, patient, this.httpOptions);
+    const sanitized = this.sanitizePatientData(patient);
+    return this.http.post<Patient>(this.apiUrl, sanitized, this.httpOptions);
   }
 
   // Actualizar paciente
   updatePatient(id: string, patient: Partial<CreatePatientRequest>): Observable<Patient> {
-    return this.http.put<Patient>(`${this.apiUrl}/${id}`, patient, this.httpOptions);
+    const sanitized = this.sanitizePatientData(patient);
+    return this.http.put<Patient>(`${this.apiUrl}/${id}`, sanitized, this.httpOptions);
+  }
+
+  // Sanitizar datos del paciente (convertir strings vacíos a null)
+  private sanitizePatientData(patient: any): any {
+    const sanitized = { ...patient };
+    // Convertir strings vacíos a null para campos opcionales
+    if (sanitized.birthDate === '') sanitized.birthDate = null;
+    if (sanitized.email === '') sanitized.email = null;
+    if (sanitized.phone2 === '') sanitized.phone2 = null;
+    if (sanitized.family_contact === '') sanitized.family_contact = null;
+    return sanitized;
   }
 
   // Eliminar paciente
