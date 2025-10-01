@@ -3,7 +3,7 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // ...existing code... (PatientSelectorComponent removed because it's not used in the template)
-import { environment } from '../../../../environments/environment';
+import { APP_CONFIG } from '../../../config/app.config';
 import { Appointment, CreateAppointmentRequest } from '../../../models/appointment.model';
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
@@ -133,7 +133,7 @@ export class CalendarComponent implements OnInit {
     async exportMonthCsv(year: number, monthIdx: number, groupBy: 'appointment' | 'patient' = 'appointment') {
         try {
             const month = monthIdx + 1;
-            const url = `${environment.apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
+            const url = `${APP_CONFIG.apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
             const resp = await fetch(url, { headers: { Accept: 'text/csv' } });
             if (!resp.ok) throw new Error('Error generando CSV');
 

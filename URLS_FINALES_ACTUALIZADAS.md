@@ -50,30 +50,35 @@ Invoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e5
 ## 🎯 FUNCIONALIDADES DISPONIBLES
 
 ### ✅ Gestión de Pacientes
+
 - Listar, crear, editar, eliminar pacientes
 - Subir y descargar archivos adjuntos
 - Búsqueda por nombre, DNI, teléfono
 - Datos geográficos (provincias/municipios)
 
 ### ✅ Agenda de Citas
+
 - Calendario mensual/semanal/diario
 - Crear, editar, cancelar citas
 - Detección de conflictos de horario
 - Filtrado por paciente
 
 ### ✅ Sistema de Créditos
+
 - Crear bonos de sesiones
 - Canjear créditos en citas
 - Historial de uso
 - Control de pagos
 
 ### ✅ Configuración
+
 - Horarios de trabajo
 - Precios de sesiones y bonos
 - Duración de citas
 - Restaurar valores por defecto
 
 ### ✅ Backups
+
 - Crear respaldos de datos
 - Descargar backups en JSON
 - Estadísticas de base de datos
@@ -84,6 +89,7 @@ Invoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e5
 ## 🔄 Comandos de Redeploy
 
 ### Redesplegar Backend:
+
 ```powershell
 cd backend
 git add .
@@ -92,6 +98,7 @@ vercel --prod
 ```
 
 ### Redesplegar Frontend:
+
 ```powershell
 cd frontend
 git add .
@@ -114,16 +121,19 @@ vercel --prod
 ## 🆘 Troubleshooting
 
 ### Error de red en PowerShell:
+
 ```powershell
 $env:NODE_TLS_REJECT_UNAUTHORIZED="0"
 ```
 
 ### Ver logs del backend:
+
 ```powershell
 vercel logs https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app
 ```
 
 ### Ver logs del frontend:
+
 ```powershell
 vercel logs https://clinic-frontend-b5rqw5sgq-davids-projects-8fa96e54.vercel.app
 ```
@@ -133,6 +143,7 @@ vercel logs https://clinic-frontend-b5rqw5sgq-davids-projects-8fa96e54.vercel.ap
 ## 🎉 ¡TODO LISTO!
 
 Tu aplicación está **completamente funcional** con:
+
 - ✅ 50+ endpoints API implementados
 - ✅ Frontend interactivo desplegado
 - ✅ Base de datos conectada (Supabase)

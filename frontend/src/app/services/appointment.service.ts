@@ -2,7 +2,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { APP_CONFIG } from '../config/app.config';
 import {
   Appointment,
   AppointmentConflictCheck,
@@ -14,13 +14,14 @@ import {
   providedIn: 'root'
 })
 export class AppointmentService {
+  private apiUrl = `${APP_CONFIG.apiUrl}/appointments`;
+
+  constructor(private http: HttpClient) { }
+
   // Obtener todas las citas sin filtrar por fecha
   getAllAppointments(): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/all`);
   }
-  private apiUrl = `${environment.apiUrl}/appointments`;
-
-  constructor(private http: HttpClient) { }
 
   // Obtener citas por rango de fechas
   getAppointments(from: string, to: string): Observable<Appointment[]> {

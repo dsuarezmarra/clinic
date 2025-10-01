@@ -1,14 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { APP_CONFIG } from '../config/app.config';
 import { FileUploadData, PatientFile } from '../models/file.model';
 
 @Injectable({
     providedIn: 'root'
 })
 export class FileService {
-    private apiUrl = `${environment.apiUrl}/files`;
+    private apiUrl = `${APP_CONFIG.apiUrl}/files`;
 
     constructor(private http: HttpClient) { }
 

@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { APP_CONFIG } from '../config/app.config';
 import {
   CreateCreditPackRequest,
   CreditHistoryResponse,
@@ -12,7 +12,7 @@ import {
   providedIn: 'root'
 })
 export class CreditService {
-  private apiUrl = `${environment.apiUrl}/credits`;
+  private apiUrl = `${APP_CONFIG.apiUrl}/credits`;
 
   constructor(private http: HttpClient) { }
 

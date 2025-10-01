@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { APP_CONFIG } from '../config/app.config';
 
 export interface BackupFile {
     fileName: string;
@@ -43,7 +43,7 @@ export interface BackupStats {
     providedIn: 'root'
 })
 export class BackupService {
-    private readonly apiUrl = `${environment.apiUrl}/backup`;
+    private readonly apiUrl = `${APP_CONFIG.apiUrl}/backup`;
 
     constructor(private http: HttpClient) { }
 
