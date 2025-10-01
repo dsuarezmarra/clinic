@@ -1,0 +1,51 @@
+{
+  "name": "clinic-backend",
+  "version": "1.0.0",
+  "description": "Backend para Masaje Corporal Deportivo",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "build": "echo 'Build script for production'",
+    "seed": "echo 'NOTE: seed script deprecated - use scripts/wipe-and-seed or migrate legacy data'",
+    "fetch:municipios": "node scripts/fetch_municipios.js",
+    
+    "backup": "node backup-manual.js",
+    "backup:create": "node backup-manual.js",
+    "backup:list": "node -e \"const {DatabaseBackup} = require('./scripts/backup'); const b = new DatabaseBackup(); console.log(JSON.stringify(b.listBackups(), null, 2))\"",
+  "migrate:sqlite-to-postgres": "echo 'LEGACY: this script required sqlite/prisma; see backend/scripts/migrate-sqlite-to-postgres.js'",
+    "import:csv": "node scripts/import-csv-to-postgres.js",
+    "check:db": "node scripts/check-postgres-db.js",
+    "wipe-and-seed": "node scripts/wipe-and-seed-postgres.js"
+  },
+  "keywords": [
+    "clinic",
+    "fisioterapia",
+    "appointments",
+    "patients"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "csv-parse": "^5.6.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.18.2",
+    "express-validator": "^7.0.1",
+    "helmet": "^7.0.0",
+    "https-proxy-agent": "^7.0.6",
+    "jsdom": "^26.1.0",
+    "moment": "^2.29.4",
+    "moment-timezone": "^0.5.43",
+    "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.16.3",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

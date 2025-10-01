@@ -1,0 +1,13 @@
+{
+  "id": "5c98cc50-bcff-48e6-9c77-7e839198e4ab",
+  "patientId": "371e8a39-3631-4059-849f-5f123042b935",
+  "start": "2025-09-19T11:26:30+02:00",
+  "end": "2025-09-19T12:26:30+02:00",
+  "durationMinutes": 60,
+  "priceCents": null,
+  "status": "BOOKED",
+  "notes": null,
+  "consumesCredit": true,
+  "createdAt": "2025-09-18T09:26:30.815",
+  "updatedAt": "2025-09-18T09:26:30.815"
+}

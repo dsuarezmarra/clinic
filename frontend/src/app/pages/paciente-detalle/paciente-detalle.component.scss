@@ -1,0 +1,131 @@
+.patient-name-container {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+}
+
+.patient-name {
+    margin-bottom: 0;
+    color: #495057;
+}
+
+.patient-age {
+    margin-bottom: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+// Estilos para sesiones individuales
+.sessions-grid {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.session-item {
+    border: 1px solid #e9ecef;
+    transition: all 0.2s ease;
+
+    &:hover {
+        border-color: #dee2e6;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    &.bg-success-subtle {
+        border-color: #a3d9a3;
+    }
+}
+
+// Animación para el toggle de packs
+.card-body {
+    transition: all 0.3s ease;
+}
+
+// Mejorar los badges
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+// Estilos para los botones de acción
+.btn-group-sm .btn {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+// Progress bars
+.progress {
+    background-color: #f8f9fa;
+}
+
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+// Estilos para archivos
+.file-preview {
+    border-radius: 0.375rem;
+    transition: transform 0.2s ease;
+
+    &:hover {
+        transform: scale(1.05);
+    }
+}
+
+.file-icon-container {
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #e9ecef !important;
+    }
+}
+
+.file-preview-container {
+    position: relative;
+
+    &:hover .file-preview {
+        cursor: pointer;
+    }
+}
+
+// Categorías de archivos
+.badge {
+    &.text-info {
+        color: #0dcaf0 !important;
+        border-color: #0dcaf0 !important;
+    }
+
+    &.text-success {
+        color: #198754 !important;
+        border-color: #198754 !important;
+    }
+
+    &.text-warning {
+        color: #ffc107 !important;
+        border-color: #ffc107 !important;
+    }
+
+    &.text-primary {
+        color: #0d6efd !important;
+        border-color: #0d6efd !important;
+    }
+
+    &.text-secondary {
+        color: #6c757d !important;
+        border-color: #6c757d !important;
+    }
+}
+
+// Animaciones para la subida de archivos
+.uploading-animation {
+    animation: pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+    from {
+        opacity: 0.6;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

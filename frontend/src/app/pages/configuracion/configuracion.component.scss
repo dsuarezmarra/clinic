@@ -1,0 +1,236 @@
+.configuracion-container {
+  padding: 24px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.configuracion-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+// Backup cards styling
+.backup-card {
+  transition: all 0.3s ease;
+  border: 1px solid #dee2e6;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  &.border-success {
+    border-color: #198754 !important;
+    box-shadow: 0 2px 8px rgba(25, 135, 84, 0.2);
+  }
+}
+
+.backup-card .card-body {
+  position: relative;
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .btn-group .btn {
+    flex: 1;
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+// Table styling for backup list
+.table-success {
+  --bs-table-bg: rgba(25, 135, 84, 0.1);
+  border-left: 4px solid #198754;
+}
+
+.configuracion-header h1 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-weight: 500;
+}
+
+.configuracion-header p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.configuracion-content {
+  min-height: 400px;
+}
+
+.tab-content {
+  padding: 24px 0;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.full-width {
+  flex: 1;
+  min-width: 100%;
+}
+
+.half-width {
+  flex: 1;
+  min-width: 250px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section h3 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.day-config {
+  margin-bottom: 24px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fafafa;
+}
+
+.day-header {
+  margin-bottom: 16px;
+}
+
+.day-hours {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.hours-section {
+  flex: 1;
+  min-width: 200px;
+}
+
+.hours-section h4 {
+  margin: 0 0 12px 0;
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 12px;
+}
+
+.time-inputs .form-control {
+  flex: 1;
+}
+
+.system-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.action-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+}
+
+.action-info h3 {
+  margin: 0 0 4px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.action-info p {
+  margin: 0;
+  color: #666;
+  font-size: 14px;
+}
+
+.info-card {
+  margin-top: 16px;
+}
+
+.system-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-item {
+  color: #666;
+  font-size: 14px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: #666;
+}
+
+.loading-container p {
+  margin-top: 16px;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .configuracion-container {
+    padding: 16px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+
+  .half-width {
+    min-width: unset;
+  }
+
+  .day-hours {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .time-inputs {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .action-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .action-info {
+    text-align: center;
+  }
+}
+
+// Logo styling for configuration page
+.config-logo {
+  height: 1.5rem;
+  width: auto;
+  max-width: 1.5rem;
+  object-fit: contain;
+  margin-right: 0.5rem;
+  vertical-align: baseline;
+}

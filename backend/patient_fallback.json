@@ -1,0 +1,19 @@
+{
+  "id": "3563ce93-96af-440e-8280-3f99cfdf631b",
+  "dni": "F89259260",
+  "firstName": "Fallback",
+  "lastName": "Tester",
+  "phone": "600000003",
+  "email": null,
+  "address": null,
+  "cp": "28001",
+  "city": null,
+  "province": null,
+  "birthDate": null,
+  "notes": null,
+  "createdAt": "2025-09-18T09:54:19.284",
+  "updatedAt": "2025-09-18T09:54:19.284",
+  "phone2": null,
+  "family_contact": null,
+  "fechaRegistro": null
+}

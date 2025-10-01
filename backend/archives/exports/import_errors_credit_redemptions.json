@@ -1,0 +1,50 @@
+[
+  {
+    "index": 318,
+    "row": {
+      "id": "5936da4e-4873-46d2-a735-07418ee1f6e1",
+      "creditPackId": "673d0857-3ff4-4a13-895d-40870f0c9388",
+      "appointmentId": "d850a9c6-6aa8-4c69-ad63-375588516b0b",
+      "unitsUsed": 1,
+      "createdAt": "2025-08-29T07:16:52.982Z"
+    },
+    "error": {
+      "code": "23503",
+      "details": "Key (creditPackId)=(673d0857-3ff4-4a13-895d-40870f0c9388) is not present in table \"credit_packs\".",
+      "hint": null,
+      "message": "insert or update on table \"credit_redemptions\" violates foreign key constraint \"fk_cr_creditpack\""
+    }
+  },
+  {
+    "index": 319,
+    "row": {
+      "id": "c9a520a1-f304-49bd-abab-ecdefded665f",
+      "creditPackId": "832bdc67-1c0c-461c-afdd-2ad28a233961",
+      "appointmentId": "0fdb23da-c70b-4f4e-b931-821235f3e2bd",
+      "unitsUsed": 1,
+      "createdAt": "2025-08-29T07:16:53.029Z"
+    },
+    "error": {
+      "code": "23503",
+      "details": "Key (creditPackId)=(832bdc67-1c0c-461c-afdd-2ad28a233961) is not present in table \"credit_packs\".",
+      "hint": null,
+      "message": "insert or update on table \"credit_redemptions\" violates foreign key constraint \"fk_cr_creditpack\""
+    }
+  },
+  {
+    "index": 320,
+    "row": {
+      "id": "f58bfbad-b397-4a19-b9f2-82460168ecb5",
+      "creditPackId": "8a2e622a-6cc0-4f86-828d-22fd867ca9f6",
+      "appointmentId": "fc4eab7d-f8c1-4e99-8107-62125759beec",
+      "unitsUsed": 1,
+      "createdAt": "2025-08-29T07:16:53.067Z"
+    },
+    "error": {
+      "code": "23503",
+      "details": "Key (creditPackId)=(8a2e622a-6cc0-4f86-828d-22fd867ca9f6) is not present in table \"credit_packs\".",
+      "hint": null,
+      "message": "insert or update on table \"credit_redemptions\" violates foreign key constraint \"fk_cr_creditpack\""
+    }
+  }
+]

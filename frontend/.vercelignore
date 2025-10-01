@@ -1,0 +1,11 @@
+# Frontend Vercel ignore
+
+.angular/
+node_modules/
+android/
+\*.log
+
+# Development
+
+\*.spec.ts
+e2e/

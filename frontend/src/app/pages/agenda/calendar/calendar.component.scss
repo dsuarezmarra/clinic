@@ -1,0 +1,702 @@
+.calendar-day-compact.holiday-compact {
+    background: #ffb3b3;
+    color: #b71c1c;
+    border: 1px solid #b71c1c;
+}
+
+.year-months-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.month-block-compact {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
+    padding: 8px 4px;
+}
+
+.calendar-grid-compact {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+}
+
+.day-header-compact {
+    background: #495057;
+    color: white;
+    padding: 2px 0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.calendar-day-compact {
+    background: #fff;
+    min-height: 18px;
+    height: 18px;
+    padding: 0;
+    cursor: pointer;
+    font-size: 10px;
+    text-align: center;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+}
+
+.calendar-day-compact:hover {
+    background: #e3f2fd;
+}
+
+.calendar-day-compact.weekend-compact {
+    background: #ffe0b2;
+}
+
+.calendar-day-compact.has-appointments-compact {
+    background: #bbdefb;
+    border: 1px solid #2196f3;
+    color: #1565c0;
+}
+
+.day-number-compact {
+    font-weight: 500;
+}
+
+.calendar-day.has-appointments {
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+}
+
+.calendar-container {
+    padding: 20px;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.calendar-header {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
+
+.calendar-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Vista Mensual */
+.month-view {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1px;
+    background: #dee2e6;
+}
+
+.day-header {
+    background: #495057;
+    color: white;
+    padding: 15px 10px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.calendar-day {
+    background: white;
+    min-height: 120px;
+    padding: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    flex-direction: column;
+}
+
+.calendar-day:hover {
+    background: #f8f9fa;
+}
+
+.calendar-day.other-month {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.calendar-day.weekend {
+    background: #fff3cd;
+}
+
+.calendar-day.weekend.other-month {
+    background: #f5f5dc;
+}
+
+.calendar-day.today {
+    background: #e3f2fd;
+    border: 2px solid #2196f3;
+}
+
+/* Día actual que NO es fin de semana debe tener fondo blanco como días normales */
+.calendar-day.today:not(.weekend) {
+    background: white;
+    border: 1px solid #dee2e6;
+}
+
+.day-number {
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #2c3e50;
+}
+
+.day-appointments {
+    flex: 1;
+    overflow: hidden;
+}
+
+.appointment-item {
+    background: #007bff;
+    color: white;
+    padding: 2px 6px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.appointment-item:hover {
+    background: #0056b3;
+}
+
+/* Vista Semanal */
+.week-view {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.week-grid {
+    display: grid;
+    grid-template-columns: 80px repeat(7, 1fr);
+    gap: 1px;
+    background: #dee2e6;
+}
+
+.time-column {
+    background: #495057;
+}
+
+.day-column-header {
+    background: #495057;
+    color: white;
+    padding: 15px 10px;
+    text-align: center;
+}
+
+.day-column-header.weekend {
+    background: #fd7e14;
+}
+
+/* Asegurar que los encabezados de días laborables tengan el color correcto */
+.day-column-header:not(.weekend) {
+    background: #6c757d;
+    color: white;
+}
+
+.day-column-header.today {
+    background: #007bff;
+}
+
+/* Día actual que NO es fin de semana debe tener el mismo color que días laborables normales */
+.day-column-header.today:not(.weekend) {
+    background: #6c757d;
+    color: white;
+}
+
+/* Si hoy es fin de semana, mantener el azul */
+.day-column-header.today.weekend {
+    background: #007bff;
+}
+
+.day-name {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.day-date {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.time-row {
+    display: contents;
+}
+
+.time-label {
+    background: #f8f9fa;
+    padding: 15px 10px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.time-slot {
+    background: white;
+    min-height: 40px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.time-slot:hover {
+    background: #f8f9fa;
+}
+
+.time-slot.weekend {
+    background: #fff3cd;
+}
+
+/* Asegurar que los días de semana (lunes-viernes) tengan fondo blanco */
+.time-slot:not(.weekend) {
+    background: white;
+}
+
+.time-slot:not(.weekend):hover {
+    background: #f8f9fa;
+}
+
+.appointment-block {
+    background: #007bff;
+    color: white;
+    padding: 5px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+/* Position appointment blocks absolutely inside the slot so multi-slot blocks can overlap the next slot cleanly */
+.time-slot {
+    position: relative;
+}
+
+
+.appointment-block {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 6px;
+    box-sizing: border-box;
+    z-index: 2;
+    height: calc(100% - 12px);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+
+/* For simplicity render each slot's block independently but with identical visuals
+   so the two halves appear duplicated and identical. */
+.appointment-block,
+.appointment-block-continued,
+.appointment-continued-content {
+    font-size: 12px;
+    line-height: 1.2;
+    /* allow wrapping so long names/time appear on the next line instead of being cut */
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+    padding-top: 4px;
+    /* ensure vertical alignment matches */
+}
+
+.appointment-block strong,
+.appointment-block-continued strong,
+.appointment-continued-content strong {
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.appointment-block .small,
+.appointment-block-continued .small,
+.appointment-continued-content .small {
+    font-size: 11px;
+}
+
+/* Ensure long names/time don't change block height; allow wrapping so text isn't cut */
+.appointment-block,
+.appointment-block-continued {
+    overflow: hidden;
+    white-space: normal;
+    /* allow wrap */
+}
+
+.appointment-block:hover {
+    background: #0056b3;
+}
+
+
+/* Continuation slot: render a block that visually matches the start slot's content
+   but with bottom corners rounded and top corners flattened to create a single
+   continuous appearance across two slots. */
+.appointment-block-continued {
+    position: absolute;
+    left: 6px;
+    right: 6px;
+    top: 6px;
+    box-sizing: border-box;
+    z-index: 2;
+    height: calc(100% - 12px);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+
+.appointment-continued-content {
+    width: 100%;
+    text-align: center;
+}
+
+/* Vertical layout inside appointment blocks: name above, time below */
+.appointment-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 100%;
+}
+
+/* Origen de la cita: texto pequeño en esquina inferior derecha dentro del bloque */
+.appointment-origin {
+    position: absolute;
+    right: 6px;
+    bottom: 4px;
+    font-size: 10px;
+    opacity: 0;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 3px;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+    color: #495057;
+}
+
+/* Mostrar origen solo en hover para la vista semanal */
+.appointment-block:hover .appointment-origin {
+    opacity: 1;
+}
+
+/* También para slots continuados */
+.appointment-block:hover .appointment-continued-content .appointment-origin {
+    opacity: 1;
+}
+
+/* Variante para la tarjeta diaria (contraste oscuro sobre fondo claro) */
+.appointment-origin-card {
+    position: absolute;
+    right: 10px;
+    bottom: 8px;
+    font-size: 11px;
+    color: #495057;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 1;
+    /* Siempre visible en la vista diaria */
+}
+
+.appointment-name {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+.appointment-time {
+    display: block;
+    font-size: 11px;
+    line-height: 1.1;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Vista Diaria */
+.day-view {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.day-schedule h4 {
+    color: #2c3e50;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 10px;
+}
+
+.time-slots {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.time-slot-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid #e9ecef;
+    min-height: 60px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.time-slot-row:hover {
+    background: #f8f9fa;
+}
+
+.time-slot-row .time-label {
+    width: 100px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+    font-size: 14px;
+    border-right: 2px solid #dee2e6;
+}
+
+.slot-content {
+    flex: 1;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+}
+
+.appointment-card {
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 6px;
+    padding: 12px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.appointment-card:hover {
+    background: #bbdefb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.appointment-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.empty-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.time-slot-row:hover .empty-slot {
+    opacity: 1;
+}
+
+/* Modales */
+.modal.show {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.patient-card {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.patient-card:hover {
+    border-color: #007bff;
+    background: #f8f9fa;
+}
+
+.patient-card.selected {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .calendar-container {
+        padding: 10px;
+    }
+
+    .calendar-header {
+        padding: 15px;
+    }
+
+    .calendar-grid {
+        font-size: 12px;
+    }
+
+    .calendar-day {
+        min-height: 80px;
+        padding: 4px;
+    }
+
+    .appointment-item {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+
+    .week-grid {
+        grid-template-columns: 60px repeat(7, 1fr);
+    }
+
+    .time-label {
+        padding: 10px 5px;
+        font-size: 10px;
+    }
+
+    .time-slot {
+        min-height: 30px;
+        padding: 2px;
+    }
+
+    .appointment-block {
+        font-size: 10px;
+        padding: 3px 5px;
+    }
+
+    .day-view {
+        padding: 15px;
+    }
+
+    .time-slot-row .time-label {
+        width: 70px;
+        font-size: 12px;
+    }
+
+    .slot-content {
+        padding: 8px 10px;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.appointment-item,
+.appointment-block,
+.appointment-card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Forzar colores de estado para evitar colisiones con otros estilos */
+.appointment-block.status-pending,
+.appointment-item.status-pending,
+.appointment-card.status-pending {
+    background-color: #ffc107 !important;
+    /* amarillo (bootstrap warning) */
+    color: #212529 !important;
+    border: 1px solid #ffc107 !important;
+}
+
+.appointment-block.status-paid,
+.appointment-item.status-paid,
+.appointment-card.status-paid {
+    background-color: #0d6efd !important;
+    /* azul (bootstrap primary) */
+    color: #fff !important;
+    border: 1px solid #0d6efd !important;
+}
+
+/* Botones de vista */
+.btn-group .btn.active {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+/* Estados de citas */
+.appointment-item.cancelled,
+.appointment-block.cancelled,
+.appointment-card.cancelled {
+    background: #dc3545 !important;
+    opacity: 0.7;
+    text-decoration: line-through;
+}
+
+.appointment-item.no-show,
+.appointment-block.no-show,
+.appointment-card.no-show {
+    background: #ffc107 !important;
+    color: #000;
+    opacity: 0.8;
+}
+
+/* Scroll personalizado */
+.time-slots::-webkit-scrollbar,
+.patient-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.time-slots::-webkit-scrollbar-track,
+.patient-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.time-slots::-webkit-scrollbar-thumb,
+.patient-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.time-slots::-webkit-scrollbar-thumb:hover,
+.patient-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Igualar tamaño de botones de navegación */
+.calendar-header .btn {
+    min-width: 40px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

@@ -1,0 +1,44 @@
+{
+  "version": 2,
+  "name": "clinic-frontend",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/clinic-frontend/browser",
+  "devCommand": "ng serve --port 4300",
+  "installCommand": "npm install",
+  "framework": "angular",
+  "regions": ["cdg1"],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/ngsw-worker.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
+}

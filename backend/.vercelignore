@@ -1,0 +1,22 @@
+# Backend Vercel ignore
+
+uploads/
+backups/
+db/
+legacy-prisma-removed/
+archives/
+imports/
+exports/
+_.log
+_.sqlite
+\*.sqlite-journal
+
+# Test files
+
+test-_.js
+test-_.json
+\*.test.js
+
+# Development files
+
+nodemon.json

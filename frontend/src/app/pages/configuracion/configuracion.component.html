@@ -1,0 +1,517 @@
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Pestañas de navegación -->
+            <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" [class.active]="activeTab === 'clinic'" (click)="activeTab = 'clinic'"
+                        id="clinic-tab" type="button" role="tab">
+                        <i class="bi bi-building"></i>
+                        Información de la Clínica
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" [class.active]="activeTab === 'prices'" (click)="switchToPricesTab()"
+                        id="prices-tab" type="button" role="tab">
+                        <i class="bi bi-currency-euro"></i>
+                        Precios
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" [class.active]="activeTab === 'backup'" (click)="activeTab = 'backup'"
+                        id="backup-tab" type="button" role="tab">
+                        <i class="bi bi-shield-check"></i>
+                        Backup
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido de las pestañas -->
+            <div class="tab-content" id="configTabsContent">
+                <!-- Pestaña de Información de la Clínica -->
+                <div class="tab-pane fade" [class.show]="activeTab === 'clinic'" [class.active]="activeTab === 'clinic'"
+                    id="clinic-pane" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">
+                                <img src="assets/logo-clinica.png" alt="Logo Clínica" class="config-logo">
+                                Información de la Clínica
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form [formGroup]="clinicForm" (ngSubmit)="saveClinicInfo()">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="clinicName" class="form-label">Nombre de la Clínica</label>
+                                        <input type="text" id="clinicName" class="form-control" formControlName="name"
+                                            placeholder="Masaje Corporal Deportivo" autofocus tabindex="0" style="z-index: 1060;">
+                                        <div *ngIf="clinicForm.get('name')?.hasError('required') && clinicForm.get('name')?.touched"
+                                            class="text-danger small">
+                                            El nombre es requerido
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="clinicPhone" class="form-label">Teléfono</label>
+                                        <input type="tel" id="clinicPhone" class="form-control" formControlName="phone"
+                                            placeholder="+34 123 456 789" tabindex="0" style="z-index: 1060;">
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="clinicEmail" class="form-label">Email</label>
+                                        <input type="email" id="clinicEmail" class="form-control"
+                                            formControlName="email" placeholder="contacto@clinica.com" tabindex="0" style="z-index: 1060;">
+                                        <div *ngIf="clinicForm.get('email')?.hasError('email') && clinicForm.get('email')?.touched"
+                                            class="text-danger small">
+                                            Email inválido
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="clinicAddress" class="form-label">Dirección</label>
+                                        <textarea id="clinicAddress" class="form-control" formControlName="address"
+                                            rows="3" placeholder="Calle Principal 123, Ciudad" tabindex="0" style="z-index: 1060;"></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end">
+                                    <button type="submit" class="btn btn-primary"
+                                        [disabled]="saving || clinicForm.invalid">
+                                        <span *ngIf="saving" class="spinner-border spinner-border-sm me-2"></span>
+                                        <i *ngIf="!saving" class="bi bi-save me-2"></i>
+                                        {{ saving ? 'Guardando...' : 'Guardar Información' }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pestaña de Precios -->
+                <div class="tab-pane fade" [class.show]="activeTab === 'prices'" [class.active]="activeTab === 'prices'"
+                    id="prices-pane" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">
+                                <i class="bi bi-currency-euro me-2"></i>
+                                Gestión de Precios
+                            </h4>
+                            <small class="text-muted">Configura los precios de sesiones y bonos. Los cambios solo
+                                afectarán a nuevos packs creados.</small>
+                        </div>
+                        <div class="card-body">
+                            <form [formGroup]="pricesForm">
+                                <div class="row">
+                                    <!-- Precios de Sesiones -->
+                                    <div class="col-md-6">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="bi bi-clock me-2"></i>
+                                                    Sesiones Individuales
+                                                </h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="sessionPrice30" class="form-label">
+                                                        <i class="bi bi-stopwatch me-1"></i>
+                                                        Sesión 30 minutos
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" id="sessionPrice30" class="form-control"
+                                                            formControlName="sessionPrice30" min="0" step="0.01"
+                                                            placeholder="0.00" tabindex="0" style="z-index: 1060;">
+                                                        <span class="input-group-text">€</span>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="sessionPrice60" class="form-label">
+                                                        <i class="bi bi-clock me-1"></i>
+                                                        Sesión 60 minutos
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" id="sessionPrice60" class="form-control"
+                                                            formControlName="sessionPrice60" min="0" step="0.01"
+                                                            placeholder="0.00" tabindex="0" style="z-index: 1060;">
+                                                        <span class="input-group-text">€</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Precios de Bonos -->
+                                    <div class="col-md-6">
+                                        <div class="card border-success">
+                                            <div class="card-header bg-success text-white">
+                                                <h5 class="card-title mb-0">
+                                                    <i class="bi bi-ticket-perforated me-2"></i>
+                                                    Bonos (Paquetes de 5 sesiones)
+                                                </h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label for="bonoPrice30" class="form-label">
+                                                        <i class="bi bi-stopwatch me-1"></i>
+                                                        Bono 5×30 minutos
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" id="bonoPrice30" class="form-control"
+                                                            formControlName="bonoPrice30" min="0" step="0.01"
+                                                            placeholder="0.00" tabindex="0" style="z-index: 1060;">
+                                                        <span class="input-group-text">€</span>
+                                                    </div>
+                                                    <div class="form-text">
+                                                        <small>Precio por sesión: {{
+                                                            getFormattedSessionUnitPrice('bono30') }}€</small>
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label for="bonoPrice60" class="form-label">
+                                                        <i class="bi bi-clock me-1"></i>
+                                                        Bono 5×60 minutos
+                                                    </label>
+                                                    <div class="input-group">
+                                                        <input type="number" id="bonoPrice60" class="form-control"
+                                                            formControlName="bonoPrice60" min="0" step="0.01"
+                                                            placeholder="0.00" tabindex="0" style="z-index: 1060;">
+                                                        <span class="input-group-text">€</span>
+                                                    </div>
+                                                    <div class="form-text">
+                                                        <small>Precio por sesión: {{
+                                                            getFormattedSessionUnitPrice('bono60') }}€</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+
+                            <!-- Botones de acción -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button type="button" class="btn btn-secondary" (click)="resetPrices()"
+                                            [disabled]="loadingPrices">
+                                            <i class="bi bi-arrow-clockwise me-2"></i>
+                                            Restaurar
+                                        </button>
+                                        <button type="button" class="btn btn-success" (click)="savePrices()"
+                                            [disabled]="loadingPrices || pricesForm.invalid">
+                                            <i class="bi bi-check2-circle me-2"></i>
+                                            <span *ngIf="loadingPrices"
+                                                class="spinner-border spinner-border-sm me-2"></span>
+                                            {{ loadingPrices ? 'Guardando...' : 'Guardar Precios' }}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Información adicional -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        <strong>Importante:</strong> Los cambios de precios solo afectan a los nuevos
+                                        packs que se creen a partir de ahora.
+                                        Los packs existentes y las citas ya agendadas mantendrán sus precios originales.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horarios y Sistema eliminados por petición del usuario -->
+
+                <!-- Pestaña de backups -->
+                <div class="tab-pane fade" [class.show]="activeTab === 'backup'" [class.active]="activeTab === 'backup'"
+                    id="backup-pane" role="tabpanel">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="card-title mb-0">💾 Gestión de Backup</h4>
+                                <small class="text-muted">Administra las copias de seguridad de la base de datos</small>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary" (click)="createBackup()"
+                                    [disabled]="creatingBackup">
+                                    <span *ngIf="creatingBackup" class="spinner-border spinner-border-sm me-2"
+                                        role="status"></span>
+                                    <i *ngIf="!creatingBackup" class="bi bi-plus-circle me-2"></i>
+                                    {{ creatingBackup ? 'Creando...' : 'Crear Backup' }}
+                                </button>
+                                <button type="button" class="btn btn-success" (click)="exportPatientsToCSV()"
+                                    [disabled]="exportingPatients" title="Exportar todos los datos de pacientes a CSV">
+                                    <span *ngIf="exportingPatients" class="spinner-border spinner-border-sm me-2"
+                                        role="status"></span>
+                                    <i *ngIf="!exportingPatients" class="bi bi-download me-2"></i>
+                                    {{ exportingPatients ? 'Exportando...' : 'Exportar Pacientes CSV' }}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Estadísticas de backup -->
+                            <div class="row mb-4" *ngIf="backupStats">
+                                <div class="col-md-3">
+                                    <div class="card bg-primary text-white">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-database fs-1"></i>
+                                            <h5 class="mt-2">{{ backupStats.totalBackups }}</h5>
+                                            <small>Total de backups</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-success text-white">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-clock fs-1"></i>
+                                            <h5 class="mt-2">{{ formatDate(backupStats.lastBackup) }}</h5>
+                                            <small>Último backup</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-info text-white">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-hdd fs-1"></i>
+                                            <h5 class="mt-2">{{ backupStats.totalSize }}</h5>
+                                            <small>Espacio Usado</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card bg-warning text-white">
+                                        <div class="card-body text-center">
+                                            <i class="bi bi-calendar-week fs-1"></i>
+                                            <h5 class="mt-2">{{ formatDate(backupStats.nextScheduled) }}</h5>
+                                            <small>Próximo Automático</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Configuración de backups automáticos -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h6 class="mb-0">⚙️ Configuración Automática</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-calendar-day text-primary me-3 fs-4"></i>
+                                                <div>
+                                                    <h6 class="mb-1">backup Diario</h6>
+                                                    <small class="text-muted">Todos los días a las 2:00 AM</small>
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle"></i> Activo
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-calendar-week text-info me-3 fs-4"></i>
+                                                <div>
+                                                    <h6 class="mb-1">backup Semanal</h6>
+                                                    <small class="text-muted">Domingos a las 3:00 AM</small>
+                                                    <div class="mt-1">
+                                                        <span class="badge bg-success">
+                                                            <i class="bi bi-check-circle"></i> Activo
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Lista de backups -->
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">💾 Backups por Fecha</h6>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm me-2"
+                                            (click)="toggleViewMode()">
+                                            <i class="bi"
+                                                [class]="viewMode === 'grouped' ? 'bi-list' : 'bi-calendar3'"></i>
+                                            {{ viewMode === 'grouped' ? 'Vista Lista' : 'Vista Fecha' }}
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            (click)="refreshBackups()">
+                                            <i class="bi bi-arrow-clockwise"></i>
+                                            Actualizar
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div *ngIf="loadingBackups" class="text-center py-4">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Cargando...</span>
+                                        </div>
+                                        <p class="mt-2 text-muted">Cargando backups...</p>
+                                    </div>
+
+                                    <div *ngIf="!loadingBackups && objectKeys(backupsByDate).length === 0"
+                                        class="text-center py-4">
+                                        <i class="bi bi-inbox text-muted" style="font-size: 3rem;"></i>
+                                        <h6 class="mt-3 text-muted">No hay backups disponibles</h6>
+                                        <p class="text-muted">Crea tu primer backup usando el botón superior</p>
+                                    </div>
+
+                                    <!-- Vista agrupada por fecha -->
+                                    <div
+                                        *ngIf="!loadingBackups && viewMode === 'grouped' && objectKeys(backupsByDate).length > 0">
+                                        <div *ngFor="let dateGroup of objectValues(backupsByDate)" class="mb-4">
+                                            <h6 class="text-primary mb-3">
+                                                <i class="bi bi-calendar3 me-2"></i>
+                                                {{ dateGroup.date }}
+                                            </h6>
+                                            <div class="row">
+                                                <div *ngFor="let backup of dateGroup.backups; let i = index"
+                                                    class="col-md-6 col-lg-4 mb-3">
+                                                    <div class="card backup-card h-100"
+                                                        [class.border-success]="i === 0 && isFirstOverall(backup)"
+                                                        [class.border-2]="i === 0 && isFirstOverall(backup)">
+                                                        <div class="card-body p-3">
+                                                            <div
+                                                                class="d-flex justify-content-between align-items-start mb-2">
+                                                                <span class="badge"
+                                                                    [class]="getBackupTypeBadgeClass(backup.type)">
+                                                                    {{ getBackupTypeLabel(backup.type) }}
+                                                                </span>
+                                                                <span *ngIf="i === 0 && isFirstOverall(backup)"
+                                                                    class="badge bg-success">
+                                                                    <i class="bi bi-star-fill"></i> Actual
+                                                                </span>
+                                                            </div>
+
+                                                            <h6 class="card-title small mb-2">
+                                                                {{ formatTime(backup.created) }}
+                                                            </h6>
+
+                                                            <div class="small text-muted mb-3">
+                                                                <div><i class="bi bi-hdd me-1"></i>{{ backup.size }}
+                                                                </div>
+                                                                <div><i class="bi bi-clock me-1"></i>{{
+                                                                    getRelativeTime(backup.created) }}</div>
+                                                            </div>
+
+                                                            <div class="btn-group w-100" role="group">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-info btn-sm"
+                                                                    (click)="downloadBackup(backup)" title="Descargar">
+                                                                    <i class="bi bi-download"></i>
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-warning btn-sm"
+                                                                    (click)="confirmRestore(backup)" title="Restaurar"
+                                                                    [disabled]="isFirstOverall(backup)">
+                                                                    <i class="bi bi-arrow-clockwise"></i>
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-danger btn-sm"
+                                                                    (click)="confirmDelete(backup)" title="Eliminar"
+                                                                    [disabled]="isFirstOverall(backup)">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Vista de tabla tradicional -->
+                                    <div *ngIf="!loadingBackups && viewMode === 'list' && backups.length > 0"
+                                        class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>📅 Fecha</th>
+                                                    <th>📁 Nombre</th>
+                                                    <th>📏 Tamaño</th>
+                                                    <th>🕐 Tipo</th>
+                                                    <th class="text-center">⚡ Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let backup of backups; let i = index"
+                                                    [class.table-success]="i === 0">
+                                                    <td>
+                                                        <div class="d-flex flex-column">
+                                                            <span class="fw-semibold">{{ formatDate(backup.created)
+                                                                }}</span>
+                                                            <small class="text-muted">{{ getRelativeTime(backup.created)
+                                                                }}</small>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="font-monospace small">{{ backup.displayName
+                                                                }}</span>
+                                                            <span *ngIf="i === 0"
+                                                                class="badge bg-success ms-2">Actual</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-light text-dark">{{ backup.size }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge"
+                                                            [class]="getBackupTypeBadgeClass(backup.type)">
+                                                            {{ getBackupTypeLabel(backup.type) }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <div class="btn-group btn-group-sm" role="group">
+                                                            <button type="button" class="btn btn-outline-info"
+                                                                (click)="downloadBackup(backup)" title="Descargar">
+                                                                <i class="bi bi-download"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-warning"
+                                                                (click)="confirmRestore(backup)" title="Restaurar"
+                                                                [disabled]="i === 0">
+                                                                <i class="bi bi-arrow-clockwise"></i>
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-danger"
+                                                                (click)="confirmDelete(backup)" title="Eliminar"
+                                                                [disabled]="i === 0">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sistema eliminado por petición del usuario -->
+            </div>
+
+            <!-- Loading overlay -->
+            <div *ngIf="loading"
+                class="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-white bg-opacity-75"
+                style="z-index: 1050;">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando configuración...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

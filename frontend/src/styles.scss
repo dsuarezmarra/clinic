@@ -1,0 +1,121 @@
+/* Bootstrap CSS */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Reset global styles and eliminate pseudo-elements */
+*,
+*::before,
+*::after {
+    content: none !important;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+    background: #ffffff;
+}
+
+/* Clinic custom styles */
+.clinic-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 0;
+    margin-bottom: 2rem;
+}
+
+.clinic-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    color: white;
+}
+
+.clinic-brand:hover {
+    color: #f8f9fa;
+    text-decoration: none;
+}
+
+.btn-group .btn {
+    border-radius: 0.375rem;
+    margin: 0 0.25rem;
+    font-weight: 500;
+}
+
+.btn-primary {
+    background-color: #667eea;
+    border-color: #667eea;
+}
+
+.btn-primary:hover {
+    background-color: #5a6fd8;
+    border-color: #5a6fd8;
+}
+
+.btn-outline-light:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Main content area */
+.main-content {
+    min-height: calc(100vh - 200px);
+    padding: 2rem 0;
+}
+
+/* Card styles */
+.card {
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 0.75rem;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+    border: none;
+}
+
+/* Table styles */
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Loading spinner */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+}
+
+/* Form styles */
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .clinic-header {
+        padding: 0.5rem 0;
+        margin-bottom: 1rem;
+    }
+
+    .btn-group {
+        flex-direction: column;
+    }
+
+    .btn-group .btn {
+        margin: 0.25rem 0;
+    }
+}

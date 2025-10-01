@@ -1,0 +1,84 @@
+/* Estilos del componente principal */
+.clinic-header {
+  padding: 1rem 0;
+  margin-bottom: 2rem;
+}
+
+.clinic-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.clinic-brand-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  text-decoration: none;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #f8f9fa;
+    transform: translateY(-1px);
+  }
+
+  &:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.clinic-logo {
+  height: 2.5rem;
+  width: auto;
+  max-width: 2.5rem;
+  object-fit: contain;
+}
+
+.main-content {
+  min-height: calc(100vh - 200px);
+}
+
+.btn-group .btn.active {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.card {
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .clinic-header {
+    padding: 0.5rem 0;
+    margin-bottom: 1rem;
+  }
+
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn-group .btn {
+    margin: 0.25rem 0;
+  }
+}

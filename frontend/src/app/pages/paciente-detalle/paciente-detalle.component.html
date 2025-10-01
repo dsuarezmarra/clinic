@@ -1,0 +1,707 @@
+<div class="container-fluid">
+    <!-- Loading spinner -->
+    <div class="text-center my-5" *ngIf="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-2 text-muted">Cargando detalles del paciente...</p>
+    </div>
+
+    <!-- Contenido del detalle del paciente -->
+    <div *ngIf="!loading && patient">
+        <!-- Header con navegación -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="patient-name-container">
+                    <h2 class="patient-name">
+                        <i class="bi bi-person-fill"></i>
+                        {{ getFullName() }}
+                    </h2>
+                    <p class="patient-age" *ngIf="patient.birthDate">{{ calculateAge() }} años</p>
+                </div>
+            </div>
+            <div class="col-md-4 text-end">
+                <button type="button" class="btn btn-outline-secondary me-2" (click)="goBack()">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Volver
+                </button>
+                <button type="button" class="btn btn-primary" (click)="editPatient()">
+                    <i class="bi bi-pencil me-2"></i>
+                    Editar
+                </button>
+            </div>
+        </div>
+
+        <!-- Información principal del paciente -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-person-vcard me-2"></i>
+                            Información Personal
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">NOMBRE COMPLETO</label>
+                                <div class="fw-medium">{{ getFullName() }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3" *ngIf="patient.phone">
+                                <label class="form-label text-muted small">TELÉFONO</label>
+                                <div>
+                                    <a href="tel:{{ patient.phone }}" class="text-decoration-none">
+                                        <i class="bi bi-telephone me-1"></i>
+                                        {{ patient.phone }}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3" *ngIf="patient.phone2">
+                                <label class="form-label text-muted small">TELÉFONO 2</label>
+                                <div>
+                                    <a href="tel:{{ patient.phone2 }}" class="text-decoration-none">
+                                        <i class="bi bi-telephone me-1"></i>
+                                        {{ patient.phone2 }}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3" *ngIf="patient.email">
+                                <label class="form-label text-muted small">EMAIL</label>
+                                <div>
+                                    <a href="mailto:{{ patient.email }}" class="text-decoration-none">
+                                        <i class="bi bi-envelope me-1"></i>
+                                        {{ patient.email }}
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3" *ngIf="patient.family_contact">
+                                <label class="form-label text-muted small">CONTACTO FAMILIAR</label>
+                                <div>
+                                    <i class="bi bi-people me-1"></i>
+                                    {{ patient.family_contact }}
+                                </div>
+                            </div>
+                            <!-- DNI mostrado junto a la información de contacto -->
+                            <div class="col-md-6 mb-3" *ngIf="patient.dni">
+                                <label class="form-label text-muted small">DNI</label>
+                                <div>
+                                    {{ patient.dni }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row" *ngIf="patient.birthDate">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">FECHA DE NACIMIENTO</label>
+                                <div>{{ formatDate(patient.birthDate) }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label text-muted small">EDAD</label>
+                                <div>{{ calculateAge() }} años</div>
+                            </div>
+                        </div>
+
+                        <div class="row" *ngIf="patient.address">
+                            <div class="col-12 mb-3">
+                                <label class="form-label text-muted small">DIRECCIÓN</label>
+                                <div>
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    {{ patient.address }}
+                                </div>
+                            </div>
+                            <!-- Mostrar CP / Provincia / Localidad después de la dirección -->
+                            <div class="col-md-4 mb-2" *ngIf="patient.cp">
+                                <label class="form-label text-muted small">CP</label>
+                                <div>{{ patient.cp }}</div>
+                            </div>
+                            <div class="col-md-4 mb-2" *ngIf="patient.city">
+                                <label class="form-label text-muted small">LOCALIDAD</label>
+                                <div>{{ patient.city }}</div>
+                            </div>
+                            <div class="col-md-4 mb-2" *ngIf="patient.province">
+                                <label class="form-label text-muted small">PROVINCIA</label>
+                                <div>{{ patient.province }}</div>
+                            </div>
+                        </div>
+
+                        <div class="row" *ngIf="patient.notes">
+                            <div class="col-12">
+                                <label class="form-label text-muted small">NOTAS</label>
+                                <div class="bg-light p-3 rounded">{{ patient.notes }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas y acciones rápidas -->
+            <div class="col-lg-4">
+                <div class="card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Estadísticas
+                        </h6>
+                        <button type="button" class="btn btn-sm btn-primary" (click)="showCreditForm()"
+                            title="Añadir Sesiones">
+                            <i class="bi bi-plus-circle"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border-end">
+                                    <div class="h4 mb-0 text-primary">{{ patient._count?.appointments || 0 }}</div>
+                                    <small class="text-muted">Citas</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="h4 mb-0 text-info">
+                                    {{ getActiveSessions() }}
+                                </div>
+                                <small class="text-muted">Sesiones</small>
+                            </div>
+                        </div>
+
+                        <!-- Detalle de sesiones si existen -->
+                        <div *ngIf="creditSummary?.summary" class="mt-3 pt-3 border-top">
+                            <div class="row text-center small">
+                                <div class="col-4">
+                                    <div class="text-success fw-bold">{{ getTotalSessions() }}
+                                    </div>
+                                    <small class="text-muted">Total</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-warning fw-bold">{{ getUsedSessions() }}</div>
+                                    <small class="text-muted">Usadas</small>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-info fw-bold">{{ getRemainingSessions() }}
+                                    </div>
+                                    <small class="text-muted">Activas</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-clock me-2"></i>
+                            Información del Sistema
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <small class="text-muted">Registrado:</small>
+                            <br>
+                            <span class="small">{{ formatDateTime(patient.createdAt) }}</span>
+                        </div>
+                        <div *ngIf="patient.updatedAt !== patient.createdAt">
+                            <small class="text-muted">Última actualización:</small>
+                            <br>
+                            <span class="small">{{ formatDateTime(patient.updatedAt) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Formulario para añadir Sesiones -->
+        <div class="row mb-4" *ngIf="showAddCreditForm">
+            <div class="col-12">
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-credit-card me-2"></i>
+                            Añadir sesiones o bonos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form (ngSubmit)="addCredits()" #creditForm="ngForm">
+                            <div class="row">
+                                <div class="col-md-3 mb-3">
+                                    <label for="creditType" class="form-label">Tipo *</label>
+                                    <select class="form-select" id="creditType" name="creditType"
+                                        [(ngModel)]="newCredit.type" (ngModelChange)="onFormValueChange()"
+                                        (change)="onFormValueChange()" required>
+                                        <option value="sesion">Sesión</option>
+                                        <option value="bono">Bono</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="creditMinutes" class="form-label">Duración *</label>
+                                    <select class="form-select" id="creditMinutes" name="creditMinutes"
+                                        [(ngModel)]="newCredit.minutes" (ngModelChange)="onFormValueChange()"
+                                        (change)="onFormValueChange()" required>
+                                        <option value="30">30 minutos (1/2h sesión)</option>
+                                        <option value="60">60 minutos (1h sesión)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-3">
+                                    <label for="creditQuantity" class="form-label">Cantidad *</label>
+                                    <input type="number" class="form-control" id="creditQuantity" name="creditQuantity"
+                                        [(ngModel)]="newCredit.quantity" (ngModelChange)="onFormValueChange()"
+                                        (input)="onFormValueChange()" required min="1" max="20" placeholder="Ej: 5">
+                                </div>
+                                <div class="col-md-3 mb-3 d-flex align-items-end">
+                                    <div class="w-100">
+                                        <div class="text-muted small">Total a crear:</div>
+                                        <div class="fw-bold text-primary">
+                                            {{ equivalentSessions }} sesiones de 1/2h (30 min)
+                                        </div>
+                                        <div class="text-muted small"
+                                            *ngIf="newCredit.type === 'bono' || newCredit.minutes === 60">
+                                            Original: {{ newCredit.quantity || 0 }} {{ newCredit.type ===
+                                            'bono' ? 'bono(s)' : 'sesión(es)' }} de {{ newCredit.minutes }} min
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="creditNotes" class="form-label">Notas</label>
+                                <textarea class="form-control" id="creditNotes" name="creditNotes"
+                                    [(ngModel)]="newCredit.notes" rows="2"
+                                    placeholder="Notas adicionales sobre estas sesiones..."></textarea>
+                            </div>
+
+                            <!-- Campo Pagado -->
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="creditPaid" name="creditPaid"
+                                        [(ngModel)]="newCredit.paid">
+                                    <label class="form-check-label" for="creditPaid">
+                                        <i class="bi bi-credit-card-2-front me-2"></i>
+                                        <strong>Pagado</strong>
+                                    </label>
+                                    <div class="form-text">
+                                        Marcar si el pago de estas sesiones ya ha sido recibido
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success"
+                                    [disabled]="!creditForm.form.valid || loading">
+                                    <i class="bi bi-check-circle me-2"></i>
+                                    Añadir
+                                </button>
+                                <button type="button" class="btn btn-secondary" (click)="hideCreditForm()">
+                                    <i class="bi bi-x-circle me-2"></i>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secciones adicionales (citas, archivos, etc.) -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                    [ngClass]="{'text-dark': activeTab === 'historial-tab', 'text-white': activeTab !== 'historial-tab'}"
+                                    [class.active]="activeTab === 'historial-tab'"
+                                    (click)="setActiveTab('historial-tab')" type="button" role="tab">
+                                    <i class="bi bi-calendar-event me-2"></i>
+                                    Historial de Citas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                    [ngClass]="{'text-dark': activeTab === 'archivos-tab', 'text-white': activeTab !== 'archivos-tab'}"
+                                    [class.active]="activeTab === 'archivos-tab'" (click)="setActiveTab('archivos-tab')"
+                                    type="button" role="tab">
+                                    <i class="bi bi-files me-2"></i>
+                                    Archivos
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link"
+                                    [ngClass]="{'text-dark': activeTab === 'creditos-tab', 'text-white': activeTab !== 'creditos-tab'}"
+                                    [class.active]="activeTab === 'creditos-tab'" (click)="setActiveTab('creditos-tab')"
+                                    type="button" role="tab">
+                                    <i class="bi bi-credit-card me-2"></i>
+                                    Sesiones
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-body">
+                        <div>
+                            <!-- Tab de citas -->
+                            <div *ngIf="activeTab === 'historial-tab'" id="citas-tab">
+                                <div *ngIf="loadingAppointments" class="text-center text-muted py-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="mt-2">Cargando historial de citas...</p>
+                                </div>
+                                <div *ngIf="!loadingAppointments && appointments.length === 0"
+                                    class="text-center text-muted py-4">
+                                    <i class="bi bi-calendar-x display-6"></i>
+                                    <p class="mt-2">No hay citas registradas para este paciente.</p>
+                                </div>
+                                <div *ngIf="!loadingAppointments && appointments.length > 0">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Fecha</th>
+                                                <th>Hora</th>
+                                                <th>Notas</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr *ngFor="let cita of appointments">
+                                                <td>{{ cita.date }}</td>
+                                                <td>{{ cita.time }}</td>
+                                                <td>{{ cita.notes || '-' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab de archivos -->
+                            <div *ngIf="activeTab === 'archivos-tab'" id="archivos-tab">
+                                <!-- Formulario de subida de archivos -->
+                                <div class="card mb-4">
+                                    <div class="card-header">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-cloud-upload me-2"></i>
+                                            Subir nuevo archivo
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="fileInput" class="form-label">Seleccionar
+                                                        archivo</label>
+                                                    <input type="file" class="form-control" id="fileInput"
+                                                        (change)="onFileSelected($event)"
+                                                        accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx">
+                                                    <div class="form-text">
+                                                        Archivos permitidos: JPG, PNG, GIF, PDF, DOC, DOCX (máx. 10MB)
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label for="uploadCategory" class="form-label">Categoría</label>
+                                                    <select class="form-select" id="uploadCategory"
+                                                        [(ngModel)]="uploadCategory">
+                                                        <option value="radiografia">Radiografía</option>
+                                                        <option value="ecografia">Ecografía</option>
+                                                        <option value="analitica">Analítica</option>
+                                                        <option value="informe">Informe Médico</option>
+                                                        <option value="otro">Otro</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="mb-3">
+                                                    <label for="uploadDescription" class="form-label">Descripción
+                                                        (opcional)</label>
+                                                    <textarea class="form-control" id="uploadDescription" rows="2"
+                                                        [(ngModel)]="uploadDescription"
+                                                        placeholder="Describe el contenido del archivo..."></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div *ngIf="selectedFile" class="text-muted">
+                                                <i class="bi bi-file-earmark me-2"></i>
+                                                {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+                                            </div>
+                                            <button type="button" class="btn btn-primary"
+                                                [disabled]="!selectedFile || uploading" (click)="uploadFile()">
+                                                <span *ngIf="uploading"
+                                                    class="spinner-border spinner-border-sm me-2"></span>
+                                                <i *ngIf="!uploading" class="bi bi-upload me-2"></i>
+                                                {{ uploading ? 'Subiendo...' : 'Subir archivo' }}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Lista de archivos -->
+                                <div class="card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-0">
+                                            <i class="bi bi-files me-2"></i>
+                                            Archivos del paciente
+                                        </h6>
+                                        <span class="badge bg-secondary">{{ patientFiles.length }}</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <!-- Loading spinner -->
+                                        <div *ngIf="loadingFiles" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando archivos...</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Lista de archivos -->
+                                        <div *ngIf="!loadingFiles && patientFiles.length > 0">
+                                            <div class="row g-3">
+                                                <div class="col-lg-6" *ngFor="let file of patientFiles">
+                                                    <div class="card border h-100">
+                                                        <div class="card-body">
+                                                            <div class="d-flex align-items-start">
+                                                                <!-- Vista previa o icono -->
+                                                                <div class="me-3 flex-shrink-0">
+                                                                    <div class="file-preview-container">
+                                                                        <img *ngIf="isImageFile(file.mimeType)"
+                                                                            [src]="getFilePreviewUrl(file.id)"
+                                                                            class="img-thumbnail file-preview"
+                                                                            [alt]="file.originalName"
+                                                                            style="width: 60px; height: 60px; object-fit: cover;">
+                                                                        <div *ngIf="!isImageFile(file.mimeType)"
+                                                                            class="file-icon-container d-flex align-items-center justify-content-center"
+                                                                            style="width: 60px; height: 60px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
+                                                                            <i [class]="'bi ' + getFileIcon(file.mimeType) + ' text-primary'"
+                                                                                style="font-size: 24px;"></i>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Información del archivo -->
+                                                                <div class="flex-grow-1 min-width-0">
+                                                                    <h6 class="card-title mb-1 text-truncate"
+                                                                        [title]="file.originalName">
+                                                                        {{ file.originalName }}
+                                                                    </h6>
+                                                                    <div class="mb-2">
+                                                                        <span class="badge"
+                                                                            [class]="getCategoryColor(file.category) + ' bg-opacity-10 border'">
+                                                                            {{ getCategoryName(file.category) }}
+                                                                        </span>
+                                                                    </div>
+                                                                    <p *ngIf="file.description"
+                                                                        class="card-text text-muted small mb-2">
+                                                                        {{ file.description }}
+                                                                    </p>
+                                                                    <div
+                                                                        class="d-flex align-items-center text-muted small">
+                                                                        <span class="me-3">
+                                                                            <i class="bi bi-calendar3 me-1"></i>
+                                                                            {{ file.uploadDate | date:'dd/MM/yyyy' }}
+                                                                        </span>
+                                                                        <span>
+                                                                            <i class="bi bi-file-earmark me-1"></i>
+                                                                            {{ formatFileSize(file.fileSize) }}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <!-- Acciones -->
+                                                            <div class="mt-3 d-flex gap-2">
+                                                                <button type="button"
+                                                                    class="btn btn-outline-primary btn-sm"
+                                                                    (click)="downloadFile(file)"
+                                                                    title="Descargar archivo">
+                                                                    <i class="bi bi-download"></i>
+                                                                </button>
+                                                                <button type="button"
+                                                                    class="btn btn-outline-danger btn-sm"
+                                                                    (click)="deleteFile(file)" title="Eliminar archivo">
+                                                                    <i class="bi bi-trash"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Estado vacío -->
+                                        <div *ngIf="!loadingFiles && patientFiles.length === 0"
+                                            class="text-center text-muted py-5">
+                                            <i class="bi bi-file-earmark-x display-6"></i>
+                                            <p class="mt-3 mb-1">No hay archivos adjuntos</p>
+                                            <p class="small">Sube el primer archivo usando el formulario de arriba</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab de Sesiones -->
+                            <div *ngIf="activeTab === 'creditos-tab'" id="creditos-tab">
+                                <!-- Lista de packs de Sesiones -->
+                                <div *ngIf="getCreditPacks().length > 0; else noCredits">
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">Packs de Sesiones</h6>
+                                                <button type="button" class="btn btn-sm btn-primary"
+                                                    (click)="showCreditForm()">
+                                                    <i class="bi bi-plus-circle me-1"></i>
+                                                    Añadir Sesiones
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Lista de packs -->
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3" *ngFor="let pack of getCreditPacks()">
+                                            <div class="card h-100" [class.border-success]="pack.unitsRemaining > 0"
+                                                [class.border-secondary]="pack.unitsRemaining === 0">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div class="d-flex flex-column">
+                                                            <h6 class="card-title mb-1">{{ pack.label }}</h6>
+                                                            <div *ngIf="formatPrice(pack)" class="text-muted small">{{
+                                                                formatPrice(pack) }}</div>
+                                                            <!-- Indicador de estado de pago -->
+                                                            <div class="d-flex gap-2 align-items-center">
+                                                                <span class="badge badge-sm"
+                                                                    [class.bg-success]="pack.paid"
+                                                                    [class.bg-warning]="!pack.paid"
+                                                                    [class.text-dark]="!pack.paid">
+                                                                    <i class="bi me-1"
+                                                                        [class.bi-check-circle]="pack.paid"
+                                                                        [class.bi-clock]="!pack.paid"></i>
+                                                                    {{ pack.paid ? 'Pagado' : 'Pendiente de pago' }}
+                                                                </span>
+                                                                <!-- Checkbox para cambiar estado de pago -->
+                                                                <div class="form-check form-check-inline mb-0"
+                                                                    *ngIf="!pack.paid">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        [id]="'paymentCheck_' + pack.id"
+                                                                        (change)="togglePackPaymentStatus(pack)"
+                                                                        title="Marcar como pagado">
+                                                                    <label class="form-check-label small text-muted"
+                                                                        [for]="'paymentCheck_' + pack.id">
+                                                                        Marcar pagado
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <span class="badge"
+                                                            [class.bg-primary]="pack.label.includes('Sesión') && pack.unitsRemaining > 0"
+                                                            [class.bg-success]="pack.label.includes('Bono') && pack.unitsRemaining > 0"
+                                                            [class.bg-secondary]="pack.unitsRemaining === 0">
+                                                            {{ getCreditTypeLabel(pack.label.includes('Sesión') ?
+                                                            'sesion' :
+                                                            'bono') }}
+                                                        </span>
+                                                    </div>
+
+                                                    <div class="row text-center mb-2">
+                                                        <div class="col-4">
+                                                            <div class="text-muted small">Total</div>
+                                                            <div class="fw-bold">{{ pack.unitsTotal }}</div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="text-muted small">Restantes</div>
+                                                            <!-- Modo edición -->
+                                                            <div *ngIf="isEditingPack(pack.id)"
+                                                                class="d-flex flex-column align-items-center">
+                                                                <input type="number"
+                                                                    class="form-control form-control-sm mb-1"
+                                                                    [(ngModel)]="editingUnitsRemaining" [min]="0"
+                                                                    [max]="pack.unitsTotal"
+                                                                    style="width: 60px; text-align: center;">
+                                                                <div class="btn-group btn-group-sm">
+                                                                    <button class="btn btn-success btn-sm"
+                                                                        (click)="saveUnitsRemaining(pack)"
+                                                                        title="Guardar">
+                                                                        <i class="bi bi-check"></i>
+                                                                    </button>
+                                                                    <button class="btn btn-secondary btn-sm"
+                                                                        (click)="cancelEditingUnits()" title="Cancelar">
+                                                                        <i class="bi bi-x"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <!-- Modo vista -->
+                                                            <div *ngIf="!isEditingPack(pack.id)"
+                                                                class="fw-bold text-success d-flex flex-column align-items-center">
+                                                                <span>{{ pack.unitsRemaining }}</span>
+                                                                <button class="btn btn-outline-primary btn-sm mt-1"
+                                                                    (click)="startEditingUnits(pack)"
+                                                                    title="Editar cantidad restante">
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="text-muted small">Usados</div>
+                                                            <div class="fw-bold text-warning">{{ pack.unitsTotal -
+                                                                pack.unitsRemaining }}</div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="progress mb-2" style="height: 8px;">
+                                                        <div class="progress-bar bg-success"
+                                                            [style.width.%]="(pack.unitsRemaining / pack.unitsTotal) * 100">
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">
+                                                            Creado: {{ formatDate(pack.createdAt) }}
+                                                        </small>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                            (click)="deleteCreditPack(pack.id)" title="Eliminar pack">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div *ngIf="pack.notes" class="mt-2">
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-chat-text me-1"></i>
+                                                            {{ pack.notes }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- No hay Sesiones -->
+                                <ng-template #noCredits>
+                                    <div class="text-center text-muted py-4">
+                                        <i class="bi bi-credit-card-2-front display-6"></i>
+                                        <h5 class="mt-3">No hay Sesiones registradas</h5>
+                                        <p class="mb-3">Este paciente no tiene packs de Sesiones asignados</p>
+                                        <button type="button" class="btn btn-primary" (click)="showCreditForm()">
+                                            <i class="bi bi-plus-circle me-2"></i>
+                                            Añadir Primer Pack de Sesiones
+                                        </button>
+                                    </div>
+                                </ng-template>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error state -->
+    <div class="text-center my-5" *ngIf="!loading && !patient">
+        <div class="mb-3">
+            <i class="bi bi-person-x display-1 text-muted"></i>
+        </div>
+        <h4 class="text-muted">Paciente no encontrado</h4>
+        <p class="text-muted">El paciente que buscas no existe o ha sido eliminado</p>
+        <button type="button" class="btn btn-primary" (click)="goBack()">
+            <i class="bi bi-arrow-left me-2"></i>
+            Volver a Pacientes
+        </button>
+    </div>
+</div>

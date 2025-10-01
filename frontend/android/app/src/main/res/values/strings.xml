@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Clínica Masaje Corporal Deportivo</string>
+    <string name="title_activity_main">Clínica Masaje Corporal Deportivo</string>
+    <string name="package_name">com.clinica.masaje</string>
+    <string name="custom_url_scheme">com.clinica.masaje</string>
+</resources>

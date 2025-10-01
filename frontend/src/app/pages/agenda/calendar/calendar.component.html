@@ -1,0 +1,320 @@
+<div class="calendar-container">
+    <!-- Encabezado del calendario -->
+    <div class="calendar-header">
+        <div *ngIf="!hideHeader" class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Calendario de Citas</h2>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary" [class.active]="viewMode === 'month'"
+                    (click)="setViewMode('month')">Mes</button>
+                <button type="button" class="btn btn-outline-primary" [class.active]="viewMode === 'week'"
+                    (click)="setViewMode('week')">Semana</button>
+                <button type="button" class="btn btn-outline-primary" [class.active]="viewMode === 'day'"
+                    (click)="setViewMode('day')">Día</button>
+            </div>
+        </div>
+
+        <!-- Navegación de fechas solo si no se oculta el header -->
+        <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="!hideHeader && viewMode !== 'month'">
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-secondary" (click)="previousPeriod()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            </div>
+
+            <h3 class="calendar-title mb-0">
+                <span *ngIf="viewMode === 'week'">
+                    Semana del {{ formatDate(getWeekDays()[0]) }}
+                    <small class="text-muted ms-2">(Total semana: {{ formatPriceCents(getWeekTotal()) }})</small>
+                </span>
+                <span *ngIf="viewMode === 'day'">
+                    {{ formatDate(currentDate) }}
+                    <small class="text-muted ms-2">(Total día: {{ formatPriceCents(getDayTotal(currentDate)) }})</small>
+                </span>
+            </h3>
+
+            <div class="d-flex gap-2">
+                <button class="btn btn-outline-primary" (click)="goToToday()">Hoy</button>
+                <button class="btn btn-outline-secondary" (click)="nextPeriod()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Mensual -->
+    <div *ngIf="viewMode === 'month'" class="year-view">
+        <div class="d-flex justify-content-center align-items-center mb-3">
+            <button class="btn btn-outline-secondary me-2" (click)="previousYear()">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <h4 class="mb-0">{{ currentYear }}</h4>
+            <button class="btn btn-outline-secondary ms-2" (click)="nextYear()">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        <div class="year-months-grid-compact">
+            <div *ngFor="let month of months; let monthIdx = index" class="month-block-compact">
+                <h6 class="text-center mb-1">
+                    {{ month }}
+                    <small class="text-muted">({{ formatPriceCents(getMonthTotal(currentYear, monthIdx)) }})</small>
+                    <!-- Export buttons: icon-only (accessible) -->
+                    <button class="btn btn-sm btn-outline-success ms-2" aria-label="Exportar facturas por cita"
+                        title="Exportar facturas por cita (una factura por cada cita)"
+                        (click)="exportMonthCsv(currentYear, monthIdx, 'appointment')"
+                        style="padding:.12rem .12rem; font-size:0.6rem; width:1.2rem; height:1.2rem; display:inline-flex; align-items:center; justify-content:center;">
+                        <!-- Excel-like icon (sheet with X) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16"
+                            fill="currentColor" aria-hidden="true">
+                            <path
+                                d="M4 1.5A1.5 1.5 0 0 0 2.5 3v10A1.5 1.5 0 0 0 4 14.5h8a1.5 1.5 0 0 0 1.5-1.5V5.707A1 1 0 0 0 12.793 5L9 1.207A1 1 0 0 0 8.293 1H4zM9 2.5L12.5 6H9V2.5z" />
+                            <path d="M5.2 9.2l.9-1 1 1 .9-1 .9 1-.9 1 1 1-.9 1-1-1-1 1-.9-1 1-1-.9-1z" />
+                        </svg>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary ms-1" aria-label="Exportar facturas por paciente"
+                        title="Exportar facturas por paciente (una factura por cada paciente agrupando sus citas)"
+                        (click)="exportMonthCsv(currentYear, monthIdx, 'patient')"
+                        style="padding:.12rem .12rem; font-size:0.6rem; width:1.2rem; height:1.2rem; display:inline-flex; align-items:center; justify-content:center;">
+                        <!-- Excel-like grouped icon (sheet + small X) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16"
+                            fill="currentColor" aria-hidden="true">
+                            <path
+                                d="M3 2.5A1.5 1.5 0 0 1 4.5 1h6A1.5 1.5 0 0 1 12 2.5V4h1.5A1.5 1.5 0 0 1 15 5.5V13A1.5 1.5 0 0 1 13.5 14.5h-11A1.5 1.5 0 0 1 1 13V5.5A1.5 1.5 0 0 1 2.5 4H3V2.5zM5.5 7.5l.7-.7.8.8.8-.8.7.7-.8.8.8.8-.7.7-.8-.8-.8.8-.7-.7.8-.8-.8-.8z" />
+                        </svg>
+                    </button>
+                </h6>
+                <div class="calendar-grid-compact">
+                    <div class="day-header-compact" *ngFor="let day of weekDays">{{ day }}</div>
+                    <div *ngFor="let day of getMonthDaysOfYear(currentYear, monthIdx)" class="calendar-day-compact"
+                        [class.has-appointments-compact]="day && getAppointmentsForDate(day).length > 0"
+                        [class.holiday-compact]="day && isHoliday(day) && getAppointmentsForDate(day).length === 0"
+                        [class.weekend-compact]="day && !isHoliday(day) && (day.getDay() === 0 || day.getDay() === 6)"
+                        (click)="day && setViewMode('day'); currentDate = day">
+                        <div class="day-number-compact">{{ day ? day.getDate() : '' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Semanal -->
+    <div *ngIf="viewMode === 'week'" class="week-view">
+        <div class="week-grid">
+            <!-- Encabezados de días -->
+            <div class="time-column"></div>
+            <div *ngFor="let day of getWeekDays()" class="day-column-header" [class.weekend]="isWeekend(day)"
+                [class.today]="isToday(day)">
+                <div class="day-name">{{ getDayName(day.getDay()) }}</div>
+                <div class="day-date">{{ day.getDate() }}</div>
+            </div>
+
+            <!-- Filas de tiempo -->
+            <div *ngFor="let timeSlot of timeSlots" class="time-row">
+                <div class="time-label">{{ timeSlot }}</div>
+                <div *ngFor="let day of getWeekDays()" class="time-slot" [class.weekend]="isWeekend(day)"
+                    (click)="openCreateAppointmentModal(day, timeSlot)">
+
+                    <div *ngIf="getAppointmentForTimeSlot(day, timeSlot) as appointment" [ngClass]="{
+                            'appointment-block': isAppointmentStart(appointment, day, timeSlot) || (!isAppointmentStart(appointment, day, timeSlot) && appointmentSpansMultipleSlots(appointment)),
+                            'appointment-block-multi': isAppointmentStart(appointment, day, timeSlot) && appointmentSpansMultipleSlots(appointment),
+                            'appointment-block-continued': !isAppointmentStart(appointment, day, timeSlot) && appointmentSpansMultipleSlots(appointment),
+                            'bg-warning': getAppointmentPaymentStatus(appointment) === 'pending',
+                            'bg-primary': getAppointmentPaymentStatus(appointment) === 'paid',
+                            'text-white': getAppointmentPaymentStatus(appointment) === 'paid',
+                            'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
+                            'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
+                        }" (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+                        <ng-container *ngIf="isAppointmentStart(appointment, day, timeSlot); else occupiedSlot">
+                            <div class="appointment-content">
+                                <strong class="appointment-name">{{ getPatientName(appointment) }}</strong>
+                                <div class="small text-muted appointment-time">{{ formatTimeRange(appointment.start,
+                                    appointment.end) }}</div>
+                                <!-- Origen/Tipo de la cita (ej: Bono 5×60m, Sesión 30m) -->
+                                <div class="appointment-origin">{{ getAppointmentOrigin(appointment) }}</div>
+                            </div>
+                        </ng-container>
+                        <ng-template #occupiedSlot>
+                            <!-- Continuation slot for multi-slot appointment: show same content as start -->
+                            <div class="appointment-continued-content appointment-content">
+                                <strong class="appointment-name">{{ getPatientName(appointment) }}</strong>
+                                <div class="small text-muted appointment-time">{{ formatTimeRange(appointment.start,
+                                    appointment.end) }}
+                                </div>
+                                <div class="appointment-origin">{{ getAppointmentOrigin(appointment) }}</div>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vista Diaria -->
+    <div *ngIf="viewMode === 'day'" class="day-view">
+        <div class="day-schedule">
+
+            <div class="time-slots">
+                <div *ngFor="let timeSlot of timeSlots" class="time-slot-row"
+                    (click)="openCreateAppointmentModal(currentDate, timeSlot)">
+
+                    <div class="time-label">{{ timeSlot }}</div>
+
+                    <div class="slot-content">
+                        <div *ngIf="getAppointmentForTimeSlot(currentDate, timeSlot) as appointment; else emptySlot"
+                            class="appointment-card" [ngClass]="{
+                                'bg-warning': getAppointmentPaymentStatus(appointment) === 'pending',
+                                'bg-primary text-white': getAppointmentPaymentStatus(appointment) === 'paid',
+                                'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
+                                'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
+                            }" (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ getPatientName(appointment) }}</strong>
+                                    <div class="text-muted small">
+                                        {{ formatTimeRange(appointment.start, appointment.end) }}
+                                    </div>
+                                </div>
+                                <div class="appointment-actions">
+                                    <button class="btn btn-sm btn-outline-primary me-1"
+                                        (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                        (click)="deleteAppointment(appointment.id); $event.stopPropagation()">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Origen mostrado en la esquina inferior derecha -->
+                            <div class="appointment-origin appointment-origin-card">{{ getAppointmentOrigin(appointment)
+                                }}</div>
+                        </div>
+
+                        <ng-template #emptySlot>
+                            <div class="empty-slot">
+                                <i class="fas fa-plus text-muted"></i>
+                                <small class="text-muted">Agregar cita</small>
+                            </div>
+                        </ng-template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para seleccionar paciente -->
+<div class="modal fade" [class.show]="showPatientModal" [style.display]="showPatientModal ? 'block' : 'none'"
+    tabindex="-1" role="dialog" *ngIf="showPatientModal">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Seleccionar Paciente</h5>
+                <button type="button" class="btn-close" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <p><strong>Fecha:</strong> {{ formatDate(selectedDate) }}</p>
+                    <p><strong>Hora:</strong> {{ selectedTimeSlot }}</p>
+                </div>
+
+                <!-- Buscador de pacientes -->
+                <div class="mb-3">
+                    <input type="text" 
+                           class="form-control"
+                           #patientSearchInput
+                           placeholder="Buscar paciente por nombre, teléfono o email..." 
+                           [(ngModel)]="patientSearchTerm"
+                           (input)="filterPatients()"
+                           autofocus
+                           tabindex="0"
+                           style="z-index: 1060;">
+                </div>
+
+                <!-- Lista de pacientes -->
+                <div class="patient-list" style="max-height: 400px; overflow-y: auto;">
+                    <div *ngFor="let patient of filteredPatients" class="patient-card"
+                        [class.selected]="selectedPatient?.id === patient.id" (click)="selectPatient(patient)">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>{{ patient.firstName }} {{ patient.lastName }}</strong>
+                                <div class="text-muted small">{{ patient.phone }}</div>
+                                <div class="text-muted small" *ngIf="patient.email">{{ patient.email }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge" [class.bg-success]="(patient.activeSessions || 0) > 0"
+                                    [class.bg-danger]="(patient.activeSessions || 0) === 0">
+                                    {{ patient.activeSessions || 0 }} sesiones
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="filteredPatients.length === 0" class="text-center text-muted py-3">
+                        No se encontraron pacientes
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" [disabled]="!selectedPatient"
+                    (click)="createAppointment()">
+                    Crear Cita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar cita -->
+<div class="modal fade" [class.show]="showEditModal" [style.display]="showEditModal ? 'block' : 'none'" tabindex="-1"
+    role="dialog" *ngIf="showEditModal && editingAppointment">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Editar Cita</h5>
+                <button type="button" class="btn-close" (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Paciente</label>
+                    <p class="form-control-plaintext">{{ getPatientName(editingAppointment) }}</p>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fecha</label>
+                    <input type="date" class="form-control" [(ngModel)]="editingDateLocal" tabindex="0" style="z-index: 1060;" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Hora</label>
+                    <select class="form-select" [(ngModel)]="editingTimeLocal" tabindex="0" style="z-index: 1060;">
+                        <option *ngFor="let slot of timeSlots" [value]="slot">{{ slot }}</option>
+                    </select>
+                    <div class="form-text">Horas permitidas: 09:00 - 22:00 en pasos de 30 minutos</div>
+                </div>
+
+                <div class="mb-3">
+                </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="editingPaid" [(ngModel)]="editingPaid" tabindex="0" style="z-index: 1060;">
+                        <label class="form-check-label" for="editingPaid">Pagada</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger me-auto" (click)="deleteAppointment(editingAppointment.id)">
+                    Eliminar
+                </button>
+                <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+                <button type="button" class="btn btn-primary" (click)="updateAppointment()">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop para modales -->
+<div class="modal-backdrop fade show" *ngIf="showPatientModal || showEditModal"></div>

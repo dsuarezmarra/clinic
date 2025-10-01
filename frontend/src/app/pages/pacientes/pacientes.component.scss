@@ -1,0 +1,231 @@
+.pacientes-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pacientes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pacientes-header h1 {
+  margin: 0;
+  color: #333;
+  font-weight: 500;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  min-width: 300px;
+}
+
+.new-patient-btn {
+  white-space: nowrap;
+}
+
+.pacientes-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.patients-table-container {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.patients-table {
+  width: 100%;
+  min-width: 700px;
+}
+
+.patient-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.patient-row:hover {
+  background-color: #f5f5f5;
+}
+
+.patient-name {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.patient-notes {
+  color: #666;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.no-data {
+  color: #999;
+  font-style: italic;
+}
+
+.credits-available {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.credits-empty {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.appointment-count {
+  color: #666;
+  font-size: 14px;
+}
+
+.actions-container {
+  display: flex;
+  gap: 4px;
+}
+
+.no-patients,
+.no-results {
+  text-align: center;
+  padding: 48px 24px;
+  color: #666;
+}
+
+.no-patients-icon,
+.no-results-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.no-patients h3,
+.no-results h3 {
+  margin: 16px 0 8px 0;
+  color: #333;
+}
+
+.no-patients p,
+.no-results p {
+  margin-bottom: 24px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  color: #666;
+}
+
+.loading-container p {
+  margin-top: 16px;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .pacientes-container {
+    padding: 16px;
+  }
+
+  .pacientes-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .header-controls {
+    justify-content: space-between;
+  }
+
+  .search-field {
+    flex: 1;
+    min-width: unset;
+  }
+
+  .patients-table {
+    min-width: 600px;
+  }
+
+  .patient-name {
+    font-size: 14px;
+  }
+
+  .actions-container {
+    flex-direction: column;
+    gap: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .new-patient-btn {
+    width: 100%;
+  }
+
+  .patients-table {
+    min-width: 500px;
+  }
+}
+
+// Estilos para paginación
+.pagination {
+  .page-link {
+    min-width: 40px !important;
+    max-width: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    line-height: 1 !important;
+    border: 1px solid #dee2e6 !important;
+    
+    i {
+      font-size: 14px !important;
+      line-height: 1 !important;
+      width: 14px !important;
+      height: 14px !important;
+      text-align: center !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+  }
+  
+  // Paginación pequeña en la parte superior
+  &.pagination-sm {
+    .page-link {
+      min-width: 32px !important;
+      max-width: 32px !important;
+      width: 32px !important;
+      height: 32px !important;
+      font-size: 13px !important;
+      
+      i {
+        font-size: 12px !important;
+        width: 12px !important;
+        height: 12px !important;
+      }
+    }
+  }
+}

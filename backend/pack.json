@@ -1,0 +1,12 @@
+{
+  "id": "af8b5a4d-a590-4a90-9c3b-2c21f709b491",
+  "patientId": "371e8a39-3631-4059-849f-5f123042b935",
+  "label": "Sesión 60m",
+  "unitsTotal": 2,
+  "unitMinutes": 60,
+  "priceCents": 4500,
+  "unitsRemaining": 2,
+  "paid": true,
+  "notes": null,
+  "createdAt": "2025-09-18T09:26:30.277"
+}

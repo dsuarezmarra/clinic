@@ -1,0 +1,29 @@
+<div class="modal fade" [class.show]="show" [style.display]="show ? 'block' : 'none'"
+     tabindex="-1" role="dialog" aria-labelledby="patientModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="patientModalLabel">Seleccionar Paciente</h5>
+        <button type="button" class="btn-close" (click)="closeModal()"></button>
+      </div>
+      <div class="modal-body">
+        <input type="text" 
+               class="form-control mb-3" 
+               #searchInput
+               placeholder="Buscar paciente..." 
+               [(ngModel)]="searchTerm"
+               autofocus
+               tabindex="0"
+               style="z-index: 1060;">
+        <div class="list-group">
+          <button type="button" class="list-group-item list-group-item-action" *ngFor="let patient of filteredPatients" (click)="selectPatient(patient)">
+            {{ patient.firstName }} {{ patient.lastName }} <span class="text-muted">{{ patient.phone }}</span>
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

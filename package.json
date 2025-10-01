@@ -1,0 +1,42 @@
+{
+  "name": "clinic-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "desktop/main.js",
+  "scripts": {
+    "build:frontend": "cd frontend && npm install --legacy-peer-deps --no-audit --no-fund && npm run build",
+    "start:desktop": "electron .",
+  "pack:desktop": "npm run build:frontend && electron-builder --win dir --x64",
+  "pack:desktop:ep": "npm run build:frontend && electron-packager . Clinic --platform=win32 --arch=x64 --out=dist --overwrite",
+  "pack:desktop:nsis": "npm run build:frontend && electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "electron": "^26.0.0",
+    "electron-builder": "^24.8.0",
+    "electron-packager": "^17.1.1"
+  },
+  "build": {
+    "appId": "com.clinic.desktop",
+    "productName": "Clinic Desktop",
+    "files": [
+      "backend/**",
+      "frontend/dist/**",
+      "desktop/**",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "desktop/build"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

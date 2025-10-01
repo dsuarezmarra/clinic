@@ -1,0 +1,26 @@
+<div class="container-fluid vh-100 d-flex flex-column">
+    <!-- Main Content -->
+    <div class="row flex-grow-1 g-0">
+        <div class="col-12 d-flex align-items-center justify-content-center bg-light">
+            <div class="container">
+                <!-- Dashboard Section -->
+                <div class="row mb-5">
+                    <div class="col-12">
+                        <app-dashboard></app-dashboard>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="row bg-dark text-white py-3 mt-0">
+        <div class="col-12 text-center">
+            <small class="text-muted">
+                <i class="bi bi-heart me-2"></i>
+                Sistema de Gestión de Masajes - {{ getCurrentYear() }}
+            </small>
+        </div>
+    </div>
+</div>

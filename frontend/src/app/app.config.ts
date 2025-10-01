@@ -1,0 +1,31 @@
+import { registerLocaleData } from '@angular/common';
+import { HTTP_INTERCEPTORS, provideHttpClient, withFetch } from '@angular/common/http';
+import localeEs from '@angular/common/locales/es';
+import { ApplicationConfig, LOCALE_ID, isDevMode } from '@angular/core';
+import { provideClientHydration } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { routes } from './app.routes';
+import { EncodingInterceptor } from './interceptors/encoding.interceptor';
+import { provideServiceWorker } from '@angular/service-worker';
+
+registerLocaleData(localeEs);
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    provideClientHydration(),
+    provideHttpClient(withFetch()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: EncodingInterceptor,
+      multi: true
+    },
+    { provide: LOCALE_ID, useValue: 'es' }, provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          }), provideServiceWorker('ngsw-worker.js', {
+            enabled: !isDevMode(),
+            registrationStrategy: 'registerWhenStable:30000'
+          })
+  ]
+};

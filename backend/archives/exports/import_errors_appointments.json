@@ -1,0 +1,68 @@
+[
+  {
+    "index": 318,
+    "row": {
+      "id": "d850a9c6-6aa8-4c69-ad63-375588516b0b",
+      "patientId": "faba91d1-1411-4290-9fe8-dc1717de29ff",
+      "start": "2025-05-27T06:00:00.000Z",
+      "end": "2025-05-27T06:30:00.000Z",
+      "durationMinutes": 30,
+      "priceCents": 3000,
+      "status": "BOOKED",
+      "notes": "Cita generada a partir de bono/sesión existente",
+      "consumesCredit": 1,
+      "createdAt": "2025-08-29T07:16:52.971Z",
+      "updatedAt": "2025-08-29T07:16:52.971Z"
+    },
+    "error": {
+      "code": "23503",
+      "details": "Key (patientId)=(faba91d1-1411-4290-9fe8-dc1717de29ff) is not present in table \"patients\".",
+      "hint": null,
+      "message": "insert or update on table \"appointments\" violates foreign key constraint \"fk_appointments_patient\""
+    }
+  },
+  {
+    "index": 319,
+    "row": {
+      "id": "0fdb23da-c70b-4f4e-b931-821235f3e2bd",
+      "patientId": "faba91d1-1411-4290-9fe8-dc1717de29ff",
+      "start": "2025-03-19T17:00:00.000Z",
+      "end": "2025-03-19T17:30:00.000Z",
+      "durationMinutes": 30,
+      "priceCents": 3000,
+      "status": "BOOKED",
+      "notes": "Cita generada a partir de bono/sesión existente",
+      "consumesCredit": 1,
+      "createdAt": "2025-08-29T07:16:53.006Z",
+      "updatedAt": "2025-08-29T07:16:53.006Z"
+    },
+    "error": {
+      "code": "23503",
+      "details": "Key (patientId)=(faba91d1-1411-4290-9fe8-dc1717de29ff) is not present in table \"patients\".",
+      "hint": null,
+      "message": "insert or update on table \"appointments\" violates foreign key constraint \"fk_appointments_patient\""
+    }
+  },
+  {
+    "index": 320,
+    "row": {
+      "id": "fc4eab7d-f8c1-4e99-8107-62125759beec",
+      "patientId": "faba91d1-1411-4290-9fe8-dc1717de29ff",
+      "start": "2025-04-20T09:00:00.000Z",
+      "end": "2025-04-20T09:30:00.000Z",
+      "durationMinutes": 30,
+      "priceCents": 3000,
+      "status": "BOOKED",
+      "notes": "Cita generada a partir de bono/sesión existente",
+      "consumesCredit": 1,
+      "createdAt": "2025-08-29T07:16:53.055Z",
+      "updatedAt": "2025-08-29T07:16:53.055Z"
+    },
+    "error": {
+      "code": "23503",
+      "details": "Key (patientId)=(faba91d1-1411-4290-9fe8-dc1717de29ff) is not present in table \"patients\".",
+      "hint": null,
+      "message": "insert or update on table \"appointments\" violates foreign key constraint \"fk_appointments_patient\""
+    }
+  }
+]
