@@ -17,14 +17,14 @@ Vercel ha activado automáticamente la protección de despliegue. Necesitas desa
 
 ### ✅ Frontend (Aplicación Web)
 
-- **URL**: https://clinic-frontend-5ox0ulz7i-davids-projects-8fa96e54.vercel.app
+- **URL**: https://clinic-frontend-4ztbquo0g-davids-projects-8fa96e54.vercel.app
 - **Estado**: ✅ Ready (Desplegado)
 - **Dashboard**: https://vercel.com/davids-projects-8fa96e54/clinic-frontend
 
 ### ✅ Backend (API)
 
-- **URL**: https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app
-- **Endpoint Health**: https://clinic-backend-6a8s7ud3d-davids-projects-8fa96e54.vercel.app/health
+- **URL**: https://clinic-backend-m6ikre53s-davids-projects-8fa96e54.vercel.app
+- **Endpoint Health**: https://clinic-backend-m6ikre53s-davids-projects-8fa96e54.vercel.app/health
 - **Estado**: ✅ Ready (Desplegado)
 - **Dashboard**: https://vercel.com/davids-projects-8fa96e54/clinic-backend
 
