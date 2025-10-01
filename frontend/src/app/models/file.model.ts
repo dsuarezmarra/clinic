@@ -1,14 +1,14 @@
 export interface PatientFile {
-    id: number;
-    patientId: number;
-    fileName: string;
+    id: string;
+    patientId: string;
     originalName: string;
-    fileSize: number;
+    storedPath: string;
     mimeType: string;
+    size: number;
     category: 'radiografia' | 'ecografia' | 'analitica' | 'informe' | 'otro';
     description?: string;
-    uploadDate: string;
-    filePath: string;
+    createdAt: string;
+    checksum?: string | null;
 }
 
 export interface FileUploadData {

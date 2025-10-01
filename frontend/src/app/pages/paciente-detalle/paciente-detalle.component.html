@@ -111,17 +111,17 @@
                                 </div>
                             </div>
                             <!-- Mostrar CP / Provincia / Localidad después de la dirección -->
-                            <div class="col-md-4 mb-2" *ngIf="patient.cp">
+                            <div class="col-md-4 mb-2">
                                 <label class="form-label text-muted small">CP</label>
-                                <div>{{ patient.cp }}</div>
+                                <div>{{ patient.cp || '-' }}</div>
                             </div>
-                            <div class="col-md-4 mb-2" *ngIf="patient.city">
+                            <div class="col-md-4 mb-2">
                                 <label class="form-label text-muted small">LOCALIDAD</label>
-                                <div>{{ patient.city }}</div>
+                                <div>{{ patient.city || '-' }}</div>
                             </div>
-                            <div class="col-md-4 mb-2" *ngIf="patient.province">
+                            <div class="col-md-4 mb-2">
                                 <label class="form-label text-muted small">PROVINCIA</label>
-                                <div>{{ patient.province }}</div>
+                                <div>{{ patient.province || '-' }}</div>
                             </div>
                         </div>
 
@@ -463,10 +463,11 @@
                                                                 <div class="me-3 flex-shrink-0">
                                                                     <div class="file-preview-container">
                                                                         <img *ngIf="isImageFile(file.mimeType)"
-                                                                            [src]="getFilePreviewUrl(file.id)"
+                                                                            [src]="file.storedPath"
                                                                             class="img-thumbnail file-preview"
                                                                             [alt]="file.originalName"
-                                                                            style="width: 60px; height: 60px; object-fit: cover;">
+                                                                            style="width: 60px; height: 60px; object-fit: cover;"
+                                                                            (error)="onImageError($event)">
                                                                         <div *ngIf="!isImageFile(file.mimeType)"
                                                                             class="file-icon-container d-flex align-items-center justify-content-center"
                                                                             style="width: 60px; height: 60px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
@@ -496,11 +497,11 @@
                                                                         class="d-flex align-items-center text-muted small">
                                                                         <span class="me-3">
                                                                             <i class="bi bi-calendar3 me-1"></i>
-                                                                            {{ file.uploadDate | date:'dd/MM/yyyy' }}
+                                                                            {{ file.createdAt | date:'dd/MM/yyyy' }}
                                                                         </span>
                                                                         <span>
                                                                             <i class="bi bi-file-earmark me-1"></i>
-                                                                            {{ formatFileSize(file.fileSize) }}
+                                                                            {{ formatFileSize(file.size) }}
                                                                         </span>
                                                                     </div>
                                                                 </div>

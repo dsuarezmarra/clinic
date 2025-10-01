@@ -431,12 +431,6 @@ export class CalendarComponent implements OnInit {
             durationMinutes: duration,
             consumesCredit: true
         };
-        console.log('Creando cita:', {
-            start: appointmentData.start,
-            end: appointmentData.end,
-            durationMinutes: appointmentData.durationMinutes,
-            diffMinutes: (new Date(appointmentData.end).getTime() - new Date(appointmentData.start).getTime()) / (1000 * 60)
-        });
         this.appointmentService.createAppointment(appointmentData).subscribe({
             next: (appointment) => {
                 this.notificationService.showSuccess('Cita creada exitosamente');

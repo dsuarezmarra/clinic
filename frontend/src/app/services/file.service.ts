@@ -30,19 +30,19 @@ export class FileService {
     }
 
     // Descargar archivo
-    downloadFile(fileId: number): Observable<Blob> {
+    downloadFile(fileId: string): Observable<Blob> {
         return this.http.get(`${this.apiUrl}/${fileId}/download`, {
             responseType: 'blob'
         });
     }
 
     // Eliminar archivo
-    deleteFile(fileId: number): Observable<void> {
+    deleteFile(fileId: string): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${fileId}`);
     }
 
     // Obtener URL de vista previa
-    getFilePreviewUrl(fileId: number): string {
+    getFilePreviewUrl(fileId: string): string {
         return `${this.apiUrl}/${fileId}/preview`;
     }
 

@@ -576,8 +576,14 @@ export class PacienteDetalleComponent implements OnInit {
         return mimeType.startsWith('image/');
     }
 
-    getFilePreviewUrl(fileId: number): string {
+    getFilePreviewUrl(fileId: string): string {
         return this.fileService.getFilePreviewUrl(fileId);
+    }
+
+    onImageError(event: any) {
+        console.error('Error loading image:', event);
+        // Ocultar la imagen si falla
+        event.target.style.display = 'none';
     }
 
     // Métodos legacy que aún se usan en el HTML

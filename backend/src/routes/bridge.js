@@ -3,6 +3,13 @@
 
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
+
+// Configurar multer para manejar archivos en memoria
+const upload = multer({ 
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 500 * 1024 * 1024 } // 10MB límite
+});
 
 // Helper para hacer requests a Supabase REST API
 async function supabaseFetch(endpoint, options = {}) {
@@ -26,10 +33,20 @@ async function supabaseFetch(endpoint, options = {}) {
     }
   });
   
-  const data = await response.json();
+  // Solo intentar parsear JSON si hay contenido
+  let data = null;
+  const contentType = response.headers.get('content-type');
+  const contentLength = response.headers.get('content-length');
+  
+  if (contentType?.includes('application/json') && contentLength !== '0') {
+    const text = await response.text();
+    if (text) {
+      data = JSON.parse(text);
+    }
+  }
   
   if (!response.ok) {
-    throw new Error(data.message || `Supabase error: ${response.status}`);
+    throw new Error(data?.message || `Supabase error: ${response.status}`);
   }
   
   // Extraer count de content-range header si existe
@@ -231,7 +248,8 @@ router.get('/appointments', async (req, res) => {
     const { from, to, patientId, page = 1, limit = 100 } = req.query;
     const offset = (page - 1) * limit;
     
-    let endpoint = `appointments?select=*&order=start.asc&limit=${limit}&offset=${offset}`;
+    // Incluir relaciones: patient, creditRedemptions con creditPack
+    let endpoint = `appointments?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.asc&limit=${limit}&offset=${offset}`;
     
     // Filtros
     if (from) {
@@ -248,8 +266,30 @@ router.get('/appointments', async (req, res) => {
       headers: { 'Prefer': 'count=exact' }
     });
     
+    // Mapear las relaciones a los nombres esperados por el frontend
+    const mapped = (appointments || []).map(apt => ({
+      ...apt,
+      patient: apt.patients || null,
+      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
+        ...cr,
+        creditPack: cr.credit_packs || null,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      }))
+    }));
+    
+    // Eliminar las propiedades originales con guiones bajos
+    mapped.forEach(apt => {
+      delete apt.patients;
+      delete apt.credit_redemptions;
+      if (apt.creditRedemptions) {
+        apt.creditRedemptions.forEach(cr => {
+          delete cr.credit_packs;
+        });
+      }
+    });
+    
     res.json({
-      appointments,
+      appointments: mapped,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -266,10 +306,33 @@ router.get('/appointments', async (req, res) => {
 // GET /api/appointments/all - Obtener todas las citas (DEBE ESTAR ANTES DE /:id)
 router.get('/appointments/all', async (req, res) => {
   try {
-    const endpoint = `appointments?select=*&order=start.asc`;
+    // Incluir relaciones: patient, creditRedemptions con creditPack
+    const endpoint = `appointments?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
-    res.json(appointments || []);
+    // Mapear las relaciones a los nombres esperados por el frontend
+    const mapped = (appointments || []).map(apt => ({
+      ...apt,
+      patient: apt.patients || null,
+      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
+        ...cr,
+        creditPack: cr.credit_packs || null,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      }))
+    }));
+    
+    // Eliminar las propiedades originales con guiones bajos
+    mapped.forEach(apt => {
+      delete apt.patients;
+      delete apt.credit_redemptions;
+      if (apt.creditRedemptions) {
+        apt.creditRedemptions.forEach(cr => {
+          delete cr.credit_packs;
+        });
+      }
+    });
+    
+    res.json(mapped);
   } catch (error) {
     console.error('Error fetching all appointments:', error);
     res.status(500).json({ error: error.message });
@@ -304,10 +367,33 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
     
-    const endpoint = `appointments?patientId=eq.${patientId}&select=*&order=start.desc`;
+    // Incluir relaciones: patient, creditRedemptions con creditPack
+    const endpoint = `appointments?patientId=eq.${patientId}&select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
-    res.json(appointments || []);
+    // Mapear las relaciones a los nombres esperados por el frontend
+    const mapped = (appointments || []).map(apt => ({
+      ...apt,
+      patient: apt.patients || null,
+      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
+        ...cr,
+        creditPack: cr.credit_packs || null,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      }))
+    }));
+    
+    // Eliminar las propiedades originales con guiones bajos
+    mapped.forEach(apt => {
+      delete apt.patients;
+      delete apt.credit_redemptions;
+      if (apt.creditRedemptions) {
+        apt.creditRedemptions.forEach(cr => {
+          delete cr.credit_packs;
+        });
+      }
+    });
+    
+    res.json(mapped);
   } catch (error) {
     console.error('Error fetching patient appointments:', error);
     res.status(500).json({ error: error.message });
@@ -319,14 +405,36 @@ router.get('/appointments/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const endpoint = `appointments?id=eq.${id}&select=*`;
+    // Incluir relaciones: patient, creditRedemptions con creditPack
+    const endpoint = `appointments?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
     const { data } = await supabaseFetch(endpoint);
     
     if (!data || data.length === 0) {
       return res.status(404).json({ error: 'Cita no encontrada' });
     }
     
-    res.json(data[0]);
+    // Mapear las relaciones a los nombres esperados por el frontend
+    const apt = data[0];
+    const mapped = {
+      ...apt,
+      patient: apt.patients || null,
+      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
+        ...cr,
+        creditPack: cr.credit_packs || null,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      }))
+    };
+    
+    // Eliminar las propiedades originales con guiones bajos
+    delete mapped.patients;
+    delete mapped.credit_redemptions;
+    if (mapped.creditRedemptions) {
+      mapped.creditRedemptions.forEach(cr => {
+        delete cr.credit_packs;
+      });
+    }
+    
+    res.json(mapped);
   } catch (error) {
     console.error('Error fetching appointment:', error);
     res.status(500).json({ error: error.message });
@@ -413,12 +521,26 @@ router.get('/credits', async (req, res) => {
     const remainingUnits = packs.reduce((sum, p) => sum + (p.unitsRemaining || 0), 0);
     const usedUnits = totalUnits - remainingUnits;
     
+    // Convertir unidades a tiempo
+    const formatTime = (units) => {
+      const hours = Math.floor(units / 2);
+      const minutes = (units % 2) * 30;
+      if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+      if (hours > 0) return `${hours}h`;
+      return `${minutes}m`;
+    };
+    
     res.json({
       patientId,
-      totalUnits,
-      usedUnits,
-      remainingUnits,
-      packs
+      summary: {
+        totalCreditsOriginal: totalUnits,
+        totalCreditsRemaining: remainingUnits,
+        totalCreditsUsed: usedUnits,
+        totalTimeOriginal: formatTime(totalUnits),
+        totalTimeRemaining: formatTime(remainingUnits),
+        totalTimeUsed: formatTime(usedUnits)
+      },
+      creditPacks: packs
     });
   } catch (error) {
     console.error('Error fetching credits:', error);
@@ -426,10 +548,15 @@ router.get('/credits', async (req, res) => {
     if (error.message?.includes('does not exist') || error.message?.includes('relation')) {
       return res.json({
         patientId: req.query.patientId,
-        totalUnits: 0,
-        usedUnits: 0,
-        remainingUnits: 0,
-        packs: []
+        summary: {
+          totalCreditsOriginal: 0,
+          totalCreditsRemaining: 0,
+          totalCreditsUsed: 0,
+          totalTimeOriginal: '0m',
+          totalTimeRemaining: '0m',
+          totalTimeUsed: '0m'
+        },
+        creditPacks: []
       });
     }
     res.status(500).json({ error: error.message });
@@ -439,12 +566,36 @@ router.get('/credits', async (req, res) => {
 // POST /api/credits/packs - Crear nuevo pack de créditos
 router.post('/credits/packs', async (req, res) => {
   try {
+    const { patientId, type, minutes, quantity, paid, notes } = req.body;
+    
+    // Calcular unidades totales (1 unidad = 30 minutos)
+    const unitsPerItem = minutes / 30;
+    const unitsTotal = type === 'bono' 
+      ? (minutes === 60 ? quantity * 10 : quantity * 5) 
+      : unitsPerItem;
+    
+    // Generar label
+    let label;
+    if (type === 'sesion') {
+      // Para sesiones: "Sesión 1x30min" o "Sesión 1x60min"
+      label = `Sesión 1x${minutes}min`;
+    } else {
+      // Para bonos: usar la cantidad ingresada por el usuario
+      // "Bono 5x30min" o "Bono 5x60min"
+      label = `Bono ${quantity}x${minutes}min`;
+    }
+    
     const packData = {
-      ...req.body,
-      unitsRemaining: req.body.unitsTotal,
-      paid: req.body.paid || false,
+      patientId,
+      label,
+      unitsTotal,
+      unitsRemaining: unitsTotal,
+      paid: paid || false,
+      notes: notes || null,
       createdAt: new Date().toISOString()
     };
+    
+    console.log('Creating credit pack:', packData);
     
     const { data } = await supabaseFetch('credit_packs', {
       method: 'POST',
@@ -596,7 +747,16 @@ router.get('/files/patient/:patientId', async (req, res) => {
     const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
     
-    res.json(files || []);
+    // Para archivos de imagen, generar thumbnail más pequeño del storedPath
+    const processedFiles = (files || []).map(file => {
+      if (file.mimeType && file.mimeType.startsWith('image/') && file.storedPath) {
+        // Mantener el storedPath completo para que Angular lo muestre
+        return file;
+      }
+      return file;
+    });
+    
+    res.json(processedFiles);
   } catch (error) {
     console.error('Error fetching files:', error);
     res.status(500).json({ error: error.message });
@@ -604,20 +764,26 @@ router.get('/files/patient/:patientId', async (req, res) => {
 });
 
 // POST /api/files/patient/:patientId - Subir archivo (DEBE ESTAR ANTES DE /:fileId)
-router.post('/files/patient/:patientId', async (req, res) => {
+router.post('/files/patient/:patientId', upload.single('file'), async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { originalName, storedPath, mimeType, size, category, description, checksum } = req.body;
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+    
+    // Convertir archivo a Base64 para almacenar en storedPath
+    const base64Data = req.file.buffer.toString('base64');
     
     const fileData = {
       patientId,
-      originalName: originalName || 'archivo.dat',
-      storedPath: storedPath || '',
-      mimeType: mimeType || 'application/octet-stream',
-      size: size || 0,
-      category: category || 'otro',
-      description: description || '',
-      checksum: checksum || null,
+      originalName: req.file.originalname,
+      storedPath: `data:${req.file.mimetype};base64,${base64Data}`,
+      mimeType: req.file.mimetype,
+      size: req.file.size,
+      category: req.body.category || 'otro',
+      description: req.body.description || '',
+      checksum: null,
       createdAt: new Date().toISOString()
     };
     
@@ -629,6 +795,41 @@ router.post('/files/patient/:patientId', async (req, res) => {
     res.status(201).json(data[0]);
   } catch (error) {
     console.error('Error uploading file:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/files/:fileId/preview - Vista previa de archivo (ESPECÍFICO - ANTES DE /download)
+router.get('/files/:fileId/preview', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    
+    const endpoint = `patient_files?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
+    const { data: files } = await supabaseFetch(endpoint);
+    
+    if (!files || files.length === 0) {
+      return res.status(404).json({ error: 'Archivo no encontrado' });
+    }
+    
+    const file = files[0];
+    
+    // Extraer el Base64 del data URI
+    let base64Data = file.storedPath;
+    if (base64Data.includes(',')) {
+      base64Data = base64Data.split(',')[1];
+    }
+    
+    // Convertir Base64 a Buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Configurar headers para visualización inline
+    res.setHeader('Content-Type', file.mimeType);
+    res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.originalName)}"`);
+    res.setHeader('Content-Length', buffer.length);
+    
+    res.send(buffer);
+  } catch (error) {
+    console.error('Error previewing file:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -646,11 +847,22 @@ router.get('/files/:fileId/download', async (req, res) => {
     }
     
     const file = files[0];
-    res.json({
-      originalName: file.originalName,
-      mimeType: file.mimeType,
-      storedPath: file.storedPath
-    });
+    
+    // Extraer el Base64 del data URI (formato: data:mime;base64,xxxxx)
+    let base64Data = file.storedPath;
+    if (base64Data.includes(',')) {
+      base64Data = base64Data.split(',')[1];
+    }
+    
+    // Convertir Base64 a Buffer
+    const buffer = Buffer.from(base64Data, 'base64');
+    
+    // Configurar headers para descarga
+    res.setHeader('Content-Type', file.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.originalName)}"`);
+    res.setHeader('Content-Length', buffer.length);
+    
+    res.send(buffer);
   } catch (error) {
     console.error('Error downloading file:', error);
     res.status(500).json({ error: error.message });

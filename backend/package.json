@@ -9,11 +9,10 @@
     "build": "echo 'Build script for production'",
     "seed": "echo 'NOTE: seed script deprecated - use scripts/wipe-and-seed or migrate legacy data'",
     "fetch:municipios": "node scripts/fetch_municipios.js",
-    
     "backup": "node backup-manual.js",
     "backup:create": "node backup-manual.js",
     "backup:list": "node -e \"const {DatabaseBackup} = require('./scripts/backup'); const b = new DatabaseBackup(); console.log(JSON.stringify(b.listBackups(), null, 2))\"",
-  "migrate:sqlite-to-postgres": "echo 'LEGACY: this script required sqlite/prisma; see backend/scripts/migrate-sqlite-to-postgres.js'",
+    "migrate:sqlite-to-postgres": "echo 'LEGACY: this script required sqlite/prisma; see backend/scripts/migrate-sqlite-to-postgres.js'",
     "import:csv": "node scripts/import-csv-to-postgres.js",
     "check:db": "node scripts/check-postgres-db.js",
     "wipe-and-seed": "node scripts/wipe-and-seed-postgres.js"

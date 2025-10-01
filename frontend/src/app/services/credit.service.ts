@@ -3,9 +3,9 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/app.config';
 import {
-  CreateCreditPackRequest,
-  CreditHistoryResponse,
-  CreditSummary
+    CreateCreditPackRequest,
+    CreditHistoryResponse,
+    CreditSummary
 } from '../models/credit.model';
 
 @Injectable({
