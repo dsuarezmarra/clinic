@@ -91,12 +91,22 @@ app.get('/api/test-direct', async (req, res) => {
     }
     
     const supabase = createClient(
-      process.env.SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_KEY,
+      process.env.SUPABASE_URL.trim(),
+      process.env.SUPABASE_SERVICE_KEY.trim(),
       {
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        db: {
+          schema: 'public'
+        },
+        global: {
+          headers: {
+            'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY.trim()}`,
+            'apikey': process.env.SUPABASE_SERVICE_KEY.trim(),
+            'Prefer': 'return=representation'
+          }
         }
       }
     );
