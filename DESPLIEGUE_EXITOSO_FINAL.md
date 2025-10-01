@@ -9,11 +9,13 @@ Tu aplicación de Masaje Corporal Deportivo está **completamente desplegada y f
 ## 🌐 URLs DE PRODUCCIÓN
 
 ### Frontend (Angular)
+
 ```
 https://clinic-frontend-iegkougsr-davids-projects-8fa96e54.vercel.app
 ```
 
 ### Backend (Node.js + Express + Supabase)
+
 ```
 https://clinic-backend-4inv4yjsn-davids-projects-8fa96e54.vercel.app
 ```
@@ -32,14 +34,14 @@ https://clinic-backend-4inv4yjsn-davids-projects-8fa96e54.vercel.app
 
 ## 🔧 TECNOLOGÍAS DESPLEGADAS
 
-| Componente | Tecnología | Estado |
-|------------|-----------|--------|
-| Frontend | Angular 20.2.1 | ✅ Funcionando |
-| Backend | Node.js 18 + Express 4.18.2 | ✅ Funcionando |
-| Base de Datos | Supabase PostgreSQL | ✅ Funcionando |
-| Hosting | Vercel (Free Tier) | ✅ Funcionando |
-| SSL/HTTPS | Automático (Vercel) | ✅ Funcionando |
-| CDN Global | Vercel Edge Network | ✅ Funcionando |
+| Componente    | Tecnología                  | Estado         |
+| ------------- | --------------------------- | -------------- |
+| Frontend      | Angular 20.2.1              | ✅ Funcionando |
+| Backend       | Node.js 18 + Express 4.18.2 | ✅ Funcionando |
+| Base de Datos | Supabase PostgreSQL         | ✅ Funcionando |
+| Hosting       | Vercel (Free Tier)          | ✅ Funcionando |
+| SSL/HTTPS     | Automático (Vercel)         | ✅ Funcionando |
+| CDN Global    | Vercel Edge Network         | ✅ Funcionando |
 
 ---
 
@@ -50,6 +52,7 @@ Debido a un bug del SDK `@supabase/supabase-js` en Vercel Serverless Functions, 
 ### Endpoints Funcionales:
 
 #### Pacientes
+
 - `GET /api/patients` - Listar pacientes (con paginación y búsqueda)
 - `GET /api/patients/:id` - Obtener un paciente
 - `POST /api/patients` - Crear paciente
@@ -57,6 +60,7 @@ Debido a un bug del SDK `@supabase/supabase-js` en Vercel Serverless Functions, 
 - `DELETE /api/patients/:id` - Eliminar paciente
 
 #### Citas
+
 - `GET /api/appointments` - Listar citas (con filtros de fecha)
 - `GET /api/appointments/:id` - Obtener una cita
 - `POST /api/appointments` - Crear cita
@@ -64,6 +68,7 @@ Debido a un bug del SDK `@supabase/supabase-js` en Vercel Serverless Functions, 
 - `DELETE /api/appointments/:id` - Eliminar cita
 
 #### Créditos
+
 - `GET /api/credits` - Listar packs de créditos
 - `POST /api/credits` - Crear pack de créditos
 - `PUT /api/credits/:id` - Actualizar pack
@@ -73,11 +78,13 @@ Debido a un bug del SDK `@supabase/supabase-js` en Vercel Serverless Functions, 
 ## 🔐 CONFIGURACIÓN DE SEGURIDAD
 
 ### Supabase
+
 - ✅ Row Level Security (RLS) desactivado
 - ✅ Permisos de `service_role` otorgados
 - ✅ SERVICE_KEY correctamente configurada
 
 ### Vercel
+
 - ✅ Variables de entorno configuradas
 - ✅ Vercel Authentication deshabilitada
 - ✅ CORS configurado correctamente
@@ -87,6 +94,7 @@ Debido a un bug del SDK `@supabase/supabase-js` en Vercel Serverless Functions, 
 ## 📋 PRUEBAS REALIZADAS
 
 ### ✅ Backend
+
 ```powershell
 # Test de pacientes
 Invoke-RestMethod -Uri "https://clinic-backend-4inv4yjsn-davids-projects-8fa96e54.vercel.app/api/patients?limit=5"
@@ -99,6 +107,7 @@ Invoke-RestMethod -Uri "https://clinic-backend-4inv4yjsn-davids-projects-8fa96e5
 ```
 
 ### ✅ Frontend
+
 - Accede a la URL del frontend
 - Verifica que carga correctamente
 - Navega a "Pacientes"
@@ -109,11 +118,13 @@ Invoke-RestMethod -Uri "https://clinic-backend-4inv4yjsn-davids-projects-8fa96e5
 ## 📁 ARCHIVOS IMPORTANTES
 
 ### Backend
+
 - `backend/api/index.js` - Entry point para Vercel
 - `backend/src/routes/bridge.js` - Rutas optimizadas con fetch directo
 - `backend/vercel.json` - Configuración de Vercel
 
 ### Frontend
+
 - `frontend/src/environments/environment.prod.ts` - URL del backend
 - `frontend/vercel.json` - Configuración de Vercel
 
@@ -122,6 +133,7 @@ Invoke-RestMethod -Uri "https://clinic-backend-4inv4yjsn-davids-projects-8fa96e5
 ## 🔄 PROCESO DE ACTUALIZACIÓN
 
 ### Para actualizar el backend:
+
 ```powershell
 cd backend
 # Hacer cambios en el código
@@ -132,6 +144,7 @@ vercel --prod
 ```
 
 ### Para actualizar el frontend:
+
 ```powershell
 cd frontend
 # Hacer cambios en el código
@@ -146,14 +159,17 @@ vercel --prod
 ## 🚨 PROBLEMAS CONOCIDOS Y SOLUCIONES
 
 ### 1. "No API key found in request"
+
 **Causa**: SDK de Supabase no funciona en Vercel Serverless  
 **Solución**: Usar las bridge routes (ya implementado)
 
 ### 2. "permission denied for schema public"
+
 **Causa**: Falta otorgar permisos a service_role  
 **Solución**: Ejecutar el SQL en `backend/fix-service-role-permissions.sql`
 
 ### 3. Variables de entorno no se actualizan
+
 **Causa**: Vercel cachea las variables  
 **Solución**: Hacer un redeploy después de cambiar variables
 
@@ -162,19 +178,25 @@ vercel --prod
 ## 📞 PRÓXIMOS PASOS OPCIONALES
 
 ### 1. Dominio Personalizado
+
 Puedes configurar un dominio personalizado en Vercel:
+
 1. Ve a tu proyecto en Vercel Dashboard
 2. Settings → Domains
 3. Agrega tu dominio (ej: `clinica.tudominio.com`)
 
 ### 2. Monitoreo
+
 Vercel incluye:
+
 - Analytics integrado
 - Logs en tiempo real
 - Métricas de rendimiento
 
 ### 3. CI/CD Automático
+
 Si conectas tu repo de GitHub a Vercel:
+
 - Cada push a `main` despliega automáticamente
 - Pull requests crean previews automáticas
 
@@ -189,6 +211,7 @@ Si conectas tu repo de GitHub a Vercel:
 ✅ **COMPLETADO AL 100%**
 
 Tu aplicación está:
+
 - ✅ Desplegada en Vercel (hosting gratuito)
 - ✅ Accesible mediante URLs HTTPS
 - ✅ Con base de datos PostgreSQL en la nube (Supabase)
