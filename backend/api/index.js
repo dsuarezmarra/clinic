@@ -203,31 +203,31 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     console.log('   SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '✅ Configurado' : '❌ NO configurado');
     console.log('   USE_SUPABASE:', process.env.USE_SUPABASE);
     
-    // ⚠️ IMPORTANTE: Aplicar middleware de database ANTES de las rutas
+    // 🌉 BRIDGE ROUTES: Usar fetch directo (funciona en Vercel)
+    const bridgeRoutes = require('../src/routes/bridge');
+    app.use('/api', bridgeRoutes);
+    console.log('✅ Bridge routes (fetch directo) cargadas');
+    
+    // ⚠️ IMPORTANTE: Aplicar middleware de database ANTES de las rutas legacy
     const databaseMiddleware = require('../src/middleware/database-middleware');
     app.use(databaseMiddleware);
     console.log('✅ Middleware de database aplicado');
     
-    const patientsRoutes = require('../src/routes/patients');
-    const appointmentsRoutes = require('../src/routes/appointments');
-    const creditsRoutes = require('../src/routes/credits');
+    // Rutas legacy (con SDK - pueden no funcionar en Vercel)
     const configRoutes = require('../src/routes/config');
     const locationsRoutes = require('../src/routes/locations');
     const backupRoutes = require('../src/routes/backup');
     const filesRoutes = require('../src/routes/files');
     const reportsRoutes = require('../src/routes/reports');
 
-    // Registrar rutas
-    app.use('/api/patients', patientsRoutes);
-    app.use('/api/appointments', appointmentsRoutes);
-    app.use('/api/credits', creditsRoutes);
+    // Registrar rutas legacy
     app.use('/api/config', configRoutes);
     app.use('/api/locations', locationsRoutes);
     app.use('/api/backup', backupRoutes);
     app.use('/api/files', filesRoutes);
     app.use('/api/reports', reportsRoutes);
 
-    console.log('✅ Rutas cargadas correctamente');
+    console.log('✅ Todas las rutas cargadas correctamente');
   } catch (error) {
     console.error('⚠️  Error cargando rutas:', error.message);
     console.error('Las rutas de API no estarán disponibles hasta configurar las variables de entorno');

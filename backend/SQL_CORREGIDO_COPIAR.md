@@ -13,13 +13,13 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO service_role;
 GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO service_role;
 
 -- Otorgar permisos sobre futuras tablas
-ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT ALL PRIVILEGES ON TABLES TO service_role;
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT ALL PRIVILEGES ON SEQUENCES TO service_role;
 
-ALTER DEFAULT PRIVILEGES IN SCHEMA public 
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
     GRANT ALL PRIVILEGES ON FUNCTIONS TO service_role;
 
 -- Asegurar permisos en tablas específicas
@@ -33,7 +33,7 @@ GRANT ALL ON invoices TO service_role;
 GRANT ALL ON invoice_items TO service_role;
 
 -- Verificar permisos (CORREGIDO)
-SELECT 
+SELECT
     table_schema,
     table_name,
     array_agg(DISTINCT privilege_type) as privileges
