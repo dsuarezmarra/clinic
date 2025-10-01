@@ -3,12 +3,15 @@
 ## ✅ URLs Actualizadas (Octubre 1, 2025 - 16:05)
 
 ### 🌐 Frontend (Angular PWA)
+
 ```
 https://clinic-frontend-ed6cb0xjk-davids-projects-8fa96e54.vercel.app
 ```
+
 **Esta es la URL que debes usar para acceder a tu aplicación**
 
 ### 🔧 Backend (Node.js + Express + Supabase)
+
 ```
 https://clinic-backend-4inv4yjsn-davids-projects-8fa96e54.vercel.app
 ```
@@ -18,11 +21,13 @@ https://clinic-backend-4inv4yjsn-davids-projects-8fa96e54.vercel.app
 ## 📋 Verificación
 
 ### Test del Backend:
+
 ```powershell
 Invoke-RestMethod -Uri "https://clinic-backend-4inv4yjsn-davids-projects-8fa96e54.vercel.app/api/patients?limit=3"
 ```
 
 Debería devolver:
+
 ```json
 {
   "patients": [...],
@@ -37,10 +42,10 @@ Debería devolver:
 
 ## 🎯 Configuración Actual
 
-| Archivo | URL Configurada |
-|---------|----------------|
+| Archivo                                         | URL Configurada   |
+| ----------------------------------------------- | ----------------- |
 | `frontend/src/environments/environment.prod.ts` | ✅ Backend Vercel |
-| `frontend/src/environments/environment.ts` | ✅ Backend Vercel |
+| `frontend/src/environments/environment.ts`      | ✅ Backend Vercel |
 
 ---
 
@@ -49,6 +54,7 @@ Debería devolver:
 **NO uses `localhost:3000` ni `localhost:4200`**
 
 Siempre accede desde la URL de Vercel:
+
 ```
 https://clinic-frontend-ed6cb0xjk-davids-projects-8fa96e54.vercel.app
 ```
@@ -58,6 +64,7 @@ https://clinic-frontend-ed6cb0xjk-davids-projects-8fa96e54.vercel.app
 ## 🔄 Si necesitas actualizar:
 
 ### Frontend:
+
 ```powershell
 cd frontend
 git add .
@@ -67,6 +74,7 @@ vercel --prod
 ```
 
 ### Backend:
+
 ```powershell
 cd backend
 git add .
