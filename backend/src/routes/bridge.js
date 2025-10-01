@@ -195,7 +195,58 @@ router.get('/appointments', async (req, res) => {
   }
 });
 
-// GET /api/appointments/:id - Obtener una cita
+// GET /api/appointments/all - Obtener todas las citas (DEBE ESTAR ANTES DE /:id)
+router.get('/appointments/all', async (req, res) => {
+  try {
+    const endpoint = `appointments?select=*&order=start.asc`;
+    const { data: appointments } = await supabaseFetch(endpoint);
+    
+    res.json(appointments || []);
+  } catch (error) {
+    console.error('Error fetching all appointments:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/appointments/conflicts/check - Verificar conflictos (DEBE ESTAR ANTES DE /:id)
+router.get('/appointments/conflicts/check', async (req, res) => {
+  try {
+    const { start, end, excludeId } = req.query;
+    
+    let endpoint = `appointments?start=lte.${end}&end=gte.${start}&select=id,start,end,patientId`;
+    
+    if (excludeId) {
+      endpoint += `&id=neq.${excludeId}`;
+    }
+    
+    const { data: conflicts } = await supabaseFetch(endpoint);
+    
+    res.json({
+      hasConflict: conflicts && conflicts.length > 0,
+      conflicts: conflicts || []
+    });
+  } catch (error) {
+    console.error('Error checking conflicts:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/appointments/patient/:patientId - Citas de un paciente (DEBE ESTAR ANTES DE /:id)
+router.get('/appointments/patient/:patientId', async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    
+    const endpoint = `appointments?patientId=eq.${patientId}&select=*&order=start.desc`;
+    const { data: appointments } = await supabaseFetch(endpoint);
+    
+    res.json(appointments || []);
+  } catch (error) {
+    console.error('Error fetching patient appointments:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/appointments/:id - Obtener una cita (DEBE ESTAR DESPUÉS DE LAS RUTAS ESPECÍFICAS)
 router.get('/appointments/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -451,61 +502,6 @@ router.get('/credits/history', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching credit history:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================================
-// APPOINTMENTS - ENDPOINTS ADICIONALES
-// ============================================================
-
-// GET /api/appointments/all - Obtener todas las citas
-router.get('/appointments/all', async (req, res) => {
-  try {
-    const endpoint = `appointments?select=*&order=start.asc`;
-    const { data: appointments } = await supabaseFetch(endpoint);
-    
-    res.json(appointments);
-  } catch (error) {
-    console.error('Error fetching all appointments:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/appointments/patient/:patientId - Citas de un paciente
-router.get('/appointments/patient/:patientId', async (req, res) => {
-  try {
-    const { patientId } = req.params;
-    
-    const endpoint = `appointments?patientId=eq.${patientId}&select=*&order=start.desc`;
-    const { data: appointments } = await supabaseFetch(endpoint);
-    
-    res.json(appointments);
-  } catch (error) {
-    console.error('Error fetching patient appointments:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/appointments/conflicts/check - Verificar conflictos
-router.get('/appointments/conflicts/check', async (req, res) => {
-  try {
-    const { start, end, excludeId } = req.query;
-    
-    let endpoint = `appointments?start=lte.${end}&end=gte.${start}&select=id,start,end,patientId`;
-    
-    if (excludeId) {
-      endpoint += `&id=neq.${excludeId}`;
-    }
-    
-    const { data: conflicts } = await supabaseFetch(endpoint);
-    
-    res.json({
-      hasConflict: conflicts && conflicts.length > 0,
-      conflicts: conflicts || []
-    });
-  } catch (error) {
-    console.error('Error checking conflicts:', error);
     res.status(500).json({ error: error.message });
   }
 });
