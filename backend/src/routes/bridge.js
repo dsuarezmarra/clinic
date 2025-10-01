@@ -76,7 +76,72 @@ router.get('/patients', async (req, res) => {
   }
 });
 
-// GET /api/patients/:id - Obtener un paciente por ID
+// ============================================================
+// PATIENT FILES ENDPOINTS (DEBEN ESTAR ANTES DE /patients/:id)
+// ============================================================
+
+// GET /api/patients/:patientId/files - Listar archivos de un paciente
+router.get('/patients/:patientId/files', async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    
+    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=uploadedAt.desc`;
+    const { data: files } = await supabaseFetch(endpoint);
+    
+    res.json(files || []);
+  } catch (error) {
+    console.error('Error fetching patient files:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/patients/:patientId/files - Subir archivo (sin Supabase Storage)
+router.post('/patients/:patientId/files', async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { fileName, fileType, fileSize, base64Data } = req.body;
+    
+    // Guardar metadata en la tabla patient_files
+    const fileData = {
+      patientId,
+      fileName,
+      fileType,
+      fileSize,
+      base64Data, // Guardamos directamente en la BD (solo para archivos pequeños)
+      uploadedAt: new Date().toISOString()
+    };
+    
+    const { data } = await supabaseFetch('patient_files', {
+      method: 'POST',
+      body: JSON.stringify(fileData)
+    });
+    
+    res.status(201).json(data[0]);
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/patients/:patientId/files/:fileId - Eliminar archivo
+router.delete('/patients/:patientId/files/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    
+    const endpoint = `patient_files?id=eq.${fileId}`;
+    await supabaseFetch(endpoint, {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/patients/:id - Obtener un paciente por ID (DEBE ESTAR DESPUÉS DE RUTAS ESPECÍFICAS)
 router.get('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -507,11 +572,11 @@ router.get('/credits/history', async (req, res) => {
 });
 
 // ============================================================
-// PATIENT FILES ENDPOINTS
+// FILE ENDPOINTS (GLOBAL) - ORDEN ESPECÍFICO A GENÉRICO
 // ============================================================
 
-// GET /api/patients/:patientId/files - Listar archivos de un paciente
-router.get('/patients/:patientId/files', async (req, res) => {
+// GET /api/files/patient/:patientId - Listar archivos por paciente (DEBE ESTAR ANTES DE /:fileId)
+router.get('/files/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
     
@@ -520,24 +585,23 @@ router.get('/patients/:patientId/files', async (req, res) => {
     
     res.json(files || []);
   } catch (error) {
-    console.error('Error fetching patient files:', error);
+    console.error('Error fetching files:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// POST /api/patients/:patientId/files - Subir archivo (sin Supabase Storage)
-router.post('/patients/:patientId/files', async (req, res) => {
+// POST /api/files/patient/:patientId - Subir archivo (DEBE ESTAR ANTES DE /:fileId)
+router.post('/files/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
     const { fileName, fileType, fileSize, base64Data } = req.body;
     
-    // Guardar metadata en la tabla patient_files
     const fileData = {
       patientId,
       fileName,
       fileType,
       fileSize,
-      base64Data, // Guardamos directamente en la BD (solo para archivos pequeños)
+      base64Data,
       uploadedAt: new Date().toISOString()
     };
     
@@ -553,25 +617,7 @@ router.post('/patients/:patientId/files', async (req, res) => {
   }
 });
 
-// DELETE /api/patients/:patientId/files/:fileId - Eliminar archivo
-router.delete('/patients/:patientId/files/:fileId', async (req, res) => {
-  try {
-    const { fileId } = req.params;
-    
-    const endpoint = `patient_files?id=eq.${fileId}`;
-    await supabaseFetch(endpoint, {
-      method: 'DELETE',
-      headers: { 'Prefer': 'return=minimal' }
-    });
-    
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting file:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/files/:fileId/download - Descargar archivo
+// GET /api/files/:fileId/download - Descargar archivo (ESPECÍFICO - ANTES DE /:fileId)
 router.get('/files/:fileId/download', async (req, res) => {
   try {
     const { fileId } = req.params;
@@ -591,6 +637,24 @@ router.get('/files/:fileId/download', async (req, res) => {
     });
   } catch (error) {
     console.error('Error downloading file:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE /api/files/:fileId - Eliminar archivo (GENÉRICO - DEBE ESTAR AL FINAL)
+router.delete('/files/:fileId', async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    
+    const endpoint = `patient_files?id=eq.${fileId}`;
+    await supabaseFetch(endpoint, {
+      method: 'DELETE',
+      headers: { 'Prefer': 'return=minimal' }
+    });
+    
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting file:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1039,70 +1103,6 @@ router.delete('/backup/delete/:fileName', async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting backup:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// ============================================================
-// FILE SERVICE ENDPOINTS (adicionales)
-// ============================================================
-
-// GET /api/files/patient/:patientId - Listar archivos (alternativa)
-router.get('/files/patient/:patientId', async (req, res) => {
-  try {
-    const { patientId } = req.params;
-    
-    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=uploadedAt.desc`;
-    const { data: files } = await supabaseFetch(endpoint);
-    
-    res.json(files || []);
-  } catch (error) {
-    console.error('Error fetching files:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// POST /api/files/patient/:patientId - Subir archivo (alternativa)
-router.post('/files/patient/:patientId', async (req, res) => {
-  try {
-    const { patientId } = req.params;
-    const { fileName, fileType, fileSize, base64Data } = req.body;
-    
-    const fileData = {
-      patientId,
-      fileName,
-      fileType,
-      fileSize,
-      base64Data,
-      uploadedAt: new Date().toISOString()
-    };
-    
-    const { data } = await supabaseFetch('patient_files', {
-      method: 'POST',
-      body: JSON.stringify(fileData)
-    });
-    
-    res.status(201).json(data[0]);
-  } catch (error) {
-    console.error('Error uploading file:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// DELETE /api/files/:fileId - Eliminar archivo (alternativa)
-router.delete('/files/:fileId', async (req, res) => {
-  try {
-    const { fileId } = req.params;
-    
-    const endpoint = `patient_files?id=eq.${fileId}`;
-    await supabaseFetch(endpoint, {
-      method: 'DELETE',
-      headers: { 'Prefer': 'return=minimal' }
-    });
-    
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting file:', error);
     res.status(500).json({ error: error.message });
   }
 });
