@@ -56,9 +56,16 @@ app.get('/health', (req, res) => {
 // Importar rutas solo si hay DB configurada
 if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
   try {
+    console.log('🔧 Configurando base de datos...');
+    console.log('   DATABASE_URL:', process.env.DATABASE_URL ? '✅ Configurado' : '❌ NO configurado');
+    console.log('   SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Configurado' : '❌ NO configurado');
+    console.log('   SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '✅ Configurado' : '❌ NO configurado');
+    console.log('   USE_SUPABASE:', process.env.USE_SUPABASE);
+    
     // ⚠️ IMPORTANTE: Aplicar middleware de database ANTES de las rutas
     const databaseMiddleware = require('../src/middleware/database-middleware');
     app.use(databaseMiddleware);
+    console.log('✅ Middleware de database aplicado');
     
     const patientsRoutes = require('../src/routes/patients');
     const appointmentsRoutes = require('../src/routes/appointments');
