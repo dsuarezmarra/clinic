@@ -4,7 +4,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist/clinic-frontend/browser",
   "devCommand": "ng serve --port 4300",
-  "installCommand": "npm install --legacy-peer-deps --omit=optional",
+  "installCommand": "npm install --legacy-peer-deps --force",
   "framework": "angular",
   "regions": ["cdg1"],
   "rewrites": [
