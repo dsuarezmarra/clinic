@@ -5,6 +5,7 @@
 Tu aplicación está desplegada correctamente, pero **Vercel Authentication está bloqueando el acceso**.
 
 Síntomas:
+
 - ✅ Backend funciona (cuando accedes desde el navegador con login)
 - ✅ Frontend carga correctamente
 - ❌ Frontend NO puede obtener datos del backend
@@ -19,13 +20,13 @@ Síntomas:
 1. **Abre esta URL**: https://vercel.com/davids-projects-8fa96e54/clinic-backend/settings/deployment-protection
 
 2. **Busca la sección "Vercel Authentication"**
+
    - Está en la parte superior de la página
    - Dice "Protect your Preview Deployments from unauthorized access"
 
 3. **Cambia el modo**:
    - Encontrarás un selector/toggle que dice "Enabled"
    - **Cámbialo a "Disabled"**
-   
 4. **Guarda los cambios**:
    - Haz clic en el botón "Save" o "Save Changes"
 
@@ -49,11 +50,13 @@ Después de desactivar la protección en ambos proyectos:
 ### 1. Prueba el backend directamente:
 
 Abre en tu navegador (debería funcionar SIN pedir login):
+
 ```
 https://clinic-backend-elrxywxbl-davids-projects-8fa96e54.vercel.app/health
 ```
 
 **Respuesta esperada** (JSON):
+
 ```json
 {
   "status": "ok",
@@ -79,6 +82,7 @@ https://clinic-frontend-3r17ai7z0-davids-projects-8fa96e54.vercel.app
 ```
 
 **Debería mostrar**:
+
 - ✅ Lista de pacientes
 - ✅ Calendario con citas
 - ✅ Sistema de bonos funcionando
@@ -89,6 +93,7 @@ https://clinic-frontend-3r17ai7z0-davids-projects-8fa96e54.vercel.app
 ## 🤔 ¿Por qué sucede esto?
 
 Vercel activa automáticamente "Deployment Protection" en nuevos proyectos para:
+
 - Proteger despliegues de prueba (Preview Deployments)
 - Prevenir accesos no autorizados durante desarrollo
 
@@ -131,5 +136,6 @@ Si después de desactivar la protección sigues sin ver datos:
 
 **Fecha**: 1 de octubre de 2025  
 **URLs Finales**:
+
 - Frontend: https://clinic-frontend-3r17ai7z0-davids-projects-8fa96e54.vercel.app
 - Backend: https://clinic-backend-elrxywxbl-davids-projects-8fa96e54.vercel.app
