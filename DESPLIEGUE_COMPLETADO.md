@@ -17,16 +17,16 @@ Vercel ha activado automáticamente la protección de despliegue. Necesitas desa
 
 ### ✅ Frontend (Aplicación Web)
 
-- **URL**: https://clinic-frontend-l42rjy8us-davids-projects-8fa96e54.vercel.app
-- **Estado**: ✅ Ready (Desplegado con conexión al backend)
+- **URL**: https://clinic-frontend-3r17ai7z0-davids-projects-8fa96e54.vercel.app
+- **Estado**: ✅ Ready (Desplegado con conexión al backend y CORS funcionando)
 - **Dashboard**: https://vercel.com/davids-projects-8fa96e54/clinic-frontend
 
 ### ✅ Backend (API)
 
-- **URL**: https://clinic-backend-nhnmjiesx-davids-projects-8fa96e54.vercel.app
-- **Endpoint Health**: https://clinic-backend-nhnmjiesx-davids-projects-8fa96e54.vercel.app/health
-- **Endpoint Patients**: https://clinic-backend-nhnmjiesx-davids-projects-8fa96e54.vercel.app/api/patients
-- **Estado**: ✅ Ready (Desplegado con variables de entorno configuradas)
+- **URL**: https://clinic-backend-elrxywxbl-davids-projects-8fa96e54.vercel.app
+- **Endpoint Health**: https://clinic-backend-elrxywxbl-davids-projects-8fa96e54.vercel.app/health
+- **Endpoint Patients**: https://clinic-backend-elrxywxbl-davids-projects-8fa96e54.vercel.app/api/patients
+- **Estado**: ✅ Ready (Desplegado con variables de entorno y CORS configurado correctamente)
 - **Dashboard**: https://vercel.com/davids-projects-8fa96e54/clinic-backend
 
 ---
