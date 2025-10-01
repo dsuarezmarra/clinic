@@ -53,6 +53,65 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Test endpoint directo a Supabase (sin middleware)
+app.get('/api/test-direct', async (req, res) => {
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    
+    console.log('🧪 Test directo a Supabase...');
+    console.log('   SUPABASE_URL:', process.env.SUPABASE_URL ? '✅' : '❌');
+    console.log('   SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '✅' : '❌');
+    
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+      return res.status(500).json({
+        error: 'Variables de entorno no configuradas',
+        SUPABASE_URL: !!process.env.SUPABASE_URL,
+        SUPABASE_SERVICE_KEY: !!process.env.SUPABASE_SERVICE_KEY
+      });
+    }
+    
+    const supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
+    
+    const { data, error, count } = await supabase
+      .from('patients')
+      .select('id, firstName, lastName, dni, phone', { count: 'exact' })
+      .limit(5);
+    
+    if (error) {
+      console.error('❌ Error de Supabase:', error);
+      return res.status(500).json({
+        error: 'Error consultando Supabase',
+        details: error
+      });
+    }
+    
+    console.log(`✅ Éxito: ${count} pacientes, devolviendo ${data.length}`);
+    
+    return res.json({
+      success: true,
+      total: count,
+      patients: data
+    });
+    
+  } catch (err) {
+    console.error('💥 Excepción en test directo:', err);
+    return res.status(500).json({
+      error: 'Excepción en servidor',
+      message: err.message,
+      stack: err.stack
+    });
+  }
+});
+
 // Importar rutas solo si hay DB configurada
 if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
   try {
