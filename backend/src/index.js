@@ -64,43 +64,13 @@ app.use(helmet({
 app.use(compression());
 
 // CORS - Permitir header X-Tenant-Slug para multi-tenant
-// Permitir múltiples orígenes: localhost, Vercel deployments temporales, y dominios personalizados
+// Configuración simplificada que permite todos los headers necesarios
 app.use(cors({
-  origin: function (origin, callback) {
-    // Permitir requests sin origin (como mobile apps o curl)
-    if (!origin) return callback(null, true);
-    
-    // Lista de orígenes permitidos
-    const allowedOrigins = [
-      'http://localhost:4300',
-      'http://localhost:4200',
-      'https://masajecorporaldeportivo.vercel.app',
-      process.env.FRONTEND_URL
-    ];
-    
-    // Permitir cualquier dominio *.vercel.app (deployments temporales)
-    if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: true, // Permitir cualquier origen (más permisivo para testing)
   credentials: true,
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Tenant-Slug',
-    'X-Requested-With',
-    'Accept',
-    'Accept-Version',
-    'Content-Length',
-    'Content-MD5',
-    'Date',
-    'X-Api-Version'
-  ],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With', 'Accept', 'Content-Length'],
   exposedHeaders: ['Content-Range', 'X-Total-Count'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  preflightContinue: false,
   optionsSuccessStatus: 204
 }));
 
