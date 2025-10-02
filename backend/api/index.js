@@ -15,17 +15,18 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 
-// CORS manual para Vercel Serverless
+// CORS manual para Vercel Serverless - INCLUIR X-Tenant-Slug para multi-tenant
 app.use((req, res, next) => {
   // Permitir todos los orígenes en producción por ahora
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With, Accept, Content-Length');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
   
   // Manejar preflight requests
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(204).end();
   }
   
   next();
