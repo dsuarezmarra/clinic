@@ -77,6 +77,35 @@ router.get('/version', (req, res) => {
   });
 });
 
+// GET /api/test-join - TEMPORAL: Probar JOINs con tablas sufijadas
+router.get('/test-join', loadTenant, async (req, res) => {
+  try {
+    const tableName = req.getTable('credit_packs');
+    console.log('🔍 Testing JOIN with table:', tableName);
+    
+    // Probar consulta con JOIN
+    const endpoint = `${req.getTable('credit_redemptions')}?select=*,${tableName}(*)&limit=1`;
+    console.log('📡 Endpoint:', endpoint);
+    
+    const { data, total } = await supabaseFetch(endpoint);
+    
+    res.json({
+      success: true,
+      tableName,
+      endpoint,
+      data,
+      keys: data && data[0] ? Object.keys(data[0]) : []
+    });
+  } catch (error) {
+    console.error('❌ Test JOIN error:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      tableName: req.getTable('credit_packs')
+    });
+  }
+});
+
 // ============================================================
 // MIDDLEWARE DE TENANT
 // ============================================================
