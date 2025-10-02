@@ -1,6 +1,7 @@
 {
   "version": 2,
   "name": "clinic-frontend",
+  "alias": ["masajecorporaldeportivo.vercel.app"],
   "buildCommand": "npm run build",
   "outputDirectory": "dist/clinic-frontend/browser",
   "devCommand": "ng serve --port 4300",
