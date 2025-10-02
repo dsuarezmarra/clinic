@@ -385,15 +385,62 @@ export class CalendarComponent implements OnInit {
         if (patient && patient.id) {
             this.creditService.getPatientCredits(patient.id).subscribe({
                 next: (res: any) => {
+                    console.log('📦 Credits received:', res);
                     const packs = res.creditPacks || [];
-                    const has60 = packs.some((p: any) => Number(p.unitMinutes) === 60 && Number(p.unitsRemaining) >= 2);
-                    if (has60) this.proposedDuration = 60;
+                    console.log('📦 Processing packs:', packs);
+                    
+                    // Verificar cada pack
+                    packs.forEach((p: any) => {
+                        console.log(`Pack: unitMinutes=${p.unitMinutes}, unitsRemaining=${p.unitsRemaining}, type=${p.type}`);
+                    });
+                    
+                    const has60 = packs.some((p: any) => {
+                        const unitMin = Number(p.unitMinutes);
+                        const unitsRem = Number(p.unitsRemaining);
+                        const hasEnough = unitMin === 60 && unitsRem >= 2;
+                        console.log(`Checking pack: unitMinutes=${unitMin}, unitsRemaining=${unitsRem}, hasEnough=${hasEnough}`);
+                        return hasEnough;
+                    });
+                    
+                    if (has60) {
+                        this.proposedDuration = 60;
+                        console.log('✅ Setting proposedDuration to 60min');
+                    } else {
+                        this.proposedDuration = 30;
+                        console.log('⚠️ No 60min packs available, keeping 30min');
+                    }
                 },
-                error: () => {
+                error: (err) => {
+                    console.error('❌ Error getting credits:', err);
                     this.proposedDuration = 30;
                 }
             });
         }
+    }
+
+    /**
+     * Verifica si hay solapamiento entre dos rangos de tiempo
+     */
+    hasTimeOverlap(start1: Date, end1: Date, start2: Date, end2: Date): boolean {
+        return start1 < end2 && end1 > start2;
+    }
+
+    /**
+     * Verifica si la nueva cita se solapa con alguna cita existente
+     */
+    checkAppointmentOverlap(newStart: Date, newEnd: Date, excludeId?: string): Appointment | null {
+        for (const apt of this.appointments) {
+            // Excluir la cita que estamos editando
+            if (excludeId && apt.id === excludeId) continue;
+            
+            const aptStart = new Date(apt.start);
+            const aptEnd = new Date(apt.end);
+            
+            if (this.hasTimeOverlap(newStart, newEnd, aptStart, aptEnd)) {
+                return apt;
+            }
+        }
+        return null;
     }
 
     createAppointment() {
@@ -422,8 +469,22 @@ export class CalendarComponent implements OnInit {
         const startDateTime = new Date(this.selectedDate);
         startDateTime.setHours(hours, minutes, 0, 0);
         const duration = this.proposedDuration || 30;
+        console.log(`🕐 Creating appointment with duration: ${duration}min (proposedDuration=${this.proposedDuration})`);
         const endDateTime = new Date(startDateTime);
         endDateTime.setMinutes(endDateTime.getMinutes() + duration);
+        
+        // Validar solapamiento antes de crear
+        const overlappingApt = this.checkAppointmentOverlap(startDateTime, endDateTime);
+        if (overlappingApt) {
+            const overlappingPatient = this.patients.find(p => p.id === overlappingApt.patientId);
+            const patientName = overlappingPatient ? `${overlappingPatient.firstName} ${overlappingPatient.lastName}` : 'Desconocido';
+            const timeRange = this.formatTimeRange(overlappingApt.start, overlappingApt.end);
+            this.notificationService.showError(
+                `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
+            );
+            return;
+        }
+        
         const appointmentData: CreateAppointmentRequest = {
             patientId: this.selectedPatient.id,
             start: startDateTime.toISOString(),
@@ -431,6 +492,7 @@ export class CalendarComponent implements OnInit {
             durationMinutes: duration,
             consumesCredit: true
         };
+        console.log('📋 Appointment data:', appointmentData);
         this.appointmentService.createAppointment(appointmentData).subscribe({
             next: (appointment) => {
                 this.notificationService.showSuccess('Cita creada exitosamente');
@@ -519,18 +581,54 @@ export class CalendarComponent implements OnInit {
         if (this.editingAppointment.consumesCredit !== undefined) payload.consumesCredit = this.editingAppointment.consumesCredit;
         if (this.editingAppointment.notes !== undefined) payload.notes = this.editingAppointment.notes === null ? '' : this.editingAppointment.notes;
         if ((this as any).editingAppointment.status !== undefined) payload.status = (this as any).editingAppointment.status;
-        // Include paid flag if changed in modal
-        if (typeof this.editingPaid === 'boolean') {
-            payload.paid = !!this.editingPaid;
+
+        // Validar solapamiento si se cambió el horario
+        if (payload.start && payload.end) {
+            const newStart = new Date(payload.start);
+            const newEnd = new Date(payload.end);
+            const overlappingApt = this.checkAppointmentOverlap(newStart, newEnd, this.editingAppointment.id);
+            if (overlappingApt) {
+                const overlappingPatient = this.patients.find(p => p.id === overlappingApt.patientId);
+                const patientName = overlappingPatient ? `${overlappingPatient.firstName} ${overlappingPatient.lastName}` : 'Desconocido';
+                const timeRange = this.formatTimeRange(overlappingApt.start, overlappingApt.end);
+                this.notificationService.showError(
+                    `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
+                );
+                return;
+            }
         }
 
         console.info('[DEBUG] updateAppointment payload:', payload);
+        
+        // First update the appointment
         this.appointmentService.updateAppointment(this.editingAppointment.id, payload).subscribe({
             next: (appointment) => {
-                this.notificationService.showSuccess('Cita actualizada exitosamente');
-                this.closeModal();
-                this.loadAppointments();
-                this.loadPatients();
+                // If paid status changed, update the associated credit pack
+                if (typeof this.editingPaid === 'boolean' && this.editingAppointment?.creditRedemptions?.length) {
+                    const packId = this.editingAppointment.creditRedemptions[0].creditPackId;
+                    console.log(`[DEBUG] Updating pack ${packId} payment status to ${this.editingPaid}`);
+                    this.creditService.updatePackPaymentStatus(packId, this.editingPaid).subscribe({
+                        next: () => {
+                            console.log(`[DEBUG] Pack payment status updated successfully`);
+                            this.notificationService.showSuccess('Cita y estado de pago actualizados exitosamente');
+                            this.closeModal();
+                            this.loadAppointments();
+                            this.loadPatients();
+                        },
+                        error: (error) => {
+                            console.error('Error updating payment status:', error);
+                            this.notificationService.showError('Cita actualizada pero error al actualizar estado de pago');
+                            this.closeModal();
+                            this.loadAppointments();
+                            this.loadPatients();
+                        }
+                    });
+                } else {
+                    this.notificationService.showSuccess('Cita actualizada exitosamente');
+                    this.closeModal();
+                    this.loadAppointments();
+                    this.loadPatients();
+                }
             },
             error: (error) => {
                 console.error('Error updating appointment:', error);
@@ -658,7 +756,8 @@ export class CalendarComponent implements OnInit {
             return appointment.priceCents;
         }
 
-        // Si existe una redención y el pack contiene precio y unidades, calcular proporcionalmente
+        // Si existe una redención de pack/bono, calcular el precio proporcional
+        // basándose en el precio del pack en el momento de su creación
         const redemptions = appointment.creditRedemptions || [];
         if (redemptions.length > 0) {
             const r = redemptions[0];
@@ -666,16 +765,16 @@ export class CalendarComponent implements OnInit {
             const priceCents = Number(pack?.priceCents ?? pack?.price_cents ?? pack?.price ?? 0) || 0;
             const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
             const unitsUsed = Number(r.unitsUsed || 0);
+            
+            // Si el pack tiene precio y unidades, calcular proporcionalmente
+            // Ejemplo: Bono 5x30min por 135€ = 27€ por sesión
             if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
                 return Math.round(unitsUsed * (priceCents / unitsTotal));
             }
-            if (priceCents > 0) {
-                // Fallback: usar el precio del pack entero
-                return priceCents;
-            }
         }
 
-        // Fallback: basar el precio en la duración de la cita
+        // Fallback: usar precio de sesión individual según duración
+        // (esto se aplica cuando se paga sin bono)
         const mins = Number(appointment.durationMinutes || 0);
         if (mins >= 60) return this.DEFAULT_PRICE_60;
         return this.DEFAULT_PRICE_30;

@@ -87,19 +87,29 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
         // Group by patient
         const byPatient = new Map();
         for (const apt of appointments) {
-            // Calculate price for appointment
+            // Calculate price based on how the appointment was paid:
+            // 1. If paid with a credit pack/bono: calculate proportionally from pack price
+            //    Example: 5x30min pack for 135€ = 27€ per session
+            // 2. If paid individually: use sessionPrice30 (30€) or sessionPrice60 (55€)
             let priceCents = 0;
+            
             if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
                 const cr = apt.creditRedemptions[0];
                 if (cr && cr.creditPack && typeof cr.creditPack.priceCents === 'number' && cr.creditPack.unitsTotal) {
                     const unitsTotal = Number(cr.creditPack.unitsTotal) || 0;
-                    if (unitsTotal > 0) {
+                    const unitsUsed = Number(cr.unitsUsed) || 0;
+                    if (unitsTotal > 0 && unitsUsed > 0) {
+                        // Price per unit from the pack
                         const perUnit = Math.round(cr.creditPack.priceCents / unitsTotal);
-                        priceCents = perUnit * (Number(cr.unitsUsed) || 1);
+                        priceCents = perUnit * unitsUsed;
                     }
                 }
             }
-            if (!priceCents) priceCents = apt.durationMinutes === 60 ? 5500 : 3000;
+            
+            // Fallback: individual session pricing
+            if (!priceCents) {
+                priceCents = apt.durationMinutes >= 60 ? 5500 : 3000;
+            }
 
             // Update appointment with calculated price
             apt.priceCents = priceCents;
@@ -157,19 +167,29 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
         rows.push(header.join(separator));
 
         for (const apt of appointments) {
-            // Calculate price for appointment
+            // Calculate price based on how the appointment was paid:
+            // 1. If paid with a credit pack/bono: calculate proportionally from pack price
+            //    Example: 5x30min pack for 135€ = 27€ per session
+            // 2. If paid individually: use sessionPrice30 (30€) or sessionPrice60 (55€)
             let priceCents = 0;
+            
             if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
                 const cr = apt.creditRedemptions[0];
                 if (cr && cr.creditPack && typeof cr.creditPack.priceCents === 'number' && cr.creditPack.unitsTotal) {
                     const unitsTotal = Number(cr.creditPack.unitsTotal) || 0;
-                    if (unitsTotal > 0) {
+                    const unitsUsed = Number(cr.unitsUsed) || 0;
+                    if (unitsTotal > 0 && unitsUsed > 0) {
+                        // Price per unit from the pack
                         const perUnit = Math.round(cr.creditPack.priceCents / unitsTotal);
-                        priceCents = perUnit * (Number(cr.unitsUsed) || 1);
+                        priceCents = perUnit * unitsUsed;
                     }
                 }
             }
-            if (!priceCents) priceCents = apt.durationMinutes === 60 ? 5500 : 3000;
+            
+            // Fallback: individual session pricing
+            if (!priceCents) {
+                priceCents = apt.durationMinutes >= 60 ? 5500 : 3000;
+            }
 
             // Update appointment with calculated price
             apt.priceCents = priceCents;

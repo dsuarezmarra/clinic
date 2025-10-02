@@ -66,7 +66,8 @@ router.get('/patients', async (req, res) => {
     const { search, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
     
-    let endpoint = `patients?select=*&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
+    // Incluir credit_packs para calcular activeSessions
+    let endpoint = `patients?select=*,credit_packs(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
     
     // Agregar búsqueda si existe
     if (search) {
@@ -78,8 +79,20 @@ router.get('/patients', async (req, res) => {
       headers: { 'Prefer': 'count=exact' }
     });
     
+    // Calcular activeSessions para cada paciente
+    const patientsWithActiveSessions = (patients || []).map(patient => {
+      const packs = Array.isArray(patient.credit_packs) ? patient.credit_packs : [];
+      const totalUnitsRemaining = packs.reduce((sum, pack) => sum + (Number(pack.unitsRemaining) || 0), 0);
+      
+      return {
+        ...patient,
+        activeSessions: totalUnitsRemaining,
+        credit_packs: undefined // Eliminar credit_packs del response
+      };
+    });
+    
     res.json({
-      patients,
+      patients: patientsWithActiveSessions,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -269,6 +282,9 @@ router.get('/appointments', async (req, res) => {
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => ({
       ...apt,
+      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
+      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
       patient: apt.patients || null,
       creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
         ...cr,
@@ -313,6 +329,9 @@ router.get('/appointments/all', async (req, res) => {
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => ({
       ...apt,
+      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
+      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
       patient: apt.patients || null,
       creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
         ...cr,
@@ -374,6 +393,9 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => ({
       ...apt,
+      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
+      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
       patient: apt.patients || null,
       creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
         ...cr,
@@ -417,6 +439,9 @@ router.get('/appointments/:id', async (req, res) => {
     const apt = data[0];
     const mapped = {
       ...apt,
+      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
+      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
       patient: apt.patients || null,
       creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
         ...cr,
@@ -444,14 +469,130 @@ router.get('/appointments/:id', async (req, res) => {
 // POST /api/appointments - Crear nueva cita
 router.post('/appointments', async (req, res) => {
   try {
-    const appointmentData = req.body;
+    const { patientId, start, end, durationMinutes = 30, consumesCredit = true, notes } = req.body;
     
-    const { data } = await supabaseFetch('appointments', {
+    // 0. Validar que no haya solapamiento con otras citas
+    const startTime = new Date(start).toISOString();
+    const endTime = new Date(end).toISOString();
+    
+    // Buscar citas que se solapen: 
+    // Una cita se solapa si: start < existingEnd AND end > existingStart
+    const { data: overlappingAppts } = await supabaseFetch(
+      `appointments?start=lt.${endTime}&end=gt.${startTime}`
+    );
+    
+    if (overlappingAppts && overlappingAppts.length > 0) {
+      return res.status(409).json({ 
+        error: 'Ya existe una cita en ese horario',
+        overlapping: overlappingAppts[0]
+      });
+    }
+    
+    // 1. Crear la cita
+    const { data: appointments } = await supabaseFetch('appointments', {
       method: 'POST',
-      body: JSON.stringify(appointmentData)
+      body: JSON.stringify({
+        patientId,
+        start,
+        end,
+        durationMinutes,
+        consumesCredit,
+        notes
+      })
     });
     
-    res.status(201).json(data[0]);
+    const appointment = appointments[0];
+    
+    // 2. Si debe consumir créditos, procesarlos
+    if (consumesCredit && patientId && appointment && appointment.id) {
+      const requiredUnits = durationMinutes === 60 ? 2 : 1;
+      
+      // Obtener packs disponibles del paciente ordenados (pagados primero, luego por fecha)
+      const { data: packs } = await supabaseFetch(
+        `credit_packs?patientId=eq.${patientId}&unitsRemaining=gt.0&order=paid.desc,createdAt.asc`
+      );
+      
+      if (!packs || packs.length === 0) {
+        // Eliminar la cita si no hay créditos
+        await supabaseFetch(`appointments?id=eq.${appointment.id}`, {
+          method: 'DELETE'
+        });
+        return res.status(400).json({ error: 'Créditos insuficientes' });
+      }
+      
+      let remainingUnits = requiredUnits;
+      const redemptions = [];
+      
+      // Consumir créditos de los packs disponibles
+      for (const pack of packs) {
+        if (remainingUnits <= 0) break;
+        
+        // Calcular unidades a usar según el tipo de pack y cita
+        let unitsToUse = 0;
+        
+        if (requiredUnits === 2) {
+          // Cita de 60 minutos - requiere 2 unidades
+          if (pack.unitsRemaining < 2) {
+            // Si el pack no tiene al menos 2 unidades, no se puede usar para cita de 60min
+            continue;
+          }
+          
+          const isSesion60 = pack.label?.startsWith('Sesión') && pack.unitMinutes === 60;
+          const isBono60 = pack.unitMinutes === 60 && !pack.label?.startsWith('Sesión');
+          
+          if (isSesion60 || isBono60) {
+            // Packs de 60min: consumir 2 unidades juntas
+            unitsToUse = Math.min(2, remainingUnits);
+          } else {
+            // Packs generales: consumir en pares (2 en 2)
+            const pairs = Math.floor(pack.unitsRemaining / 2);
+            unitsToUse = pairs > 0 ? Math.min(pairs * 2, remainingUnits) : 0;
+          }
+        } else {
+          // Cita de 30 minutos - requiere 1 unidad
+          unitsToUse = Math.min(remainingUnits, pack.unitsRemaining);
+        }
+        
+        if (unitsToUse === 0) continue;
+        
+        // Crear redemption
+        const { data: redemption } = await supabaseFetch('credit_redemptions', {
+          method: 'POST',
+          body: JSON.stringify({
+            creditPackId: pack.id,
+            appointmentId: appointment.id,
+            unitsUsed: unitsToUse
+          })
+        });
+        
+        redemptions.push(redemption[0]);
+        
+        // Actualizar unitsRemaining del pack
+        await supabaseFetch(`credit_packs?id=eq.${pack.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            unitsRemaining: pack.unitsRemaining - unitsToUse
+          })
+        });
+        
+        remainingUnits -= unitsToUse;
+      }
+      
+      if (remainingUnits > 0) {
+        // Eliminar la cita y las redemptions creadas si no se pudieron consumir todos los créditos
+        for (const redemption of redemptions) {
+          await supabaseFetch(`credit_redemptions?id=eq.${redemption.id}`, {
+            method: 'DELETE'
+          });
+        }
+        await supabaseFetch(`appointments?id=eq.${appointment.id}`, {
+          method: 'DELETE'
+        });
+        return res.status(400).json({ error: 'Créditos insuficientes' });
+      }
+    }
+    
+    res.status(201).json(appointment);
   } catch (error) {
     console.error('Error creating appointment:', error);
     res.status(500).json({ error: error.message });
@@ -464,20 +605,73 @@ router.put('/appointments/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     
-    const endpoint = `appointments?id=eq.${id}`;
-    const { data } = await supabaseFetch(endpoint, {
-      method: 'PATCH',
-      body: JSON.stringify(updates)
+    console.log('PUT /appointments/:id - Updating appointment:', id);
+    console.log('Update payload:', JSON.stringify(updates, null, 2));
+    
+    // Filtrar campos permitidos para actualización
+    const allowedFields = ['start', 'end', 'durationMinutes', 'notes', 'status'];
+    const filteredUpdates = {};
+    
+    allowedFields.forEach(field => {
+      if (updates[field] !== undefined) {
+        filteredUpdates[field] = updates[field];
+      }
     });
     
+    console.log('Filtered updates:', JSON.stringify(filteredUpdates, null, 2));
+    
+    if (Object.keys(filteredUpdates).length === 0) {
+      return res.status(400).json({ error: 'No hay campos válidos para actualizar' });
+    }
+    
+    // Validar solapamiento si se está cambiando el horario
+    if (filteredUpdates.start || filteredUpdates.end) {
+      // Obtener la cita actual para tener start/end completos
+      const { data: currentAppt } = await supabaseFetch(`appointments?id=eq.${id}`);
+      if (!currentAppt || currentAppt.length === 0) {
+        return res.status(404).json({ error: 'Cita no encontrada' });
+      }
+      
+      const newStart = filteredUpdates.start || currentAppt[0].start;
+      const newEnd = filteredUpdates.end || currentAppt[0].end;
+      const startTime = new Date(newStart).toISOString();
+      const endTime = new Date(newEnd).toISOString();
+      
+      // Buscar citas que se solapen (excluyendo la cita actual)
+      const { data: overlappingAppts } = await supabaseFetch(
+        `appointments?start=lt.${endTime}&end=gt.${startTime}&id=neq.${id}`
+      );
+      
+      if (overlappingAppts && overlappingAppts.length > 0) {
+        return res.status(409).json({ 
+          error: 'Ya existe una cita en ese horario',
+          overlapping: overlappingAppts[0]
+        });
+      }
+    }
+    
+    const endpoint = `appointments?id=eq.${id}`;
+    const { data, error } = await supabaseFetch(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(filteredUpdates)
+    });
+    
+    if (error) {
+      console.error('Supabase error:', error);
+      return res.status(500).json({ error: error.message || 'Error al actualizar en Supabase' });
+    }
+    
     if (!data || data.length === 0) {
+      console.log('No data returned - appointment not found');
       return res.status(404).json({ error: 'Cita no encontrada' });
     }
     
+    console.log('Appointment updated successfully:', data[0]);
     res.json(data[0]);
   } catch (error) {
     console.error('Error updating appointment:', error);
-    res.status(500).json({ error: error.message });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: error.message || 'Error interno del servidor' });
   }
 });
 
@@ -486,8 +680,39 @@ router.delete('/appointments/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const endpoint = `appointments?id=eq.${id}`;
-    await supabaseFetch(endpoint, {
+    // 1. Obtener los redemptions de la cita para revertir créditos
+    const { data: redemptions } = await supabaseFetch(
+      `credit_redemptions?appointmentId=eq.${id}&select=*,credit_packs(*)`
+    );
+    
+    // 2. Revertir créditos a los packs
+    if (redemptions && redemptions.length > 0) {
+      for (const redemption of redemptions) {
+        const pack = redemption.credit_packs;
+        if (pack) {
+          const currentUnits = Number(pack.unitsRemaining) || 0;
+          const unitsToRevert = Number(redemption.unitsUsed) || 0;
+          const newUnits = currentUnits + unitsToRevert;
+          
+          // Actualizar unitsRemaining del pack
+          await supabaseFetch(`credit_packs?id=eq.${pack.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              unitsRemaining: newUnits
+            })
+          });
+        }
+      }
+      
+      // 3. Eliminar los redemptions
+      await supabaseFetch(`credit_redemptions?appointmentId=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'Prefer': 'return=minimal' }
+      });
+    }
+    
+    // 4. Eliminar la cita
+    await supabaseFetch(`appointments?id=eq.${id}`, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
@@ -590,6 +815,7 @@ router.post('/credits/packs', async (req, res) => {
       label,
       unitsTotal,
       unitsRemaining: unitsTotal,
+      unitMinutes: minutes, // 🔥 CRÍTICO: Guardar 30 o 60 para identificar tipo de pack
       paid: paid || false,
       notes: notes || null,
       createdAt: new Date().toISOString()
@@ -1331,6 +1557,193 @@ router.delete('/backup/delete/:fileName', async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting backup:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ============================================
+// CONFIGURATION ENDPOINTS (/api/meta/config)
+// ============================================
+
+// Configuración por defecto
+const DEFAULT_CONFIG = {
+  workingHours: {
+    monday: { enabled: true, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } },
+    tuesday: { enabled: true, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } },
+    wednesday: { enabled: true, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } },
+    thursday: { enabled: true, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } },
+    friday: { enabled: true, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } },
+    saturday: { enabled: false, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } },
+    sunday: { enabled: false, morning: { start: '09:00', end: '14:00' }, afternoon: { start: '16:00', end: '20:00' } }
+  },
+  defaultDuration: 30,
+  slotDuration: 30,
+  holidays: [],
+  clinicInfo: {
+    name: 'Masaje Corporal Deportivo',
+    address: '',
+    phone: '',
+    email: ''
+  }
+};
+
+const DEFAULT_PRICES = {
+  sessionPrice30: 35,
+  sessionPrice60: 60,
+  bonoPrice30: 150,
+  bonoPrice60: 260
+};
+
+// GET /api/meta/config - Obtener configuración
+router.get('/meta/config', async (req, res) => {
+  try {
+    const { data: configs } = await supabaseFetch('configurations?select=*');
+    
+    const configObject = {};
+    if (configs) {
+      configs.forEach(config => {
+        try {
+          configObject[config.key] = JSON.parse(config.value);
+        } catch (e) {
+          configObject[config.key] = config.value;
+        }
+      });
+    }
+    
+    const finalConfig = { ...DEFAULT_CONFIG, ...configObject };
+    res.json(finalConfig);
+  } catch (error) {
+    console.error('Error getting config:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/meta/config - Actualizar configuración
+router.put('/meta/config', async (req, res) => {
+  try {
+    const updates = req.body;
+    
+    // Actualizar cada configuración
+    const promises = Object.keys(updates).map(async (key) => {
+      const value = typeof updates[key] === 'object' ? JSON.stringify(updates[key]) : updates[key].toString();
+      
+      // Buscar si existe
+      const { data: existing } = await supabaseFetch(`configurations?key=eq.${key}`);
+      
+      if (existing && existing.length > 0) {
+        // Actualizar
+        return await supabaseFetch(`configurations?key=eq.${key}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ value })
+        });
+      } else {
+        // Crear
+        return await supabaseFetch('configurations', {
+          method: 'POST',
+          body: JSON.stringify({ key, value })
+        });
+      }
+    });
+    
+    await Promise.all(promises);
+    
+    // Obtener configuración actualizada
+    const { data: configs } = await supabaseFetch('configurations?select=*');
+    const configObject = {};
+    if (configs) {
+      configs.forEach(config => {
+        try {
+          configObject[config.key] = JSON.parse(config.value);
+        } catch (e) {
+          configObject[config.key] = config.value;
+        }
+      });
+    }
+    
+    const finalConfig = { ...DEFAULT_CONFIG, ...configObject };
+    res.json(finalConfig);
+  } catch (error) {
+    console.error('Error updating config:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/meta/config/prices - Obtener precios
+router.get('/meta/config/prices', async (req, res) => {
+  try {
+    const priceKeys = ['sessionPrice30', 'sessionPrice60', 'bonoPrice30', 'bonoPrice60'];
+    const keysParam = priceKeys.map(k => `"${k}"`).join(',');
+    const { data: priceConfigs } = await supabaseFetch(`configurations?key=in.(${keysParam})`);
+    
+    const pricesObject = { ...DEFAULT_PRICES };
+    if (priceConfigs) {
+      priceConfigs.forEach(config => {
+        try {
+          pricesObject[config.key] = parseFloat(config.value);
+        } catch (e) {
+          pricesObject[config.key] = parseFloat(config.value) || DEFAULT_PRICES[config.key];
+        }
+      });
+    }
+    
+    res.json(pricesObject);
+  } catch (error) {
+    console.error('Error getting prices:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// PUT /api/meta/config/prices - Actualizar precios
+router.put('/meta/config/prices', async (req, res) => {
+  try {
+    const updates = req.body;
+    
+    // Actualizar cada precio
+    const promises = Object.keys(updates).map(async (key) => {
+      const value = updates[key].toString();
+      
+      // Buscar si existe
+      const { data: existing } = await supabaseFetch(`configurations?key=eq.${key}`);
+      
+      if (existing && existing.length > 0) {
+        // Actualizar
+        return await supabaseFetch(`configurations?key=eq.${key}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ value })
+        });
+      } else {
+        // Crear
+        return await supabaseFetch('configurations', {
+          method: 'POST',
+          body: JSON.stringify({ key, value })
+        });
+      }
+    });
+    
+    await Promise.all(promises);
+    
+    // Obtener precios actualizados
+    const priceKeys = ['sessionPrice30', 'sessionPrice60', 'bonoPrice30', 'bonoPrice60'];
+    const keysParam = priceKeys.map(k => `"${k}"`).join(',');
+    const { data: priceConfigs } = await supabaseFetch(`configurations?key=in.(${keysParam})`);
+    
+    const pricesObject = { ...DEFAULT_PRICES };
+    if (priceConfigs) {
+      priceConfigs.forEach(config => {
+        try {
+          pricesObject[config.key] = parseFloat(config.value);
+        } catch (e) {
+          pricesObject[config.key] = parseFloat(config.value) || DEFAULT_PRICES[config.key];
+        }
+      });
+    }
+    
+    res.json({
+      message: 'Precios actualizados correctamente',
+      prices: pricesObject
+    });
+  } catch (error) {
+    console.error('Error updating prices:', error);
     res.status(500).json({ error: error.message });
   }
 });

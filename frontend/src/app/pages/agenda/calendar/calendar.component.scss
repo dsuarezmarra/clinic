@@ -507,6 +507,11 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Mostrar origen en hover para la vista diaria (sin appointment-origin-card que ya no se usa) */
+.appointment-card:hover .appointment-origin:not(.appointment-origin-card) {
+    opacity: 1;
+}
+
 .appointment-actions {
     display: flex;
     gap: 5px;
