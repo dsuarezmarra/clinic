@@ -86,8 +86,22 @@ app.use(cors({
     }
   },
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug'],
-  exposedHeaders: ['Content-Range', 'X-Total-Count']
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Tenant-Slug',
+    'X-Requested-With',
+    'Accept',
+    'Accept-Version',
+    'Content-Length',
+    'Content-MD5',
+    'Date',
+    'X-Api-Version'
+  ],
+  exposedHeaders: ['Content-Range', 'X-Total-Count'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Parsear JSON con codificación UTF-8
