@@ -100,7 +100,7 @@ router.get('/patients', async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Incluir credit_packs para calcular activeSessions
-    let endpoint = `${req.getTable('patients')}?select=*,credit_packs(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
+    let endpoint = `${req.getTable('patients')}?select=*,${req.getTable('credit_packs')}(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
     
     // Agregar búsqueda si existe
     if (search) {
@@ -295,7 +295,7 @@ router.get('/appointments', async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    let endpoint = `${req.getTable('appointments')}?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.asc&limit=${limit}&offset=${offset}`;
+    let endpoint = `${req.getTable('appointments')}?select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.asc&limit=${limit}&offset=${offset}`;
     
     // Filtros
     if (from) {
@@ -356,7 +356,7 @@ router.get('/appointments', async (req, res) => {
 router.get('/appointments/all', async (req, res) => {
   try {
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    const endpoint = `${req.getTable('appointments')}?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
+    const endpoint = `${req.getTable('appointments')}?select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
     // Mapear las relaciones a los nombres esperados por el frontend
@@ -420,7 +420,7 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
     const { patientId } = req.params;
     
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    const endpoint = `${req.getTable('appointments')}?patientId=eq.${patientId}&select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
+    const endpoint = `${req.getTable('appointments')}?patientId=eq.${patientId}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
     // Mapear las relaciones a los nombres esperados por el frontend
@@ -461,7 +461,7 @@ router.get('/appointments/:id', async (req, res) => {
     const { id } = req.params;
     
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    const endpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const endpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`;
     const { data } = await supabaseFetch(endpoint);
     
     if (!data || data.length === 0) {
@@ -688,7 +688,7 @@ router.post('/appointments', async (req, res) => {
     // 3. Obtener la cita completa con todas sus relaciones para devolverla
     // (igual que en GET /appointments/all para consistencia)
     console.log('🔄 Fetching complete appointment with creditRedemptions...');
-    const endpoint = `${req.getTable('appointments')}?id=eq.${appointment.id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const endpoint = `${req.getTable('appointments')}?id=eq.${appointment.id}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`;
     const { data: fullAppointments } = await supabaseFetch(endpoint);
     
     console.log('📦 fullAppointments received:', JSON.stringify(fullAppointments, null, 2));
@@ -800,7 +800,7 @@ router.put('/appointments/:id', async (req, res) => {
     console.log('Appointment updated successfully:', data[0]);
     
     // Obtener la cita completa con todas sus relaciones para devolverla
-    const fullEndpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const fullEndpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`;
     const { data: fullAppointments } = await supabaseFetch(fullEndpoint);
     
     if (!fullAppointments || fullAppointments.length === 0) {
@@ -846,7 +846,7 @@ router.delete('/appointments/:id', async (req, res) => {
     
     // 1. Obtener los redemptions de la cita para revertir créditos
     const { data: redemptions } = await supabaseFetch(
-      `${req.getTable('credit_redemptions')}?appointmentId=eq.${id}&select=*,credit_packs(*)`
+      `${req.getTable('credit_redemptions')}?appointmentId=eq.${id}&select=*,${req.getTable('credit_packs')}(*)`
     );
     
     // 2. Revertir créditos a los packs
@@ -1106,7 +1106,7 @@ router.get('/credits/history', async (req, res) => {
     }
     
     // Obtener redenciones con información de packs y citas
-    const endpoint = `${req.getTable('credit_redemptions')}?select=*,credit_packs!inner(patientId),appointments(*)&credit_packs.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
+    const endpoint = `${req.getTable('credit_redemptions')}?select=*,${req.getTable('credit_packs')}!inner(patientId),${req.getTable('appointments')}(*)&credit_packs.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
     
     const { data: redemptions, total } = await supabaseFetch(endpoint, {
       headers: { 'Prefer': 'count=exact' }
@@ -2140,7 +2140,7 @@ router.get('/reports/billing', async (req, res) => {
     const endDate = new Date(year, month, 0, 23, 59, 59);
     
     const { data: appointments } = await supabaseFetch(
-      `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
+      `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`
     );
 
     const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
