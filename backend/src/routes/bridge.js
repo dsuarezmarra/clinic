@@ -852,7 +852,9 @@ router.delete('/appointments/:id', async (req, res) => {
     // 2. Revertir créditos a los packs
     if (redemptions && redemptions.length > 0) {
       for (const redemption of redemptions) {
-        const pack = redemption.credit_packs;
+        // PostgREST devuelve la relación con el nombre completo de la tabla
+        const packKey = `${req.tableSuffix ? 'credit_packs_' + req.tableSuffix : 'credit_packs'}`;
+        const pack = redemption[packKey];
         if (pack) {
           const currentUnits = Number(pack.unitsRemaining) || 0;
           const unitsToRevert = Number(redemption.unitsUsed) || 0;
@@ -1106,7 +1108,7 @@ router.get('/credits/history', async (req, res) => {
     }
     
     // Obtener redenciones con información de packs y citas
-    const endpoint = `${req.getTable('credit_redemptions')}?select=*,${req.getTable('credit_packs')}!inner(patientId),${req.getTable('appointments')}(*)&credit_packs.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
+    const endpoint = `${req.getTable('credit_redemptions')}?select=*,${req.getTable('credit_packs')}!inner(patientId),${req.getTable('appointments')}(*)&${req.getTable('credit_packs')}.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
     
     const { data: redemptions, total } = await supabaseFetch(endpoint, {
       headers: { 'Prefer': 'count=exact' }
