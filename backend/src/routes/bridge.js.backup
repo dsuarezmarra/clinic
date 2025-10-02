@@ -1,13 +1,12 @@
 // Endpoints "bridge" usando fetch directo a Supabase REST API
 // Estos endpoints evitan el bug del SDK @supabase/supabase-js en Vercel
-// VERSION: 2.2.0 - Multi-tenant con sufijos de tabla
+// VERSION: 2.1.1 - Locations cargadas al inicio
 
 const express = require('express');
 const router = express.Router();
-const { loadTenant } = require('../middleware/tenant');
 
 // Log de versión al cargar el módulo
-console.log('🔄 bridge.js VERSION 2.2.0 cargado - Multi-tenant');
+console.log('🔄 bridge.js VERSION 2.1.1 cargado - Locations fix');
 const multer = require('multer');
 
 // Cargar locations.json una sola vez al inicio del módulo
@@ -78,18 +77,6 @@ router.get('/version', (req, res) => {
 });
 
 // ============================================================
-// MIDDLEWARE DE TENANT
-// ============================================================
-// Aplicar middleware loadTenant a las rutas que necesitan acceso a tablas con sufijo
-// Los endpoints /tenants y /meta/locations NO requieren tenant
-router.use('/patients*', loadTenant);
-router.use('/appointments*', loadTenant);
-router.use('/credits*', loadTenant);
-router.use('/reports*', loadTenant);
-router.use('/backup*', loadTenant);
-router.use('/meta/config*', loadTenant);
-
-// ============================================================
 // PATIENTS ENDPOINTS
 // ============================================================
 
@@ -100,7 +87,7 @@ router.get('/patients', async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Incluir credit_packs para calcular activeSessions
-    let endpoint = `${req.getTable('patients')}?select=*,credit_packs(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
+    let endpoint = `patients?select=*,credit_packs(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
     
     // Agregar búsqueda si existe
     if (search) {
@@ -212,7 +199,7 @@ router.get('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const endpoint = `${req.getTable('patients')}?id=eq.${id}&select=*`;
+    const endpoint = `patients?id=eq.${id}&select=*`;
     const { data } = await supabaseFetch(endpoint);
     
     if (!data || data.length === 0) {
@@ -231,7 +218,7 @@ router.post('/patients', async (req, res) => {
   try {
     const patientData = req.body;
     
-    const { data } = await supabaseFetch(`${req.getTable('patients')}`, {
+    const { data } = await supabaseFetch('patients', {
       method: 'POST',
       body: JSON.stringify(patientData)
     });
@@ -249,7 +236,7 @@ router.put('/patients/:id', async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
     
-    const endpoint = `${req.getTable('patients')}?id=eq.${id}`;
+    const endpoint = `patients?id=eq.${id}`;
     const { data } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(updates)
@@ -271,7 +258,7 @@ router.delete('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const endpoint = `${req.getTable('patients')}?id=eq.${id}`;
+    const endpoint = `patients?id=eq.${id}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
@@ -295,7 +282,7 @@ router.get('/appointments', async (req, res) => {
     const offset = (page - 1) * limit;
     
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    let endpoint = `${req.getTable('appointments')}?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.asc&limit=${limit}&offset=${offset}`;
+    let endpoint = `appointments?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.asc&limit=${limit}&offset=${offset}`;
     
     // Filtros
     if (from) {
@@ -356,7 +343,7 @@ router.get('/appointments', async (req, res) => {
 router.get('/appointments/all', async (req, res) => {
   try {
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    const endpoint = `${req.getTable('appointments')}?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
+    const endpoint = `appointments?select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
     // Mapear las relaciones a los nombres esperados por el frontend
@@ -396,7 +383,7 @@ router.get('/appointments/conflicts/check', async (req, res) => {
   try {
     const { start, end, excludeId } = req.query;
     
-    let endpoint = `${req.getTable('appointments')}?start=lte.${end}&end=gte.${start}&select=id,start,end,patientId`;
+    let endpoint = `appointments?start=lte.${end}&end=gte.${start}&select=id,start,end,patientId`;
     
     if (excludeId) {
       endpoint += `&id=neq.${excludeId}`;
@@ -420,7 +407,7 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
     const { patientId } = req.params;
     
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    const endpoint = `${req.getTable('appointments')}?patientId=eq.${patientId}&select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
+    const endpoint = `appointments?patientId=eq.${patientId}&select=*,patients(*),credit_redemptions(*,credit_packs(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
     // Mapear las relaciones a los nombres esperados por el frontend
@@ -461,7 +448,7 @@ router.get('/appointments/:id', async (req, res) => {
     const { id } = req.params;
     
     // Incluir relaciones: patient, creditRedemptions con creditPack
-    const endpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const endpoint = `appointments?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
     const { data } = await supabaseFetch(endpoint);
     
     if (!data || data.length === 0) {
@@ -511,7 +498,7 @@ router.post('/appointments', async (req, res) => {
     // Buscar citas que se solapen: 
     // Una cita se solapa si: start < existingEnd AND end > existingStart
     const { data: overlappingAppts } = await supabaseFetch(
-      `${req.getTable('appointments')}?start=lt.${endTime}&end=gt.${startTime}`
+      `appointments?start=lt.${endTime}&end=gt.${startTime}`
     );
     
     if (overlappingAppts && overlappingAppts.length > 0) {
@@ -522,7 +509,7 @@ router.post('/appointments', async (req, res) => {
     }
     
     // 1. Crear la cita
-    const { data: appointments } = await supabaseFetch(`${req.getTable('appointments')}`, {
+    const { data: appointments } = await supabaseFetch('appointments', {
       method: 'POST',
       body: JSON.stringify({
         patientId,
@@ -542,7 +529,7 @@ router.post('/appointments', async (req, res) => {
       
       // Obtener packs disponibles del paciente ordenados (pagados primero, luego por fecha)
       const { data: packs } = await supabaseFetch(
-        `${req.getTable('credit_packs')}?patientId=eq.${patientId}&unitsRemaining=gt.0&order=paid.desc,createdAt.asc`
+        `credit_packs?patientId=eq.${patientId}&unitsRemaining=gt.0&order=paid.desc,createdAt.asc`
       );
       
       console.log('📦 Packs disponibles para consumir (ordenados por paid DESC, createdAt ASC):');
@@ -554,7 +541,7 @@ router.post('/appointments', async (req, res) => {
       
       if (!packs || packs.length === 0) {
         // Eliminar la cita si no hay créditos
-        await supabaseFetch(`${req.getTable('appointments')}?id=eq.${appointment.id}`, {
+        await supabaseFetch(`appointments?id=eq.${appointment.id}`, {
           method: 'DELETE'
         });
         return res.status(400).json({ error: 'Créditos insuficientes' });
@@ -605,7 +592,7 @@ router.post('/appointments', async (req, res) => {
         console.log(`  ✅ Usando pack PAGADO "${pack.label}" (${pack.unitMinutes}min) - ${unitsToUse} unidades | Created: ${pack.createdAt}`);
         
         // Crear redemption
-        const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
+        const { data: redemption } = await supabaseFetch('credit_redemptions', {
           method: 'POST',
           body: JSON.stringify({
             creditPackId: pack.id,
@@ -617,7 +604,7 @@ router.post('/appointments', async (req, res) => {
         redemptions.push(redemption[0]);
         
         // Actualizar unitsRemaining del pack
-        await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${pack.id}`, {
+        await supabaseFetch(`credit_packs?id=eq.${pack.id}`, {
           method: 'PATCH',
           body: JSON.stringify({
             unitsRemaining: pack.unitsRemaining - unitsToUse
@@ -648,7 +635,7 @@ router.post('/appointments', async (req, res) => {
           console.log(`  ⚠️  Usando pack PENDIENTE "${pack.label}" (${pack.unitMinutes}min) - ${unitsToUse} unidades | Created: ${pack.createdAt}`);
           
           // Crear redemption
-          const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
+          const { data: redemption } = await supabaseFetch('credit_redemptions', {
             method: 'POST',
             body: JSON.stringify({
               creditPackId: pack.id,
@@ -660,7 +647,7 @@ router.post('/appointments', async (req, res) => {
           redemptions.push(redemption[0]);
           
           // Actualizar unitsRemaining del pack
-          await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${pack.id}`, {
+          await supabaseFetch(`credit_packs?id=eq.${pack.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
               unitsRemaining: pack.unitsRemaining - unitsToUse
@@ -674,11 +661,11 @@ router.post('/appointments', async (req, res) => {
       if (remainingUnits > 0) {
         // Eliminar la cita y las redemptions creadas si no se pudieron consumir todos los créditos
         for (const redemption of redemptions) {
-          await supabaseFetch(`${req.getTable('credit_redemptions')}?id=eq.${redemption.id}`, {
+          await supabaseFetch(`credit_redemptions?id=eq.${redemption.id}`, {
             method: 'DELETE'
           });
         }
-        await supabaseFetch(`${req.getTable('appointments')}?id=eq.${appointment.id}`, {
+        await supabaseFetch(`appointments?id=eq.${appointment.id}`, {
           method: 'DELETE'
         });
         return res.status(400).json({ error: 'Créditos insuficientes' });
@@ -688,7 +675,7 @@ router.post('/appointments', async (req, res) => {
     // 3. Obtener la cita completa con todas sus relaciones para devolverla
     // (igual que en GET /appointments/all para consistencia)
     console.log('🔄 Fetching complete appointment with creditRedemptions...');
-    const endpoint = `${req.getTable('appointments')}?id=eq.${appointment.id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const endpoint = `appointments?id=eq.${appointment.id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
     const { data: fullAppointments } = await supabaseFetch(endpoint);
     
     console.log('📦 fullAppointments received:', JSON.stringify(fullAppointments, null, 2));
@@ -758,7 +745,7 @@ router.put('/appointments/:id', async (req, res) => {
     // Validar solapamiento si se está cambiando el horario
     if (filteredUpdates.start || filteredUpdates.end) {
       // Obtener la cita actual para tener start/end completos
-      const { data: currentAppt } = await supabaseFetch(`${req.getTable('appointments')}?id=eq.${id}`);
+      const { data: currentAppt } = await supabaseFetch(`appointments?id=eq.${id}`);
       if (!currentAppt || currentAppt.length === 0) {
         return res.status(404).json({ error: 'Cita no encontrada' });
       }
@@ -770,7 +757,7 @@ router.put('/appointments/:id', async (req, res) => {
       
       // Buscar citas que se solapen (excluyendo la cita actual)
       const { data: overlappingAppts } = await supabaseFetch(
-        `${req.getTable('appointments')}?start=lt.${endTime}&end=gt.${startTime}&id=neq.${id}`
+        `appointments?start=lt.${endTime}&end=gt.${startTime}&id=neq.${id}`
       );
       
       if (overlappingAppts && overlappingAppts.length > 0) {
@@ -781,7 +768,7 @@ router.put('/appointments/:id', async (req, res) => {
       }
     }
     
-    const endpoint = `${req.getTable('appointments')}?id=eq.${id}`;
+    const endpoint = `appointments?id=eq.${id}`;
     const { data, error } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(filteredUpdates)
@@ -800,7 +787,7 @@ router.put('/appointments/:id', async (req, res) => {
     console.log('Appointment updated successfully:', data[0]);
     
     // Obtener la cita completa con todas sus relaciones para devolverla
-    const fullEndpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const fullEndpoint = `appointments?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
     const { data: fullAppointments } = await supabaseFetch(fullEndpoint);
     
     if (!fullAppointments || fullAppointments.length === 0) {
@@ -846,7 +833,7 @@ router.delete('/appointments/:id', async (req, res) => {
     
     // 1. Obtener los redemptions de la cita para revertir créditos
     const { data: redemptions } = await supabaseFetch(
-      `${req.getTable('credit_redemptions')}?appointmentId=eq.${id}&select=*,credit_packs(*)`
+      `credit_redemptions?appointmentId=eq.${id}&select=*,credit_packs(*)`
     );
     
     // 2. Revertir créditos a los packs
@@ -859,7 +846,7 @@ router.delete('/appointments/:id', async (req, res) => {
           const newUnits = currentUnits + unitsToRevert;
           
           // Actualizar unitsRemaining del pack
-          await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${pack.id}`, {
+          await supabaseFetch(`credit_packs?id=eq.${pack.id}`, {
             method: 'PATCH',
             body: JSON.stringify({
               unitsRemaining: newUnits
@@ -869,14 +856,14 @@ router.delete('/appointments/:id', async (req, res) => {
       }
       
       // 3. Eliminar los redemptions
-      await supabaseFetch(`${req.getTable('credit_redemptions')}?appointmentId=eq.${id}`, {
+      await supabaseFetch(`credit_redemptions?appointmentId=eq.${id}`, {
         method: 'DELETE',
         headers: { 'Prefer': 'return=minimal' }
       });
     }
     
     // 4. Eliminar la cita
-    await supabaseFetch(`${req.getTable('appointments')}?id=eq.${id}`, {
+    await supabaseFetch(`appointments?id=eq.${id}`, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
@@ -902,7 +889,7 @@ router.get('/credits', async (req, res) => {
     }
     
     // Obtener packs del paciente
-    const packsEndpoint = `${req.getTable('credit_packs')}?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
+    const packsEndpoint = `credit_packs?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: packs } = await supabaseFetch(packsEndpoint);
     
     // Calcular totales
@@ -989,7 +976,7 @@ router.post('/credits/packs', async (req, res) => {
     console.log('Creating credit pack with price:', packData);
     console.log('💰 Price:', priceCents, 'cents (', ((priceCents || 0)/100).toFixed(2), '€)');
     
-    const { data } = await supabaseFetch(`${req.getTable('credit_packs')}`, {
+    const { data } = await supabaseFetch('credit_packs', {
       method: 'POST',
       body: JSON.stringify(packData)
     });
@@ -1006,7 +993,7 @@ router.delete('/credits/packs/:packId', async (req, res) => {
   try {
     const { packId } = req.params;
     
-    const endpoint = `${req.getTable('credit_packs')}?id=eq.${packId}`;
+    const endpoint = `credit_packs?id=eq.${packId}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
@@ -1025,7 +1012,7 @@ router.patch('/credits/packs/:packId/payment', async (req, res) => {
     const { packId } = req.params;
     const { paid } = req.body;
     
-    const endpoint = `${req.getTable('credit_packs')}?id=eq.${packId}`;
+    const endpoint = `credit_packs?id=eq.${packId}`;
     const { data } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify({ paid })
@@ -1044,7 +1031,7 @@ router.patch('/credits/packs/:packId/units', async (req, res) => {
     const { packId } = req.params;
     const { unitsRemaining } = req.body;
     
-    const endpoint = `${req.getTable('credit_packs')}?id=eq.${packId}`;
+    const endpoint = `credit_packs?id=eq.${packId}`;
     const { data } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify({ unitsRemaining })
@@ -1070,19 +1057,19 @@ router.post('/credits/redeem', async (req, res) => {
       createdAt: new Date().toISOString()
     };
     
-    const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
+    const { data: redemption } = await supabaseFetch('credit_redemptions', {
       method: 'POST',
       body: JSON.stringify(redemptionData)
     });
     
     // Actualizar unidades restantes del pack
-    const packEndpoint = `${req.getTable('credit_packs')}?id=eq.${creditPackId}&select=unitsRemaining`;
+    const packEndpoint = `credit_packs?id=eq.${creditPackId}&select=unitsRemaining`;
     const { data: packs } = await supabaseFetch(packEndpoint);
     
     if (packs && packs.length > 0) {
       const newUnitsRemaining = packs[0].unitsRemaining - unitsUsed;
       
-      await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${creditPackId}`, {
+      await supabaseFetch(`credit_packs?id=eq.${creditPackId}`, {
         method: 'PATCH',
         body: JSON.stringify({ unitsRemaining: newUnitsRemaining })
       });
@@ -1106,7 +1093,7 @@ router.get('/credits/history', async (req, res) => {
     }
     
     // Obtener redenciones con información de packs y citas
-    const endpoint = `${req.getTable('credit_redemptions')}?select=*,credit_packs!inner(patientId),appointments(*)&credit_packs.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
+    const endpoint = `credit_redemptions?select=*,credit_packs!inner(patientId),appointments(*)&credit_packs.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
     
     const { data: redemptions, total } = await supabaseFetch(endpoint, {
       headers: { 'Prefer': 'count=exact' }
@@ -1286,7 +1273,7 @@ router.delete('/files/:fileId', async (req, res) => {
 // GET /api/config - Obtener configuración
 router.get('/config', async (req, res) => {
   try {
-    const endpoint = `${req.getTable('configurations')}?select=*&limit=1`;
+    const endpoint = `configurations?select=*&limit=1`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -1326,13 +1313,13 @@ router.put('/config', async (req, res) => {
     const configData = req.body;
     
     // Verificar si existe una configuración
-    const checkEndpoint = `${req.getTable('configurations')}?select=id&limit=1`;
+    const checkEndpoint = `configurations?select=id&limit=1`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     let result;
     if (existing && existing.length > 0) {
       // Actualizar
-      const updateEndpoint = `${req.getTable('configurations')}?id=eq.${existing[0].id}`;
+      const updateEndpoint = `configurations?id=eq.${existing[0].id}`;
       const { data } = await supabaseFetch(updateEndpoint, {
         method: 'PATCH',
         body: JSON.stringify(configData)
@@ -1340,7 +1327,7 @@ router.put('/config', async (req, res) => {
       result = data[0];
     } else {
       // Crear
-      const { data } = await supabaseFetch(`${req.getTable('configurations')}`, {
+      const { data } = await supabaseFetch('configurations', {
         method: 'POST',
         body: JSON.stringify(configData)
       });
@@ -1377,19 +1364,19 @@ router.post('/config/reset', async (req, res) => {
       }
     };
     
-    const checkEndpoint = `${req.getTable('configurations')}?select=id&limit=1`;
+    const checkEndpoint = `configurations?select=id&limit=1`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     let result;
     if (existing && existing.length > 0) {
-      const updateEndpoint = `${req.getTable('configurations')}?id=eq.${existing[0].id}`;
+      const updateEndpoint = `configurations?id=eq.${existing[0].id}`;
       const { data } = await supabaseFetch(updateEndpoint, {
         method: 'PATCH',
         body: JSON.stringify(defaultConfig)
       });
       result = data[0];
     } else {
-      const { data } = await supabaseFetch(`${req.getTable('configurations')}`, {
+      const { data } = await supabaseFetch('configurations', {
         method: 'POST',
         body: JSON.stringify(defaultConfig)
       });
@@ -1409,7 +1396,7 @@ router.get('/config/working-hours/:date', async (req, res) => {
     const { date } = req.params;
     
     // Obtener configuración
-    const endpoint = `${req.getTable('configurations')}?select=workingHours&limit=1`;
+    const endpoint = `configurations?select=workingHours&limit=1`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -1434,7 +1421,7 @@ router.get('/config/working-hours/:date', async (req, res) => {
 // GET /api/config/prices - Obtener precios
 router.get('/config/prices', async (req, res) => {
   try {
-    const endpoint = `${req.getTable('configurations')}?select=prices&limit=1`;
+    const endpoint = `configurations?select=prices&limit=1`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -1458,14 +1445,14 @@ router.put('/config/prices', async (req, res) => {
   try {
     const prices = req.body;
     
-    const checkEndpoint = `${req.getTable('configurations')}?select=id&limit=1`;
+    const checkEndpoint = `configurations?select=id&limit=1`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     if (!existing || existing.length === 0) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
     
-    const updateEndpoint = `${req.getTable('configurations')}?id=eq.${existing[0].id}`;
+    const updateEndpoint = `configurations?id=eq.${existing[0].id}`;
     const { data } = await supabaseFetch(updateEndpoint, {
       method: 'PATCH',
       body: JSON.stringify({ prices })
@@ -1530,7 +1517,7 @@ router.get('/meta/locations/by-cp/:cp', async (req, res) => {
 router.get('/backup/list', async (req, res) => {
   try {
     // Obtener backups guardados en la tabla backups
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?select=*&order=created.desc`);
+    const { data: backups, error } = await supabaseFetch('backups?select=*&order=created.desc');
     
     if (error) {
       console.error('Error fetching backups from database:', error);
@@ -1574,7 +1561,7 @@ function formatBytes(bytes, decimals = 2) {
 router.get('/backup/stats', async (req, res) => {
   try {
     // Obtener todos los backups
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?select=*&order=created.desc`);
+    const { data: backups, error } = await supabaseFetch('backups?select=*&order=created.desc');
     
     if (error) {
       console.error('Error fetching backup stats:', error);
@@ -1610,10 +1597,10 @@ router.post('/backup/create', async (req, res) => {
   try {
     // 1. Obtener todos los datos
     const [patients, appointments, creditPacks, redemptions, files] = await Promise.all([
-      supabaseFetch(`${req.getTable('patients')}?select=*`).then(r => r.data || []),
-      supabaseFetch(`${req.getTable('appointments')}?select=*`).then(r => r.data || []),
-      supabaseFetch(`${req.getTable('credit_packs')}?select=*`).then(r => r.data || []),
-      supabaseFetch(`${req.getTable('credit_redemptions')}?select=*`).then(r => r.data || []),
+      supabaseFetch('patients?select=*').then(r => r.data || []),
+      supabaseFetch('appointments?select=*').then(r => r.data || []),
+      supabaseFetch('credit_packs?select=*').then(r => r.data || []),
+      supabaseFetch('credit_redemptions?select=*').then(r => r.data || []),
       supabaseFetch('patient_files?select=*').then(r => r.data || [])
     ]);
     
@@ -1644,7 +1631,7 @@ router.post('/backup/create', async (req, res) => {
     const sizeBytes = new Blob([backupJson]).size;
     
     // 4. Guardar en la tabla backups
-    const { data: savedBackup, error: saveError } = await supabaseFetch(`${req.getTable('backups')}`, {
+    const { data: savedBackup, error: saveError } = await supabaseFetch('backups', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify({
@@ -1697,7 +1684,7 @@ router.get('/backup/status', async (req, res) => {
 router.get('/backup/grouped', async (req, res) => {
   try {
     // Obtener backups guardados
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?select=*&order=created.desc`);
+    const { data: backups, error } = await supabaseFetch('backups?select=*&order=created.desc');
     
     if (error) {
       console.error('Error fetching backups:', error);
@@ -1744,7 +1731,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     console.log('🔄 Iniciando restauración del backup:', fileName);
     
     // 1. Obtener el backup de la base de datos
-    const { data: backups, error: fetchError } = await supabaseFetch(`${req.getTable('backups')}?file_name=eq.${encodeURIComponent(fileName)}`);
+    const { data: backups, error: fetchError } = await supabaseFetch(`backups?file_name=eq.${encodeURIComponent(fileName)}`);
     
     if (fetchError || !backups || backups.length === 0) {
       console.error('❌ Backup no encontrado:', fileName);
@@ -1779,11 +1766,11 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     // 3. Eliminar datos existentes (CUIDADO: Esta operación es destructiva)
     console.log('🗑️ Eliminando datos existentes...');
     await Promise.all([
-      supabaseFetch(`${req.getTable('credit_redemptions')}?id=gt.0`, { method: 'DELETE' }),
-      supabaseFetch(`${req.getTable('appointments')}?id=gt.0`, { method: 'DELETE' }),
+      supabaseFetch('credit_redemptions?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch('appointments?id=gt.0', { method: 'DELETE' }),
       supabaseFetch('patient_files?id=gt.0', { method: 'DELETE' }),
-      supabaseFetch(`${req.getTable('credit_packs')}?id=gt.0`, { method: 'DELETE' }),
-      supabaseFetch(`${req.getTable('patients')}?id=gt.0`, { method: 'DELETE' })
+      supabaseFetch('credit_packs?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch('patients?id=gt.0', { method: 'DELETE' })
     ]);
     
     console.log('✅ Datos existentes eliminados');
@@ -1793,7 +1780,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     
     // 4.1 Primero pacientes (no tienen dependencias)
     if (patients.length > 0) {
-      const { error: patientsError } = await supabaseFetch(`${req.getTable('patients')}`, {
+      const { error: patientsError } = await supabaseFetch('patients', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(patients)
@@ -1807,7 +1794,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     
     // 4.2 Credit packs (dependen de pacientes)
     if (creditPacks.length > 0) {
-      const { error: packsError } = await supabaseFetch(`${req.getTable('credit_packs')}`, {
+      const { error: packsError } = await supabaseFetch('credit_packs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(creditPacks)
@@ -1821,7 +1808,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     
     // 4.3 Appointments (dependen de pacientes y credit_packs)
     if (appointments.length > 0) {
-      const { error: appointmentsError } = await supabaseFetch(`${req.getTable('appointments')}`, {
+      const { error: appointmentsError } = await supabaseFetch('appointments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(appointments)
@@ -1835,7 +1822,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     
     // 4.4 Credit redemptions (dependen de credit_packs y appointments)
     if (redemptions.length > 0) {
-      const { error: redemptionsError } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
+      const { error: redemptionsError } = await supabaseFetch('credit_redemptions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(redemptions)
@@ -1889,7 +1876,7 @@ router.get('/backup/download/:fileName', async (req, res) => {
     const { fileName } = req.params;
     
     // Buscar el backup en la base de datos
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?file_name=eq.${encodeURIComponent(fileName)}`);
+    const { data: backups, error } = await supabaseFetch(`backups?file_name=eq.${encodeURIComponent(fileName)}`);
     
     if (error || !backups || backups.length === 0) {
       return res.status(404).json({ error: 'Backup no encontrado' });
@@ -1912,7 +1899,7 @@ router.delete('/backup/delete/:fileName', async (req, res) => {
     const { fileName } = req.params;
     
     // Eliminar el backup de la base de datos
-    const { error } = await supabaseFetch(`${req.getTable('backups')}?file_name=eq.${encodeURIComponent(fileName)}`, {
+    const { error } = await supabaseFetch(`backups?file_name=eq.${encodeURIComponent(fileName)}`, {
       method: 'DELETE'
     });
     
@@ -1973,7 +1960,7 @@ const DEFAULT_PRICES = {
 // GET /api/meta/config - Obtener configuración
 router.get('/meta/config', async (req, res) => {
   try {
-    const { data: configs } = await supabaseFetch(`${req.getTable('configurations')}?select=*`);
+    const { data: configs } = await supabaseFetch('configurations?select=*');
     
     const configObject = {};
     if (configs) {
@@ -2004,17 +1991,17 @@ router.put('/meta/config', async (req, res) => {
       const value = typeof updates[key] === 'object' ? JSON.stringify(updates[key]) : updates[key].toString();
       
       // Buscar si existe
-      const { data: existing } = await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`);
+      const { data: existing } = await supabaseFetch(`configurations?key=eq.${key}`);
       
       if (existing && existing.length > 0) {
         // Actualizar
-        return await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`, {
+        return await supabaseFetch(`configurations?key=eq.${key}`, {
           method: 'PATCH',
           body: JSON.stringify({ value })
         });
       } else {
         // Crear
-        return await supabaseFetch(`${req.getTable('configurations')}`, {
+        return await supabaseFetch('configurations', {
           method: 'POST',
           body: JSON.stringify({ key, value })
         });
@@ -2024,7 +2011,7 @@ router.put('/meta/config', async (req, res) => {
     await Promise.all(promises);
     
     // Obtener configuración actualizada
-    const { data: configs } = await supabaseFetch(`${req.getTable('configurations')}?select=*`);
+    const { data: configs } = await supabaseFetch('configurations?select=*');
     const configObject = {};
     if (configs) {
       configs.forEach(config => {
@@ -2049,7 +2036,7 @@ router.get('/meta/config/prices', async (req, res) => {
   try {
     const priceKeys = ['sessionPrice30', 'sessionPrice60', 'bonoPrice30', 'bonoPrice60'];
     const keysParam = priceKeys.map(k => `"${k}"`).join(',');
-    const { data: priceConfigs } = await supabaseFetch(`${req.getTable('configurations')}?key=in.(${keysParam})`);
+    const { data: priceConfigs } = await supabaseFetch(`configurations?key=in.(${keysParam})`);
     
     const pricesObject = { ...DEFAULT_PRICES };
     if (priceConfigs) {
@@ -2079,17 +2066,17 @@ router.put('/meta/config/prices', async (req, res) => {
       const value = updates[key].toString();
       
       // Buscar si existe
-      const { data: existing } = await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`);
+      const { data: existing } = await supabaseFetch(`configurations?key=eq.${key}`);
       
       if (existing && existing.length > 0) {
         // Actualizar
-        return await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`, {
+        return await supabaseFetch(`configurations?key=eq.${key}`, {
           method: 'PATCH',
           body: JSON.stringify({ value })
         });
       } else {
         // Crear
-        return await supabaseFetch(`${req.getTable('configurations')}`, {
+        return await supabaseFetch('configurations', {
           method: 'POST',
           body: JSON.stringify({ key, value })
         });
@@ -2101,7 +2088,7 @@ router.put('/meta/config/prices', async (req, res) => {
     // Obtener precios actualizados
     const priceKeys = ['sessionPrice30', 'sessionPrice60', 'bonoPrice30', 'bonoPrice60'];
     const keysParam = priceKeys.map(k => `"${k}"`).join(',');
-    const { data: priceConfigs } = await supabaseFetch(`${req.getTable('configurations')}?key=in.(${keysParam})`);
+    const { data: priceConfigs } = await supabaseFetch(`configurations?key=in.(${keysParam})`);
     
     const pricesObject = { ...DEFAULT_PRICES };
     if (priceConfigs) {
@@ -2140,7 +2127,7 @@ router.get('/reports/billing', async (req, res) => {
     const endDate = new Date(year, month, 0, 23, 59, 59);
     
     const { data: appointments } = await supabaseFetch(
-      `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
+      `appointments?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
     );
 
     const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
