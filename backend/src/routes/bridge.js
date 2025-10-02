@@ -1586,20 +1586,146 @@ router.get('/backup/grouped', async (req, res) => {
 // POST /api/backup/restore/:fileName - Restaurar backup
 router.post('/backup/restore/:fileName', async (req, res) => {
   try {
-    // Nota: Esta es una operación compleja que requeriría:
-    // 1. Descargar el backup
-    // 2. Validar el formato
-    // 3. Truncar tablas
-    // 4. Insertar datos
-    // Por ahora devolvemos error indicando que debe hacerse manualmente
+    const { fileName } = req.params;
+    console.log('🔄 Iniciando restauración del backup:', fileName);
     
-    res.status(501).json({
-      success: false,
-      message: 'La restauración debe realizarse manualmente por seguridad'
+    // 1. Obtener el backup de la base de datos
+    const { data: backups, error: fetchError } = await supabaseFetch(`backups?file_name=eq.${encodeURIComponent(fileName)}`);
+    
+    if (fetchError || !backups || backups.length === 0) {
+      console.error('❌ Backup no encontrado:', fileName);
+      return res.status(404).json({
+        success: false,
+        message: 'Backup no encontrado'
+      });
+    }
+    
+    const backup = backups[0];
+    const backupData = backup.data;
+    
+    // 2. Validar formato del backup
+    if (!backupData || !backupData.data || !backupData.version) {
+      console.error('❌ Formato de backup inválido');
+      return res.status(400).json({
+        success: false,
+        message: 'Formato de backup inválido'
+      });
+    }
+    
+    const { patients = [], appointments = [], creditPacks = [], redemptions = [], files = [] } = backupData.data;
+    
+    console.log('📊 Datos a restaurar:', {
+      patients: patients.length,
+      appointments: appointments.length,
+      creditPacks: creditPacks.length,
+      redemptions: redemptions.length,
+      files: files.length
+    });
+    
+    // 3. Eliminar datos existentes (CUIDADO: Esta operación es destructiva)
+    console.log('🗑️ Eliminando datos existentes...');
+    await Promise.all([
+      supabaseFetch('credit_redemptions?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch('appointments?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch('patient_files?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch('credit_packs?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch('patients?id=gt.0', { method: 'DELETE' })
+    ]);
+    
+    console.log('✅ Datos existentes eliminados');
+    
+    // 4. Insertar datos del backup (en orden para respetar foreign keys)
+    console.log('📥 Insertando datos del backup...');
+    
+    // 4.1 Primero pacientes (no tienen dependencias)
+    if (patients.length > 0) {
+      const { error: patientsError } = await supabaseFetch('patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(patients)
+      });
+      if (patientsError) {
+        console.error('❌ Error insertando pacientes:', patientsError);
+        throw new Error('Error al restaurar pacientes');
+      }
+      console.log(`✅ ${patients.length} pacientes restaurados`);
+    }
+    
+    // 4.2 Credit packs (dependen de pacientes)
+    if (creditPacks.length > 0) {
+      const { error: packsError } = await supabaseFetch('credit_packs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(creditPacks)
+      });
+      if (packsError) {
+        console.error('❌ Error insertando bonos:', packsError);
+        throw new Error('Error al restaurar bonos');
+      }
+      console.log(`✅ ${creditPacks.length} bonos restaurados`);
+    }
+    
+    // 4.3 Appointments (dependen de pacientes y credit_packs)
+    if (appointments.length > 0) {
+      const { error: appointmentsError } = await supabaseFetch('appointments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(appointments)
+      });
+      if (appointmentsError) {
+        console.error('❌ Error insertando citas:', appointmentsError);
+        throw new Error('Error al restaurar citas');
+      }
+      console.log(`✅ ${appointments.length} citas restauradas`);
+    }
+    
+    // 4.4 Credit redemptions (dependen de credit_packs y appointments)
+    if (redemptions.length > 0) {
+      const { error: redemptionsError } = await supabaseFetch('credit_redemptions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(redemptions)
+      });
+      if (redemptionsError) {
+        console.error('❌ Error insertando redenciones:', redemptionsError);
+        throw new Error('Error al restaurar redenciones');
+      }
+      console.log(`✅ ${redemptions.length} redenciones restauradas`);
+    }
+    
+    // 4.5 Patient files (dependen de pacientes)
+    if (files.length > 0) {
+      const { error: filesError } = await supabaseFetch('patient_files', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify(files)
+      });
+      if (filesError) {
+        console.error('❌ Error insertando archivos:', filesError);
+        throw new Error('Error al restaurar archivos');
+      }
+      console.log(`✅ ${files.length} archivos restaurados`);
+    }
+    
+    console.log('🎉 Backup restaurado exitosamente');
+    
+    res.json({
+      success: true,
+      message: 'Backup restaurado exitosamente',
+      restored: {
+        patients: patients.length,
+        appointments: appointments.length,
+        creditPacks: creditPacks.length,
+        redemptions: redemptions.length,
+        files: files.length
+      }
     });
   } catch (error) {
-    console.error('Error restoring backup:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Error restoring backup:', error);
+    res.status(500).json({ 
+      success: false,
+      message: error.message || 'Error al restaurar el backup'
+    });
   }
 });
 

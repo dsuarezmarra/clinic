@@ -9,6 +9,7 @@ Backend actualizado: https://masajecorporaldeportivo-api.vercel.app
 ## 🚀 **SOLO FALTA 1 PASO: Crear la Tabla en Supabase**
 
 ### **Paso 1: Ir a Supabase SQL Editor**
+
 ```
 https://supabase.com/dashboard/project/nnfxzgvplvavgdfmgrrb/sql/new
 ```
@@ -59,11 +60,13 @@ GRANT USAGE, SELECT ON SEQUENCE backups_id_seq TO anon, authenticated, service_r
 ## 🎯 **Qué se Corrigió**
 
 ### **Problema:**
+
 - Los backups no se guardaban realmente
 - Solo existían datos "virtuales" temporales
 - No aparecían en "Vista Fecha"
 
 ### **Solución:**
+
 - Ahora los backups se guardan en tabla `backups` de Supabase
 - Son persistentes y reales
 - Aparecen en ambas vistas correctamente
@@ -74,12 +77,14 @@ GRANT USAGE, SELECT ON SEQUENCE backups_id_seq TO anon, authenticated, service_r
 ## 📊 **Características de la Solución**
 
 ### **Tabla `backups`:**
+
 - **file_name:** Nombre del backup (ej: `backup_2025-10-02T12-30-45.json`)
 - **data:** Todos los datos exportados (pacientes, citas, bonos, etc.)
 - **size_bytes:** Tamaño del backup
 - **created:** Fecha y hora de creación
 
 ### **Funcionalidades:**
+
 - ✅ Crear backup → Guarda en BD
 - ✅ Vista Lista → Muestra todos los backups
 - ✅ Vista Fecha → Agrupa por fecha
@@ -92,6 +97,7 @@ GRANT USAGE, SELECT ON SEQUENCE backups_id_seq TO anon, authenticated, service_r
 ## ⚠️ **IMPORTANTE**
 
 Después de ejecutar el SQL en Supabase:
+
 1. Refrescar la página de la aplicación (F5)
 2. Crear un backup de prueba
 3. Verificar que aparece en ambas vistas
