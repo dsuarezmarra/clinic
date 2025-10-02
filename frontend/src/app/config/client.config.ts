@@ -77,19 +77,20 @@ const CLIENT_CONFIGS: Record<string, ClientConfig> = {
 
 /**
  * Obtiene el ID del cliente actual desde variables de entorno
- * En desarrollo: usa .env.local
- * En producción: configura VITE_CLIENT_ID en Vercel
+ * En desarrollo: se puede cambiar manualmente aquí
+ * En producción: se define en el código antes del build
  */
 function getCurrentClientId(): string {
-  // Variable de entorno definida en build time
-  const envClientId = import.meta.env.VITE_CLIENT_ID;
+  // CONFIGURACIÓN: Cambiar esto al hacer build para cada cliente
+  // En Vercel, usa el hook de build para reemplazar este valor
+  const clientId = 'masajecorporaldeportivo';  // <-- Cambiar según el cliente
   
-  if (envClientId && CLIENT_CONFIGS[envClientId]) {
-    return envClientId;
+  if (clientId && CLIENT_CONFIGS[clientId]) {
+    return clientId;
   }
   
   // Fallback al cliente por defecto
-  console.warn('⚠️ VITE_CLIENT_ID no definido, usando cliente por defecto');
+  console.warn('⚠️ Cliente no configurado, usando por defecto');
   return 'masajecorporaldeportivo';
 }
 

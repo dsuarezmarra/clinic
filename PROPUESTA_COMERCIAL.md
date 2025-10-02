@@ -5,6 +5,7 @@
 ## 📋 **Resumen Ejecutivo**
 
 Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wellness**, con:
+
 - ✅ Gestión de pacientes y citas
 - ✅ Sistema de bonos/packs de sesiones
 - ✅ Calendario inteligente
@@ -19,6 +20,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 ### **🚀 Paquete Básico - 500€ (única vez)**
 
 **Incluye:**
+
 - ✅ Configuración inicial completa
 - ✅ Personalización con tu marca:
   - Nombre de la clínica
@@ -37,6 +39,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 ### **📱 Paquete Premium - 750€ (única vez)**
 
 **Todo lo del Básico +**
+
 - ✅ Dominio personalizado: `www.tuclinica.com`
 - ✅ Logo profesional diseñado (si no tienes)
 - ✅ Email corporativo integrado
@@ -52,6 +55,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 ### **💎 Paquete Enterprise - 1.200€ (única vez)**
 
 **Todo lo del Premium +**
+
 - ✅ Personalización avanzada de funcionalidades
 - ✅ Integración con tu sistema actual (si existe)
 - ✅ Recordatorios automáticos por email/SMS
@@ -66,12 +70,14 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 ## 🔄 **Mantenimiento Mensual (Opcional)**
 
 ### **Plan Básico - 29€/mes**
+
 - ✅ Actualizaciones de seguridad
 - ✅ Backup automático diario
 - ✅ Soporte por email (48h respuesta)
 - ✅ Hosting incluido (sin límites)
 
 ### **Plan Pro - 59€/mes**
+
 - ✅ Todo lo del Básico +
 - ✅ Soporte prioritario (24h respuesta)
 - ✅ Nuevas funcionalidades incluidas
@@ -79,6 +85,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 - ✅ 2 horas/mes de desarrollo a medida
 
 ### **Plan Enterprise - 99€/mes**
+
 - ✅ Todo lo del Pro +
 - ✅ Soporte telefónico
 - ✅ Gestor de cuenta dedicado
@@ -89,20 +96,21 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 
 ## 🎨 **Personalizaciones Extra**
 
-| Servicio | Precio | Tiempo |
-|----------|--------|--------|
-| Campo personalizado en formularios | 50€ | 1-2 días |
-| Nueva funcionalidad simple | 150€ | 2-5 días |
-| Funcionalidad compleja | 300€+ | 5-10 días |
-| Integración con otro sistema | 400€+ | 7-14 días |
-| App móvil nativa (iOS/Android) | 2.000€+ | 1-2 meses |
-| Sistema de recordatorios SMS | 200€ setup + 0,05€/SMS | 3-5 días |
+| Servicio                           | Precio                 | Tiempo    |
+| ---------------------------------- | ---------------------- | --------- |
+| Campo personalizado en formularios | 50€                    | 1-2 días  |
+| Nueva funcionalidad simple         | 150€                   | 2-5 días  |
+| Funcionalidad compleja             | 300€+                  | 5-10 días |
+| Integración con otro sistema       | 400€+                  | 7-14 días |
+| App móvil nativa (iOS/Android)     | 2.000€+                | 1-2 meses |
+| Sistema de recordatorios SMS       | 200€ setup + 0,05€/SMS | 3-5 días  |
 
 ---
 
 ## ✨ **Características del Sistema**
 
 ### **👥 Gestión de Pacientes**
+
 - Ficha completa con datos personales
 - Historial de citas y tratamientos
 - Adjuntar archivos (informes, imágenes)
@@ -110,6 +118,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 - Búsqueda rápida por nombre/DNI/teléfono
 
 ### **📅 Agenda Inteligente**
+
 - Calendario visual (día/semana/mes)
 - Arrastrar y soltar para mover citas
 - Colores por tipo de tratamiento
@@ -117,6 +126,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 - Vista de disponibilidad en tiempo real
 
 ### **🎟️ Sistema de Bonos**
+
 - Crear packs de sesiones (5, 10, 20 sesiones)
 - Descuentos automáticos por volumen
 - Control de sesiones consumidas/disponibles
@@ -124,6 +134,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 - Historial de uso por paciente
 
 ### **📊 Reportes e Informes**
+
 - Exportar a Excel/CSV
 - Ingresos por período
 - Sesiones realizadas
@@ -131,6 +142,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 - Pacientes activos/inactivos
 
 ### **📱 PWA (Progressive Web App)**
+
 - Se instala como app en el móvil
 - Funciona sin internet (modo offline)
 - Notificaciones push
@@ -138,6 +150,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 - Experiencia nativa
 
 ### **🔐 Seguridad**
+
 - Base de datos cifrada
 - Backups automáticos diarios
 - Acceso privado (sin autenticación de terceros)
@@ -149,6 +162,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 ## 💰 **Retorno de Inversión**
 
 ### **Situación Actual (Sin sistema)**
+
 - ⏱️ 15-20 min/día gestionando agenda en papel
 - 📞 Llamadas perdidas por no ver disponibilidad
 - 💸 Bonos mal controlados (pérdidas ~50€/mes)
@@ -158,6 +172,7 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 **Total pérdidas estimadas:** ~200€/mes
 
 ### **Con el Sistema**
+
 - ⚡ 5 min/día (ahorro de 10-15 min)
 - 📱 Agenda siempre disponible (más clientes)
 - 💯 Control exacto de bonos (0€ pérdidas)
@@ -185,12 +200,15 @@ Sistema web completo de gestión para **clínicas de fisioterapia, masajes y wel
 ## 📞 **Siguiente Paso**
 
 ### **Demo Gratuita**
+
 Te mostramos el sistema funcionando con datos de ejemplo en **15 minutos**:
+
 - Sin compromiso
 - Por videollamada o presencial
 - Resolvemos todas tus dudas
 
 ### **Contacto**
+
 📧 **Email:** tu@email.com  
 📱 **WhatsApp:** +34 XXX XXX XXX  
 🌐 **Web:** www.tusistemas.com  

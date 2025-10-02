@@ -13,6 +13,7 @@ Hola [Nombre del prospecto],
 Me llamo [Tu nombre] y he desarrollado un **sistema de gestión específico para clínicas de fisioterapia, masajes y wellness**.
 
 ¿Te resulta familiar?
+
 - 📝 Agenda en papel que se vuelve caótica
 - 🤔 No recordar cuántas sesiones quedan en los bonos
 - 💸 Pérdida de dinero por mal control
@@ -47,6 +48,7 @@ Hola [Nombre],
 Gracias por tu tiempo en la demo de hoy. Como comentamos, estas son las características que mejor encajan con tu clínica:
 
 **✅ Lo que necesitas:**
+
 - [Característica 1 mencionada]
 - [Característica 2 mencionada]
 - [Característica 3 mencionada]
@@ -54,10 +56,12 @@ Gracias por tu tiempo en la demo de hoy. Como comentamos, estas son las caracter
 **📦 Paquete recomendado:** [Básico/Premium/Enterprise]
 
 **💰 Inversión:**
+
 - Setup inicial: [precio]€ (única vez)
 - Mantenimiento: [precio]€/mes (opcional, sin permanencia)
 
 **🎁 Promoción actual:**
+
 - 20% de descuento en setup
 - 3 meses de mantenimiento GRATIS
 
@@ -83,6 +87,7 @@ Hola [Nombre],
 ¡Genial! Gracias por confiar en [tu empresa].
 
 **✅ Confirmación de compra:**
+
 - Paquete: [Básico/Premium/Enterprise]
 - Precio: [precio]€
 - Forma de pago: [Transferencia/Tarjeta/Otro]
@@ -90,26 +95,30 @@ Hola [Nombre],
 **📋 Siguientes pasos:**
 
 **1. Pago** (si no está hecho)
-   - IBAN: ES00 0000 0000 0000 0000 0000
-   - Concepto: "Setup [Nombre Clínica]"
-   - O pago con tarjeta: [link Stripe/PayPal]
+
+- IBAN: ES00 0000 0000 0000 0000 0000
+- Concepto: "Setup [Nombre Clínica]"
+- O pago con tarjeta: [link Stripe/PayPal]
 
 **2. Información para personalización** (responde este email con):
-   - Nombre completo de tu clínica
-   - Logo (formato PNG o JPG, alta resolución)
-   - Color principal (código hex si lo tienes, ej: #FF5733)
-   - URL deseada: [nombre].vercel.app
-   - Teléfono y dirección de la clínica
-   - Horario habitual: Lunes-Viernes [XX:XX - XX:XX]
+
+- Nombre completo de tu clínica
+- Logo (formato PNG o JPG, alta resolución)
+- Color principal (código hex si lo tienes, ej: #FF5733)
+- URL deseada: [nombre].vercel.app
+- Teléfono y dirección de la clínica
+- Horario habitual: Lunes-Viernes [XX:XX - XX:XX]
 
 **3. Servicios y precios:**
-   - ¿Cuánto cobras por sesión de 30 min?
-   - ¿Cuánto cobras por sesión de 60 min?
-   - ¿Tienes bonos? ¿Cuántas sesiones y precios?
+
+- ¿Cuánto cobras por sesión de 30 min?
+- ¿Cuánto cobras por sesión de 60 min?
+- ¿Tienes bonos? ¿Cuántas sesiones y precios?
 
 **⏰ En [1-2 días / 3-5 días] tendrás tu sistema listo.**
 
 Te enviaré un email con:
+
 - 🔗 URL de acceso
 - 👤 Credenciales (si aplica)
 - 📚 Manual de usuario
@@ -138,12 +147,14 @@ Hola [Nombre],
 URL: https://[cliente].vercel.app
 
 **📱 Instalar como app en móvil:**
+
 1. Abre la URL en Chrome (móvil)
 2. Menú (3 puntos) → "Añadir a pantalla de inicio"
 3. ¡Ya tienes tu app!
 
 **📊 Datos de ejemplo:**
 He creado algunos datos de prueba para que pruebes el sistema:
+
 - 3 pacientes de ejemplo
 - 5 citas de ejemplo
 - 2 bonos de ejemplo
@@ -151,6 +162,7 @@ He creado algunos datos de prueba para que pruebes el sistema:
 **Puedes borrarlos cuando empieces a usar el sistema de verdad.**
 
 **📚 Recursos:**
+
 - Manual de usuario: [adjunto PDF]
 - Videos tutoriales: [link YouTube/Vimeo]
 - FAQ: [link]
@@ -160,6 +172,7 @@ Reserva tu sesión de formación (1 hora):
 [Link Calendly o disponibilidad]
 
 **💬 Soporte:**
+
 - Email: [tu email]
 - WhatsApp: [tu número]
 - Horario: Lunes-Viernes 9:00-18:00
@@ -185,12 +198,14 @@ Espero que estés sacándole partido al sistema 💪
 Cuota de mantenimiento de [mes]: [precio]€
 
 **✅ Incluye:**
+
 - Actualizaciones de seguridad
 - Backup automático diario
 - Soporte por email
 - Hosting ilimitado
 
 **💳 Pago:**
+
 - IBAN: ES00 0000 0000 0000 0000 0000
 - Concepto: "Mantenimiento [Mes] - [Cliente]"
 - Fecha límite: [día X del mes]
@@ -199,6 +214,7 @@ Cuota de mantenimiento de [mes]: [precio]€
 Sin problema, puedes cancelar en cualquier momento (avisa con 7 días de antelación).
 
 **🆕 Novedades de este mes:**
+
 - [Nueva funcionalidad 1]
 - [Mejora 2]
 - [Corrección bug 3]
@@ -228,6 +244,7 @@ Me encantaría saber:
 
 **🎁 Por tu feedback:**
 Si me dejas un testimonio (2-3 líneas), te regalo:
+
 - **1 mes de mantenimiento GRATIS**
 - O **1 personalización pequeña sin coste**
 
@@ -257,12 +274,14 @@ Hace tiempo que no sé de ti. Espero que todo vaya bien por tu clínica.
 Veo que dejaste de usar [sistema] hace [X meses]. **¿Hubo algún problema?**
 
 Me gustaría saber:
+
 - ¿Dejaste de necesitarlo?
 - ¿Encontraste algo mejor?
 - ¿Hubo algún error o algo que no te gustó?
 
 **🎁 Oferta de reactivación:**
 Si quieres volver, te ofrezco:
+
 - **50% de descuento** en el primer mes
 - **Actualización gratuita** con las nuevas funcionalidades
 - **Formación de refresco** (30 min)
@@ -297,6 +316,7 @@ Hola [Nombre],
 [Casos de uso]
 
 **💰 Precio:**
+
 - Setup: [precio]€ (única vez)
 - Incluido en mantenimiento: [Sí/No]
 
