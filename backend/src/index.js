@@ -63,16 +63,22 @@ app.use(helmet({
 }));
 app.use(compression());
 
-// CORS - Permitir header X-Tenant-Slug para multi-tenant
-// Configuración simplificada que permite todos los headers necesarios
-app.use(cors({
-  origin: true, // Permitir cualquier origen (más permisivo para testing)
-  credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug', 'X-Requested-With', 'Accept', 'Content-Length'],
-  exposedHeaders: ['Content-Range', 'X-Total-Count'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  optionsSuccessStatus: 204
-}));
+// CORS Manual - Manejar preflight OPTIONS requests explícitamente
+app.use((req, res, next) => {
+  // Configurar headers CORS para todas las respuestas
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With, Accept, Content-Length');
+  res.header('Access-Control-Expose-Headers', 'Content-Range, X-Total-Count');
+  
+  // Si es una petición OPTIONS (preflight), responder inmediatamente
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
 
 // Parsear JSON con codificación UTF-8
 app.use(express.json({
