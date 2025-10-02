@@ -1375,54 +1375,78 @@ router.get('/meta/locations/by-cp/:cp', async (req, res) => {
 // GET /api/backup/list - Listar backups disponibles
 router.get('/backup/list', async (req, res) => {
   try {
-    // Obtener todas las tablas
-    const [patients, appointments, creditPacks, redemptions] = await Promise.all([
-      supabaseFetch('patients?select=count').then(r => r.total || 0),
-      supabaseFetch('appointments?select=count').then(r => r.total || 0),
-      supabaseFetch('credit_packs?select=count').then(r => r.total || 0),
-      supabaseFetch('credit_redemptions?select=count').then(r => r.total || 0)
-    ]);
+    // Obtener backups guardados en la tabla backups
+    const { data: backups, error } = await supabaseFetch('backups?select=*&order=created.desc');
     
-    // Crear backup "virtual" con timestamp actual
-    const backup = {
-      fileName: `backup_${new Date().toISOString().replace(/:/g, '-')}.json`,
-      date: new Date().toISOString(),
-      size: 0,
-      stats: {
-        patients,
-        appointments,
-        creditPacks,
-        redemptions
-      }
-    };
+    if (error) {
+      console.error('Error fetching backups from database:', error);
+      return res.json([]); // Devolver array vacío si hay error
+    }
     
-    res.json([backup]);
+    // Formatear backups para el frontend
+    const formattedBackups = (backups || []).map(backup => {
+      const createdDate = new Date(backup.created);
+      return {
+        fileName: backup.file_name,
+        filePath: backup.file_name,
+        size: formatBytes(backup.size_bytes || 0),
+        created: backup.created,
+        modified: backup.created,
+        type: 'manual',
+        date: createdDate.toISOString().split('T')[0],
+        time: createdDate.toTimeString().split(' ')[0],
+        displayName: backup.file_name
+      };
+    });
+    
+    res.json(formattedBackups);
   } catch (error) {
     console.error('Error listing backups:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// GET /api/backup/stats - Estadísticas de la base de datos
+// Helper function para formatear bytes
+function formatBytes(bytes, decimals = 2) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// GET /api/backup/stats - Estadísticas de backups
 router.get('/backup/stats', async (req, res) => {
   try {
-    const [patients, appointments, creditPacks, redemptions, files] = await Promise.all([
-      supabaseFetch('patients?select=count').then(r => r.total || 0),
-      supabaseFetch('appointments?select=count').then(r => r.total || 0),
-      supabaseFetch('credit_packs?select=count').then(r => r.total || 0),
-      supabaseFetch('credit_redemptions?select=count').then(r => r.total || 0),
-      supabaseFetch('patient_files?select=count').then(r => r.total || 0)
-    ]);
+    // Obtener todos los backups
+    const { data: backups, error } = await supabaseFetch('backups?select=*&order=created.desc');
+    
+    if (error) {
+      console.error('Error fetching backup stats:', error);
+      return res.json({
+        totalBackups: 0,
+        totalSize: '0 Bytes',
+        lastBackup: 'N/A',
+        nextScheduled: 'N/A',
+        oldestBackup: 'N/A'
+      });
+    }
+    
+    const totalBackups = backups ? backups.length : 0;
+    const totalSizeBytes = backups ? backups.reduce((sum, b) => sum + (b.size_bytes || 0), 0) : 0;
+    const lastBackup = backups && backups.length > 0 ? backups[0].created : null;
+    const oldestBackup = backups && backups.length > 0 ? backups[backups.length - 1].created : null;
     
     res.json({
-      patients,
-      appointments,
-      creditPacks,
-      redemptions,
-      files
+      totalBackups,
+      totalSize: formatBytes(totalSizeBytes),
+      lastBackup: lastBackup || 'N/A',
+      nextScheduled: 'Manual',
+      oldestBackup: oldestBackup || 'N/A'
     });
   } catch (error) {
-    console.error('Error fetching stats:', error);
+    console.error('Error fetching backup stats:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -1430,6 +1454,7 @@ router.get('/backup/stats', async (req, res) => {
 // POST /api/backup/create - Crear backup (exportar datos)
 router.post('/backup/create', async (req, res) => {
   try {
+    // 1. Obtener todos los datos
     const [patients, appointments, creditPacks, redemptions, files] = await Promise.all([
       supabaseFetch('patients?select=*').then(r => r.data || []),
       supabaseFetch('appointments?select=*').then(r => r.data || []),
@@ -1438,9 +1463,19 @@ router.post('/backup/create', async (req, res) => {
       supabaseFetch('patient_files?select=*').then(r => r.data || [])
     ]);
     
-    const backup = {
-      created: new Date().toISOString(),
+    // 2. Crear objeto backup
+    const timestamp = new Date().toISOString();
+    const fileName = `backup_${timestamp.replace(/[:.]/g, '-')}.json`;
+    const backupData = {
+      created: timestamp,
       version: '1.0',
+      counts: {
+        patients: patients.length,
+        appointments: appointments.length,
+        creditPacks: creditPacks.length,
+        redemptions: redemptions.length,
+        files: files.length
+      },
       data: {
         patients,
         appointments,
@@ -1450,14 +1485,43 @@ router.post('/backup/create', async (req, res) => {
       }
     };
     
+    // 3. Convertir a JSON y calcular tamaño
+    const backupJson = JSON.stringify(backupData);
+    const sizeBytes = new Blob([backupJson]).size;
+    
+    // 4. Guardar en la tabla backups
+    const { data: savedBackup, error: saveError } = await supabaseFetch('backups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify({
+        file_name: fileName,
+        data: backupData,
+        size_bytes: sizeBytes,
+        created: timestamp
+      })
+    });
+    
+    if (saveError) {
+      console.error('Error saving backup to database:', saveError);
+      throw new Error('Error al guardar el backup en la base de datos');
+    }
+    
     res.json({
       success: true,
-      fileName: `backup_${Date.now()}.json`,
-      backup
+      message: 'Backup creado exitosamente',
+      backup: {
+        fileName: fileName,
+        size: formatBytes(sizeBytes),
+        timestamp: timestamp,
+        counts: backupData.counts
+      }
     });
   } catch (error) {
     console.error('Error creating backup:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message || 'Error al crear el backup'
+    });
   }
 });
 
@@ -1478,16 +1542,41 @@ router.get('/backup/status', async (req, res) => {
 // GET /api/backup/grouped - Backups agrupados por fecha
 router.get('/backup/grouped', async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const backup = {
-      fileName: `backup_${new Date().toISOString().replace(/:/g, '-')}.json`,
-      date: new Date().toISOString(),
-      size: 0
-    };
+    // Obtener backups guardados
+    const { data: backups, error } = await supabaseFetch('backups?select=*&order=created.desc');
     
-    res.json({
-      [today]: [backup]
+    if (error) {
+      console.error('Error fetching backups:', error);
+      return res.json({});
+    }
+    
+    // Agrupar por fecha
+    const grouped = {};
+    (backups || []).forEach(backup => {
+      const createdDate = new Date(backup.created);
+      const dateKey = createdDate.toISOString().split('T')[0];
+      
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = {
+          date: dateKey,
+          backups: []
+        };
+      }
+      
+      grouped[dateKey].backups.push({
+        fileName: backup.file_name,
+        filePath: backup.file_name,
+        size: formatBytes(backup.size_bytes || 0),
+        created: backup.created,
+        modified: backup.created,
+        type: 'manual',
+        date: dateKey,
+        time: createdDate.toTimeString().split(' ')[0],
+        displayName: backup.file_name
+      });
     });
+    
+    res.json(grouped);
   } catch (error) {
     console.error('Error fetching grouped backups:', error);
     res.status(500).json({ error: error.message });
@@ -1517,30 +1606,20 @@ router.post('/backup/restore/:fileName', async (req, res) => {
 // GET /api/backup/download/:fileName - Descargar backup
 router.get('/backup/download/:fileName', async (req, res) => {
   try {
-    // Crear backup en tiempo real
-    const [patients, appointments, creditPacks, redemptions, files] = await Promise.all([
-      supabaseFetch('patients?select=*').then(r => r.data || []),
-      supabaseFetch('appointments?select=*').then(r => r.data || []),
-      supabaseFetch('credit_packs?select=*').then(r => r.data || []),
-      supabaseFetch('credit_redemptions?select=*').then(r => r.data || []),
-      supabaseFetch('patient_files?select=*').then(r => r.data || [])
-    ]);
+    const { fileName } = req.params;
     
-    const backup = {
-      created: new Date().toISOString(),
-      version: '1.0',
-      data: {
-        patients,
-        appointments,
-        creditPacks,
-        redemptions,
-        files
-      }
-    };
+    // Buscar el backup en la base de datos
+    const { data: backups, error } = await supabaseFetch(`backups?file_name=eq.${encodeURIComponent(fileName)}`);
+    
+    if (error || !backups || backups.length === 0) {
+      return res.status(404).json({ error: 'Backup no encontrado' });
+    }
+    
+    const backup = backups[0];
     
     res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Content-Disposition', `attachment; filename="${req.params.fileName}"`);
-    res.json(backup);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.json(backup.data);
   } catch (error) {
     console.error('Error downloading backup:', error);
     res.status(500).json({ error: error.message });
@@ -1550,14 +1629,31 @@ router.get('/backup/download/:fileName', async (req, res) => {
 // DELETE /api/backup/delete/:fileName - Eliminar backup
 router.delete('/backup/delete/:fileName', async (req, res) => {
   try {
-    // Los backups son "virtuales", no se eliminan realmente
+    const { fileName } = req.params;
+    
+    // Eliminar el backup de la base de datos
+    const { error } = await supabaseFetch(`backups?file_name=eq.${encodeURIComponent(fileName)}`, {
+      method: 'DELETE'
+    });
+    
+    if (error) {
+      console.error('Error deleting backup:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error al eliminar el backup'
+      });
+    }
+    
     res.json({
       success: true,
       message: 'Backup eliminado correctamente'
     });
   } catch (error) {
     console.error('Error deleting backup:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: error.message 
+    });
   }
 });
 
