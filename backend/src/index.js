@@ -63,10 +63,31 @@ app.use(helmet({
 }));
 app.use(compression());
 
-// CORS
+// CORS - Permitir header X-Tenant-Slug para multi-tenant
+// Permitir múltiples orígenes: localhost, Vercel deployments temporales, y dominios personalizados
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:4300',
-  credentials: true
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (como mobile apps o curl)
+    if (!origin) return callback(null, true);
+    
+    // Lista de orígenes permitidos
+    const allowedOrigins = [
+      'http://localhost:4300',
+      'http://localhost:4200',
+      'https://masajecorporaldeportivo.vercel.app',
+      process.env.FRONTEND_URL
+    ];
+    
+    // Permitir cualquier dominio *.vercel.app (deployments temporales)
+    if (origin.includes('.vercel.app') || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-Slug'],
+  exposedHeaders: ['Content-Range', 'X-Total-Count']
 }));
 
 // Parsear JSON con codificación UTF-8
