@@ -17,7 +17,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const express = require('express');
-const cors = require('cors');
+// const cors = require('cors'); // DESHABILITADO - Usando CORS manual
 const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
