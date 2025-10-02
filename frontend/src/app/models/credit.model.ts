@@ -33,6 +33,7 @@ export interface CreateCreditPackRequest {
   quantity?: number;
   paid?: boolean; // Estado de pago
   notes?: string;
+  priceCents?: number; // Precio en céntimos
 }
 
 export interface CreditRedemption {

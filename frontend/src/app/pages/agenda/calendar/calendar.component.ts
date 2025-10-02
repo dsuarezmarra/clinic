@@ -195,6 +195,10 @@ export class CalendarComponent implements OnInit {
                 // DEBUG: mostrar la primera cita para verificar estructura (remover cuando se confirme)
                 if (this.appointments && this.appointments.length > 0) {
                     console.info('[DEBUG] Primera cita cargada en CalendarComponent:', this.appointments[0]);
+                    console.info('[DEBUG] creditRedemptions:', JSON.stringify(this.appointments[0].creditRedemptions, null, 2));
+                    if (this.appointments[0].creditRedemptions && this.appointments[0].creditRedemptions.length > 0) {
+                        console.info('[DEBUG] creditPack del primer redemption:', JSON.stringify(this.appointments[0].creditRedemptions[0].creditPack, null, 2));
+                    }
                 } else {
                     console.info('[DEBUG] No hay citas cargadas en CalendarComponent');
                 }
@@ -387,27 +391,46 @@ export class CalendarComponent implements OnInit {
                 next: (res: any) => {
                     console.log('📦 Credits received:', res);
                     const packs = res.creditPacks || [];
-                    console.log('📦 Processing packs:', packs);
                     
-                    // Verificar cada pack
-                    packs.forEach((p: any) => {
-                        console.log(`Pack: unitMinutes=${p.unitMinutes}, unitsRemaining=${p.unitsRemaining}, type=${p.type}`);
-                    });
+                    // PRIORIDAD 1: Buscar packs PAGADOS
+                    const paidPacks = packs.filter((p: any) => p.paid === true && p.unitsRemaining > 0);
+                    console.log(`📦 Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
                     
-                    const has60 = packs.some((p: any) => {
-                        const unitMin = Number(p.unitMinutes);
-                        const unitsRem = Number(p.unitsRemaining);
-                        const hasEnough = unitMin === 60 && unitsRem >= 2;
-                        console.log(`Checking pack: unitMinutes=${unitMin}, unitsRemaining=${unitsRem}, hasEnough=${hasEnough}`);
-                        return hasEnough;
-                    });
+                    // PRIORIDAD 2: Si no hay pagados, buscar packs PENDIENTES
+                    const pendingPacks = packs.filter((p: any) => p.paid === false && p.unitsRemaining > 0);
+                    console.log(`📦 Packs PENDIENTES disponibles: ${pendingPacks.length}`, pendingPacks);
                     
-                    if (has60) {
+                    // Determinar qué pack usar para proponer duración
+                    let packToUse = null;
+                    let isPaid = false;
+                    
+                    if (paidPacks.length > 0) {
+                        packToUse = paidPacks[0]; // Más antiguo pagado
+                        isPaid = true;
+                    } else if (pendingPacks.length > 0) {
+                        packToUse = pendingPacks[0]; // Más antiguo pendiente
+                        isPaid = false;
+                    }
+                    
+                    if (!packToUse) {
+                        this.proposedDuration = 30;
+                        console.log('⚠️ No hay packs disponibles, proponiendo 30min por defecto');
+                        return;
+                    }
+                    
+                    const unitMin = Number(packToUse.unitMinutes);
+                    const unitsRem = Number(packToUse.unitsRemaining);
+                    const paidLabel = isPaid ? 'PAGADO' : 'PENDIENTE';
+                    
+                    console.log(`✅ Pack ${paidLabel} más antiguo: ${packToUse.label}, ${unitMin}min, ${unitsRem} units disponibles`);
+                    
+                    // Proponer duración según el pack disponible
+                    if (unitMin === 60 && unitsRem >= 2) {
                         this.proposedDuration = 60;
-                        console.log('✅ Setting proposedDuration to 60min');
+                        console.log(`✅ Proponiendo 60min (pack ${paidLabel} de 60min con 2+ units)`);
                     } else {
                         this.proposedDuration = 30;
-                        console.log('⚠️ No 60min packs available, keeping 30min');
+                        console.log(`✅ Proponiendo 30min (pack ${paidLabel} de 30min o <2 units)`);
                     }
                 },
                 error: (err) => {

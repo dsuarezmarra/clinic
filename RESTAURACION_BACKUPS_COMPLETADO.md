@@ -16,6 +16,7 @@ El endpoint `POST /api/backup/restore/:fileName` ahora:
 2. ✅ **Valida el formato** del backup
 3. ✅ **Elimina datos existentes** (operación destructiva - con confirmación)
 4. ✅ **Restaura todos los datos** en el orden correcto:
+
    - Pacientes (primero, no tienen dependencias)
    - Bonos/Credit Packs (dependen de pacientes)
    - Citas (dependen de pacientes y bonos)
@@ -40,6 +41,7 @@ El endpoint `POST /api/backup/restore/:fileName` ahora:
 ### **⚠️ ADVERTENCIA:**
 
 La restauración es **DESTRUCTIVA**:
+
 - Elimina TODOS los datos actuales
 - Reemplaza con los datos del backup
 - **NO SE PUEDE DESHACER**
@@ -83,6 +85,7 @@ El usuario debe confirmar con un popup antes de proceder.
 ## 📊 **Respuesta del Endpoint**
 
 ### **Éxito (200):**
+
 ```json
 {
   "success": true,
@@ -98,6 +101,7 @@ El usuario debe confirmar con un popup antes de proceder.
 ```
 
 ### **Error (404):**
+
 ```json
 {
   "success": false,
@@ -106,6 +110,7 @@ El usuario debe confirmar con un popup antes de proceder.
 ```
 
 ### **Error (400):**
+
 ```json
 {
   "success": false,
@@ -114,6 +119,7 @@ El usuario debe confirmar con un popup antes de proceder.
 ```
 
 ### **Error (500):**
+
 ```json
 {
   "success": false,
@@ -126,27 +132,32 @@ El usuario debe confirmar con un popup antes de proceder.
 ## 🧪 **Probar la Restauración**
 
 ### **Paso 1: Crear datos de prueba**
+
 1. Crear 2-3 pacientes
 2. Crear 1-2 bonos
 3. Crear 2-3 citas
 
 ### **Paso 2: Crear backup**
+
 1. Ir a Configuración → Backup
 2. Click en "Crear Backup"
 3. Verificar que aparece en la lista
 
 ### **Paso 3: Modificar datos**
+
 1. Eliminar un paciente
 2. Crear un paciente nuevo
 3. Modificar una cita
 
 ### **Paso 4: Restaurar backup**
+
 1. Click en "Restaurar" del backup creado
 2. Confirmar la acción
 3. Esperar a que se complete
 4. Verificar que los datos volvieron al estado del backup
 
 ### **Resultado Esperado:**
+
 - ✅ Los datos modificados desaparecen
 - ✅ Los datos originales reaparecen
 - ✅ El contador de pacientes/citas/bonos es correcto
@@ -165,11 +176,13 @@ El usuario debe confirmar con un popup antes de proceder.
 ## 🔐 **Consideraciones de Seguridad**
 
 ### **⚠️ Operación Destructiva:**
+
 - La restauración **elimina TODOS los datos actuales**
 - No hay "undo" después de confirmar
 - Se recomienda crear un backup actual antes de restaurar otro
 
 ### **✅ Protecciones Implementadas:**
+
 1. **Confirmación obligatoria** en el frontend
 2. **Validación del formato** del backup
 3. **Logs detallados** en consola del servidor
@@ -213,6 +226,7 @@ Durante la restauración verás en Vercel logs:
 ## 🎯 **Próximos Pasos**
 
 El sistema de backups está **100% completo**:
+
 - ✅ Crear
 - ✅ Listar
 - ✅ Descargar
@@ -224,7 +238,8 @@ El sistema de backups está **100% completo**:
 
 ---
 
-**¿Quieres probar la restauración?** 
+**¿Quieres probar la restauración?**
+
 1. Crea un backup
 2. Modifica algunos datos
 3. Restaura el backup

@@ -1,8 +1,12 @@
 // Endpoints "bridge" usando fetch directo a Supabase REST API
 // Estos endpoints evitan el bug del SDK @supabase/supabase-js en Vercel
+// VERSION: 2.1.0 - POST/PUT appointments devuelve creditRedemptions completos
 
 const express = require('express');
 const router = express.Router();
+
+// Log de versión al cargar el módulo
+console.log('🔄 bridge.js VERSION 2.1.0 cargado - creditRedemptions fix');
 const multer = require('multer');
 
 // Configurar multer para manejar archivos en memoria
@@ -55,6 +59,19 @@ async function supabaseFetch(endpoint, options = {}) {
   
   return { data, total, status: response.status };
 }
+
+// ============================================================
+// VERSION ENDPOINT
+// ============================================================
+
+// GET /api/version - Devolver versión del bridge
+router.get('/version', (req, res) => {
+  res.json({ 
+    version: '2.1.0',
+    description: 'POST/PUT appointments devuelve creditRedemptions completos',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // ============================================================
 // PATIENTS ENDPOINTS
@@ -512,6 +529,13 @@ router.post('/appointments', async (req, res) => {
         `credit_packs?patientId=eq.${patientId}&unitsRemaining=gt.0&order=paid.desc,createdAt.asc`
       );
       
+      console.log('📦 Packs disponibles para consumir (ordenados por paid DESC, createdAt ASC):');
+      if (packs && packs.length > 0) {
+        packs.forEach((pack, index) => {
+          console.log(`  ${index + 1}. ${pack.label} | Paid: ${pack.paid} | Units: ${pack.unitsRemaining} | Created: ${pack.createdAt}`);
+        });
+      }
+      
       if (!packs || packs.length === 0) {
         // Eliminar la cita si no hay créditos
         await supabaseFetch(`appointments?id=eq.${appointment.id}`, {
@@ -523,37 +547,46 @@ router.post('/appointments', async (req, res) => {
       let remainingUnits = requiredUnits;
       const redemptions = [];
       
-      // Consumir créditos de los packs disponibles
-      for (const pack of packs) {
-        if (remainingUnits <= 0) break;
+      // Función helper para calcular unidades a usar
+      const calculateUnitsToUse = (pack, remainingUnits, requiredUnits) => {
+        const isSession60 = pack.label?.startsWith('Sesión') && pack.unitMinutes === 60;
+        const isBono60 = pack.label?.startsWith('Bono') && pack.unitMinutes === 60;
         
-        // Calcular unidades a usar según el tipo de pack y cita
-        let unitsToUse = 0;
-        
-        if (requiredUnits === 2) {
-          // Cita de 60 minutos - requiere 2 unidades
-          if (pack.unitsRemaining < 2) {
-            // Si el pack no tiene al menos 2 unidades, no se puede usar para cita de 60min
-            continue;
-          }
-          
-          const isSesion60 = pack.label?.startsWith('Sesión') && pack.unitMinutes === 60;
-          const isBono60 = pack.unitMinutes === 60 && !pack.label?.startsWith('Sesión');
-          
-          if (isSesion60 || isBono60) {
-            // Packs de 60min: consumir 2 unidades juntas
-            unitsToUse = Math.min(2, remainingUnits);
+        // REGLA 1: Sesiones/Bonos de 60min son INDIVISIBLES
+        // Solo se consumen si tienen al menos 2 unidades completas
+        if (isSession60 || isBono60) {
+          if (pack.unitsRemaining >= 2 && remainingUnits >= 2) {
+            // Consumir 2 unidades completas (indivisible)
+            return 2;
           } else {
-            // Packs generales: consumir en pares (2 en 2)
-            const pairs = Math.floor(pack.unitsRemaining / 2);
-            unitsToUse = pairs > 0 ? Math.min(pairs * 2, remainingUnits) : 0;
+            // No se puede consumir - es indivisible
+            return 0;
           }
-        } else {
-          // Cita de 30 minutos - requiere 1 unidad
-          unitsToUse = Math.min(remainingUnits, pack.unitsRemaining);
         }
         
-        if (unitsToUse === 0) continue;
+        // REGLA 2: Sesiones/Bonos de 30min son flexibles
+        // Se consumen según lo que se necesite (1 unidad a la vez)
+        return Math.min(remainingUnits, pack.unitsRemaining);
+      };
+      
+      // PRIMERA PASADA: Consumir SOLO de packs PAGADOS (más antiguos primero por la query)
+      console.log('🔄 Primera pasada: Consumiendo de packs PAGADOS (más antiguos primero)...');
+      for (const pack of packs) {
+        if (remainingUnits <= 0) break;
+        if (!pack.paid) continue; // Solo packs pagados en esta pasada
+        
+        const unitsToUse = calculateUnitsToUse(pack, remainingUnits, requiredUnits);
+        
+        if (unitsToUse === 0) {
+          const is60min = pack.unitMinutes === 60;
+          const reason = is60min && pack.unitsRemaining < 2 
+            ? 'pack de 60min INDIVISIBLE con <2 units'
+            : 'sin unidades disponibles';
+          console.log(`  ⏭️  Pack PAGADO "${pack.label}" saltado (${reason})`);
+          continue;
+        }
+        
+        console.log(`  ✅ Usando pack PAGADO "${pack.label}" (${pack.unitMinutes}min) - ${unitsToUse} unidades | Created: ${pack.createdAt}`);
         
         // Crear redemption
         const { data: redemption } = await supabaseFetch('credit_redemptions', {
@@ -578,6 +611,50 @@ router.post('/appointments', async (req, res) => {
         remainingUnits -= unitsToUse;
       }
       
+      // SEGUNDA PASADA: Si aún faltan unidades, consumir de packs PENDIENTES (más antiguos primero)
+      if (remainingUnits > 0) {
+        console.log(`🔄 Segunda pasada: Consumiendo de packs PENDIENTES (faltan ${remainingUnits} unidades)...`);
+        for (const pack of packs) {
+          if (remainingUnits <= 0) break;
+          if (pack.paid) continue; // Solo packs pendientes en esta pasada
+          
+          const unitsToUse = calculateUnitsToUse(pack, remainingUnits, requiredUnits);
+          
+          if (unitsToUse === 0) {
+            const is60min = pack.unitMinutes === 60;
+            const reason = is60min && pack.unitsRemaining < 2 
+              ? 'pack de 60min INDIVISIBLE con <2 units'
+              : 'sin unidades disponibles';
+            console.log(`  ⏭️  Pack PENDIENTE "${pack.label}" saltado (${reason})`);
+            continue;
+          }
+          
+          console.log(`  ⚠️  Usando pack PENDIENTE "${pack.label}" (${pack.unitMinutes}min) - ${unitsToUse} unidades | Created: ${pack.createdAt}`);
+          
+          // Crear redemption
+          const { data: redemption } = await supabaseFetch('credit_redemptions', {
+            method: 'POST',
+            body: JSON.stringify({
+              creditPackId: pack.id,
+              appointmentId: appointment.id,
+              unitsUsed: unitsToUse
+            })
+          });
+          
+          redemptions.push(redemption[0]);
+          
+          // Actualizar unitsRemaining del pack
+          await supabaseFetch(`credit_packs?id=eq.${pack.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              unitsRemaining: pack.unitsRemaining - unitsToUse
+            })
+          });
+          
+          remainingUnits -= unitsToUse;
+        }
+      }
+      
       if (remainingUnits > 0) {
         // Eliminar la cita y las redemptions creadas si no se pudieron consumir todos los créditos
         for (const redemption of redemptions) {
@@ -592,7 +669,45 @@ router.post('/appointments', async (req, res) => {
       }
     }
     
-    res.status(201).json(appointment);
+    // 3. Obtener la cita completa con todas sus relaciones para devolverla
+    // (igual que en GET /appointments/all para consistencia)
+    console.log('🔄 Fetching complete appointment with creditRedemptions...');
+    const endpoint = `appointments?id=eq.${appointment.id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const { data: fullAppointments } = await supabaseFetch(endpoint);
+    
+    console.log('📦 fullAppointments received:', JSON.stringify(fullAppointments, null, 2));
+    
+    if (!fullAppointments || fullAppointments.length === 0) {
+      console.error('❌ No fullAppointments found after creation');
+      return res.status(500).json({ error: 'Error al obtener la cita creada' });
+    }
+    
+    // Mapear las relaciones a los nombres esperados por el frontend
+    const apt = fullAppointments[0];
+    const mapped = {
+      ...apt,
+      // Asegurar que las fechas estén en formato ISO completo
+      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
+      patient: apt.patients || null,
+      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
+        ...cr,
+        creditPack: cr.credit_packs || null,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      }))
+    };
+    
+    // Eliminar las propiedades originales con guiones bajos
+    delete mapped.patients;
+    delete mapped.credit_redemptions;
+    if (mapped.creditRedemptions) {
+      mapped.creditRedemptions.forEach(cr => {
+        delete cr.credit_packs;
+      });
+    }
+    
+    console.log('✅ Returning mapped appointment with creditRedemptions:', mapped.creditRedemptions?.length || 0);
+    res.status(201).json(mapped);
   } catch (error) {
     console.error('Error creating appointment:', error);
     res.status(500).json({ error: error.message });
@@ -667,7 +782,40 @@ router.put('/appointments/:id', async (req, res) => {
     }
     
     console.log('Appointment updated successfully:', data[0]);
-    res.json(data[0]);
+    
+    // Obtener la cita completa con todas sus relaciones para devolverla
+    const fullEndpoint = `appointments?id=eq.${id}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`;
+    const { data: fullAppointments } = await supabaseFetch(fullEndpoint);
+    
+    if (!fullAppointments || fullAppointments.length === 0) {
+      return res.json(data[0]); // Fallback a la cita básica si falla el fetch completo
+    }
+    
+    // Mapear las relaciones a los nombres esperados por el frontend
+    const apt = fullAppointments[0];
+    const mapped = {
+      ...apt,
+      // Asegurar que las fechas estén en formato ISO completo
+      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
+      patient: apt.patients || null,
+      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
+        ...cr,
+        creditPack: cr.credit_packs || null,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      }))
+    };
+    
+    // Eliminar las propiedades originales con guiones bajos
+    delete mapped.patients;
+    delete mapped.credit_redemptions;
+    if (mapped.creditRedemptions) {
+      mapped.creditRedemptions.forEach(cr => {
+        delete cr.credit_packs;
+      });
+    }
+    
+    res.json(mapped);
   } catch (error) {
     console.error('Error updating appointment:', error);
     console.error('Error stack:', error.stack);
@@ -791,7 +939,7 @@ router.get('/credits', async (req, res) => {
 // POST /api/credits/packs - Crear nuevo pack de créditos
 router.post('/credits/packs', async (req, res) => {
   try {
-    const { patientId, type, minutes, quantity, paid, notes } = req.body;
+    const { patientId, type, minutes, quantity, paid, notes, priceCents } = req.body;
     
     // Calcular unidades totales (1 unidad = 30 minutos)
     const unitsPerItem = minutes / 30;
@@ -816,12 +964,14 @@ router.post('/credits/packs', async (req, res) => {
       unitsTotal,
       unitsRemaining: unitsTotal,
       unitMinutes: minutes, // 🔥 CRÍTICO: Guardar 30 o 60 para identificar tipo de pack
+      priceCents: priceCents || 0, // Precio en céntimos
       paid: paid || false,
       notes: notes || null,
       createdAt: new Date().toISOString()
     };
     
-    console.log('Creating credit pack:', packData);
+    console.log('Creating credit pack with price:', packData);
+    console.log('💰 Price:', priceCents, 'cents (', ((priceCents || 0)/100).toFixed(2), '€)');
     
     const { data } = await supabaseFetch('credit_packs', {
       method: 'POST',
@@ -1969,5 +2119,173 @@ router.put('/meta/config/prices', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// ================================================================================
+// REPORTS ENDPOINTS
+// ================================================================================
+
+// GET /api/reports/billing?year=YYYY&month=MM&groupBy=appointment|patient
+router.get('/reports/billing', async (req, res) => {
+  try {
+    const year = parseInt(req.query.year, 10) || new Date().getFullYear();
+    const month = parseInt(req.query.month, 10) || (new Date().getMonth() + 1);
+    const groupBy = req.query.groupBy || 'appointment';
+
+    // Obtener todas las citas del mes con creditRedemptions y packs
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59);
+    
+    const { data: appointments } = await supabaseFetch(
+      `appointments?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
+    );
+
+    const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.write('\uFEFF'); // BOM for Excel
+
+    if (groupBy === 'patient') {
+      // Agrupar por paciente
+      const patientMap = new Map();
+      
+      for (const apt of appointments || []) {
+        const patientId = apt.patientId;
+        if (!patientMap.has(patientId)) {
+          patientMap.set(patientId, {
+            patient: apt.patients,
+            appointments: []
+          });
+        }
+        patientMap.get(patientId).appointments.push(apt);
+      }
+
+      // Generar CSV agrupado por paciente
+      res.write('Paciente;DNI;Total Citas;Total Pagado (€);Total Pendiente (€);Total (€)\n');
+      
+      for (const [patientId, data] of patientMap) {
+        const patient = data.patient;
+        const apts = data.appointments;
+        
+        let totalPaid = 0;
+        let totalPending = 0;
+        
+        for (const apt of apts) {
+          const price = calculateAppointmentPrice(apt);
+          const isPaid = getAppointmentPaidStatus(apt);
+          
+          if (isPaid) {
+            totalPaid += price;
+          } else {
+            totalPending += price;
+          }
+        }
+        
+        const total = totalPaid + totalPending;
+        const row = `${patient.firstName} ${patient.lastName};${patient.dni || ''};${apts.length};${(totalPaid / 100).toFixed(2)};${(totalPending / 100).toFixed(2)};${(total / 100).toFixed(2)}\n`;
+        res.write(row);
+      }
+    } else {
+      // Agrupar por cita
+      res.write('Fecha;Hora;Paciente;DNI;Duración (min);Tipo;Estado Pago;Precio (€)\n');
+      
+      for (const apt of appointments || []) {
+        const patient = apt.patients;
+        const date = new Date(apt.start);
+        const dateStr = date.toLocaleDateString('es-ES');
+        const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const duration = apt.durationMinutes || 0;
+        const type = getAppointmentType(apt);
+        const isPaid = getAppointmentPaidStatus(apt);
+        const paidStatus = isPaid ? 'Pagado' : 'Pendiente';
+        const price = calculateAppointmentPrice(apt);
+        const priceEuros = (price / 100).toFixed(2);
+        
+        const row = `${dateStr};${timeStr};${patient.firstName} ${patient.lastName};${patient.dni || ''};${duration};${type};${paidStatus};${priceEuros}\n`;
+        res.write(row);
+      }
+    }
+    
+    res.end();
+  } catch (error) {
+    console.error('Error generating billing report:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Helper: Calcular precio de una cita
+function calculateAppointmentPrice(appointment) {
+  const DEFAULT_PRICE_30 = 3000; // 30€
+  const DEFAULT_PRICE_60 = 5500; // 55€
+  
+  if (!appointment) return 0;
+  
+  // Si tiene priceCents directamente
+  if (appointment.priceCents && appointment.priceCents > 0) {
+    return appointment.priceCents;
+  }
+  
+  // Si tiene creditRedemptions, calcular proporcional
+  const redemptions = appointment.credit_redemptions || appointment.creditRedemptions || [];
+  if (redemptions.length > 0) {
+    const r = redemptions[0];
+    const pack = r.credit_packs || r.creditPack || {};
+    const priceCents = Number(pack.priceCents || pack.price_cents || pack.price || 0) || 0;
+    const unitsTotal = Number(pack.unitsTotal || pack.units_total || 0) || 0;
+    const unitsUsed = Number(r.unitsUsed || r.units_used || 0);
+    
+    if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
+      return Math.round(unitsUsed * (priceCents / unitsTotal));
+    }
+  }
+  
+  // Fallback: precio según duración
+  const mins = Number(appointment.durationMinutes || 0);
+  return mins >= 60 ? DEFAULT_PRICE_60 : DEFAULT_PRICE_30;
+}
+
+// Helper: Determinar si una cita está pagada
+function getAppointmentPaidStatus(appointment) {
+  if (!appointment) return false;
+  
+  const redemptions = appointment.credit_redemptions || appointment.creditRedemptions || [];
+  if (redemptions.length > 0) {
+    const r = redemptions[0];
+    const pack = r.credit_packs || r.creditPack || {};
+    return pack.paid === true;
+  }
+  
+  // Si tiene priceCents sin redemptions, considerar como pagada
+  if (appointment.priceCents && appointment.priceCents > 0) {
+    return true;
+  }
+  
+  return false;
+}
+
+// Helper: Obtener tipo de cita
+function getAppointmentType(appointment) {
+  if (!appointment) return '';
+  
+  const redemptions = appointment.credit_redemptions || appointment.creditRedemptions || [];
+  if (redemptions.length > 0) {
+    const r = redemptions[0];
+    const pack = r.credit_packs || r.creditPack || {};
+    if (pack && pack.label) {
+      return String(pack.label || '').trim();
+    }
+    
+    const unitsTotal = Number(pack.unitsTotal || pack.units_total || 0);
+    const unitMinutes = Number(pack.unitMinutes || pack.unit_minutes || 0) || 30;
+    
+    if (unitsTotal > 0) {
+      if (unitsTotal === 1 || unitsTotal === 2) return `Sesión ${unitMinutes}m`;
+      const sessions = unitMinutes === 60 ? Math.round(unitsTotal / 2) : unitsTotal;
+      return `Bono ${sessions}×${unitMinutes}m`;
+    }
+  }
+  
+  const mins = Number(appointment.durationMinutes || 0);
+  return mins >= 60 ? 'Sesión 60m' : `Sesión ${mins}m`;
+}
 
 module.exports = router;

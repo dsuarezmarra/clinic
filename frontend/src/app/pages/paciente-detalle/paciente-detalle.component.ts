@@ -6,6 +6,7 @@ import { CreateCreditPackRequest, CreditSummary } from '../../models/credit.mode
 import { FileUploadData, PatientFile } from '../../models/file.model';
 import { Patient } from '../../models/patient.model';
 import { AppointmentService } from '../../services/appointment.service';
+import { ConfigService } from '../../services/config.service';
 import { CreditService } from '../../services/credit.service';
 import { EventBusService } from '../../services/event-bus.service';
 import { FileService } from '../../services/file.service';
@@ -41,6 +42,14 @@ export class PacienteDetalleComponent implements OnInit {
     uploadDescription = '';
     uploading = false;
 
+    // Precios de configuración
+    prices: any = {
+        sessionPrice30: 30,
+        sessionPrice60: 55,
+        bonoPrice30: 135,
+        bonoPrice60: 248
+    };
+
     newCredit = {
         type: 'sesion' as 'sesion' | 'bono',
         quantity: 1,
@@ -54,6 +63,7 @@ export class PacienteDetalleComponent implements OnInit {
         private router: Router,
         private patientService: PatientService,
         private creditService: CreditService,
+        private configService: ConfigService,
         private fileService: FileService,
         private notificationService: NotificationService,
         private cdr: ChangeDetectorRef,
@@ -178,6 +188,26 @@ export class PacienteDetalleComponent implements OnInit {
     showCreditForm() {
         this.showAddCreditForm = true;
         this.resetNewCreditForm();
+        this.loadPricesForForm();
+    }
+
+    loadPricesForForm() {
+        console.log('🔄 Cargando precios de configuración...');
+        this.configService.getPrices().subscribe({
+            next: (prices: any) => {
+                console.log('✅ Precios cargados:', prices);
+                this.prices = {
+                    sessionPrice30: prices.sessionPrice30 ?? 30,
+                    sessionPrice60: prices.sessionPrice60 ?? 55,
+                    bonoPrice30: prices.bonoPrice30 ?? 135,
+                    bonoPrice60: prices.bonoPrice60 ?? 248
+                };
+            },
+            error: (error: any) => {
+                console.error('❌ Error cargando precios, usando valores por defecto:', error);
+                // Mantener valores por defecto ya inicializados
+            }
+        });
     }
 
     hideCreditForm() {
@@ -195,18 +225,44 @@ export class PacienteDetalleComponent implements OnInit {
         };
     }
 
+    calculatePackPrice(): number {
+        const type = this.newCredit.type;
+        const minutes = Number(this.newCredit.minutes);
+        const quantity = Number(this.newCredit.quantity) || 1;
+
+        let pricePerUnit = 0;
+
+        if (type === 'sesion') {
+            // Sesión individual: usar precio de sesión
+            pricePerUnit = minutes === 60 ? this.prices.sessionPrice60 : this.prices.sessionPrice30;
+        } else {
+            // Bono: usar precio de bono (precio total del bono dividido por cantidad de sesiones)
+            const totalBonoPrice = minutes === 60 ? this.prices.bonoPrice60 : this.prices.bonoPrice30;
+            // Para bonos, el precio total es el precio configurado (que ya incluye todas las sesiones)
+            return Math.round(totalBonoPrice * 100); // Convertir a céntimos
+        }
+
+        // Para sesiones individuales, multiplicar por cantidad
+        return Math.round(pricePerUnit * quantity * 100); // Convertir a céntimos
+    }
+
     createCreditPack() {
         if (!this.patient) return;
+        
+        const priceCents = this.calculatePackPrice();
+        
         const request: CreateCreditPackRequest = {
             patientId: this.patient.id,
             type: this.newCredit.type === 'sesion' ? 'sesion' : 'bono',
             minutes: Number(this.newCredit.minutes) as 30 | 60,
             quantity: Number(this.newCredit.quantity) || 1,
             paid: !!this.newCredit.paid,
-            notes: this.newCredit.notes || undefined
+            notes: this.newCredit.notes || undefined,
+            priceCents: priceCents
         };
 
         console.log('createCreditPack request (normalized):', request);
+        console.log('💰 Precio calculado:', priceCents, 'céntimos (', (priceCents/100).toFixed(2), '€)');
 
         this.creditService.createCreditPack(request).subscribe({
             next: (res: any) => {
