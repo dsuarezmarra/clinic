@@ -1,10 +1,14 @@
+import { CURRENT_CLIENT_CONFIG } from './client.config';
+
 /**
- * Configuración única de la aplicación
- * No necesitamos múltiples entornos porque todo se despliega en producción
+ * Configuración de la aplicación basada en el cliente actual
+ * Se carga automáticamente según VITE_CLIENT_ID
  */
 export const APP_CONFIG = {
-  apiUrl: 'https://clinic-backend-q7hie00fl-davids-projects-8fa96e54.vercel.app/api',
-  appName: 'Clínica Masaje Corporal Deportivo',
+  // Configuración específica del cliente
+  ...CURRENT_CLIENT_CONFIG,
+  
+  // Configuración general de la aplicación
   version: '1.0.0',
   production: true
 } as const;
