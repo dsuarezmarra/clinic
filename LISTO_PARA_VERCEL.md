@@ -11,11 +11,13 @@
 ### Backend Multi-Tenant
 
 ✅ **database-manager.js**
+
 - Constructor acepta `tenantSlug`
 - Método `getTableName(baseTable)` agrega sufijo automáticamente
 - 78 tablas actualizadas: `from('patients')` → `from(this.getTableName('patients'))`
 
 ✅ **database-middleware.js**
+
 - Lee header `X-Tenant-Slug`
 - Crea `DatabaseManager` con tenant correcto
 - Caché de instancias por tenant
@@ -24,19 +26,23 @@
 ### Frontend Multi-Cliente
 
 ✅ **Configuración por Cliente**
+
 - `masajecorporaldeportivo.config.ts`
 - `actifisio.config.ts`
 - ClientConfigService carga config basado en `VITE_CLIENT_ID`
 
 ✅ **TenantInterceptor**
+
 - Envía header `X-Tenant-Slug` en TODAS las peticiones HTTP
 - Extrae tenant slug de la config del cliente
 
 ✅ **Temas Dinámicos**
+
 - CSS Variables aplicadas en runtime
 - 8 variables: colores, gradientes, etc.
 
 ✅ **PWA Manifest**
+
 - Template con placeholders
 - Scripts de generación por cliente
 
@@ -89,6 +95,7 @@ vercel --prod --name app-actifisio
 ### Backend (1 proyecto)
 
 **Variables de entorno:**
+
 ```
 SUPABASE_URL=tu_url
 SUPABASE_SERVICE_KEY=tu_key
@@ -96,6 +103,7 @@ NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
 
 **Build Settings:**
+
 - Framework: Other
 - Build Command: `npm install`
 - Output Directory: `.`
@@ -104,11 +112,13 @@ NODE_TLS_REJECT_UNAUTHORIZED=0
 ### Frontend - masajecorporaldeportivo (Proyecto existente)
 
 **Variables de entorno:**
+
 ```
 VITE_CLIENT_ID=masajecorporaldeportivo
 ```
 
 **Build Settings:**
+
 - Framework: Angular
 - Build Command: `npm run build:masajecorporaldeportivo`
 - Output Directory: `dist/clinic-frontend/browser`
@@ -117,11 +127,13 @@ VITE_CLIENT_ID=masajecorporaldeportivo
 ### Frontend - actifisio (Proyecto NUEVO)
 
 **Variables de entorno:**
+
 ```
 VITE_CLIENT_ID=actifisio
 ```
 
 **Build Settings:**
+
 - Framework: Angular
 - Build Command: `npm run build:actifisio`
 - Output Directory: `dist/clinic-frontend/browser`
@@ -143,6 +155,7 @@ curl -H "X-Tenant-Slug: masajecorporaldeportivo" \
 ```
 
 **Logs esperados en Vercel:**
+
 ```
 📋 [Multi-Tenant] Tenant detectado: masajecorporaldeportivo
 🔄 Creando nueva instancia de DatabaseManager para tenant: masajecorporaldeportivo
@@ -185,6 +198,7 @@ curl -H "X-Tenant-Slug: masajecorporaldeportivo" \
 **Causa:** Backend busca tabla sin sufijo  
 **Diagnóstico:** Variable `VITE_CLIENT_ID` no está configurada O TenantInterceptor no está funcionando  
 **Solución:**
+
 1. Verificar `VITE_CLIENT_ID` en Vercel
 2. Rebuild del frontend
 3. Verificar en logs: `X-Tenant-Slug` presente
@@ -193,15 +207,17 @@ curl -H "X-Tenant-Slug: masajecorporaldeportivo" \
 
 **Causa:** Tabla con sufijo no existe en Supabase  
 **Solución:**
+
 1. Ir a Supabase → SQL Editor
 2. Ejecutar `SCRIPT_SQL_ACTIFISIO.md` (pero para masajecorporaldeportivo)
 3. O ejecutar:
+
    ```sql
-   CREATE TABLE patients_masajecorporaldeportivo 
+   CREATE TABLE patients_masajecorporaldeportivo
    (LIKE patients INCLUDING ALL);
-   
+
    -- Copiar datos existentes
-   INSERT INTO patients_masajecorporaldeportivo 
+   INSERT INTO patients_masajecorporaldeportivo
    SELECT * FROM patients;
    ```
 
@@ -274,8 +290,8 @@ Si algo no funciona en Vercel:
 1. **Revisar Logs de Vercel Functions**
    - Ver qué tenant slug está llegando
    - Ver qué tabla está buscando
-   
 2. **Verificar Variables de Entorno**
+
    - `VITE_CLIENT_ID` en frontend
    - `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` en backend
 

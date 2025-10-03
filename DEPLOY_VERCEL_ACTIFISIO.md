@@ -93,6 +93,7 @@ Development Command: ng serve
 ### 3. Environment Variables
 
 **Production:**
+
 ```
 Name: VITE_CLIENT_ID
 Value: actifisio
@@ -117,51 +118,51 @@ Necesitamos actualizar la configuración del cliente para usar las URLs correcta
 // frontend/src/config/clients/actifisio.config.ts
 
 export const actifisioConfig: ClientConfig = {
-  id: 'actifisio',
-  tenantSlug: 'actifisio',
-  name: 'Actifisio',
-  shortName: 'Actifisio',
-  
+  id: "actifisio",
+  tenantSlug: "actifisio",
+  name: "Actifisio",
+  shortName: "Actifisio",
+
   theme: {
-    primaryColor: '#ff6b35',      // Naranja
-    secondaryColor: '#f7b731',    // Amarillo
-    headerGradient: 'linear-gradient(135deg, #ff6b35 0%, #f7b731 100%)',
-    buttonColor: '#ff6b35',
-    buttonHoverColor: '#e55a2b',
-    accentColor: '#f7b731',
-    textColor: '#2c3e50',
-    backgroundColor: '#ffffff'
+    primaryColor: "#ff6b35", // Naranja
+    secondaryColor: "#f7b731", // Amarillo
+    headerGradient: "linear-gradient(135deg, #ff6b35 0%, #f7b731 100%)",
+    buttonColor: "#ff6b35",
+    buttonHoverColor: "#e55a2b",
+    accentColor: "#f7b731",
+    textColor: "#2c3e50",
+    backgroundColor: "#ffffff",
   },
-  
+
   assets: {
-    logo: '/assets/clients/actifisio/logo.png',
-    favicon: '/assets/clients/actifisio/favicon.ico'
+    logo: "/assets/clients/actifisio/logo.png",
+    favicon: "/assets/clients/actifisio/favicon.ico",
   },
-  
+
   backend: {
-    apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api' // 🔄 Backend compartido
+    apiUrl: "https://masajecorporaldeportivo-api.vercel.app/api", // 🔄 Backend compartido
   },
-  
+
   contact: {
-    email: 'contacto@actifisio.com',
-    phone: '+34 XXX XXX XXX',
-    address: 'Dirección de Actifisio'
+    email: "contacto@actifisio.com",
+    phone: "+34 XXX XXX XXX",
+    address: "Dirección de Actifisio",
   },
-  
+
   features: {
     enableCalendar: true,
     enablePatientFiles: true,
     enableCreditPacks: true,
     enableInvoicing: true,
     enableBackups: true,
-    enableReports: true
+    enableReports: true,
   },
-  
+
   seo: {
-    title: 'Actifisio - Gestión de Fisioterapia',
-    description: 'Sistema de gestión para clínica de fisioterapia Actifisio',
-    keywords: 'fisioterapia, actifisio, gestión clínica, citas'
-  }
+    title: "Actifisio - Gestión de Fisioterapia",
+    description: "Sistema de gestión para clínica de fisioterapia Actifisio",
+    keywords: "fisioterapia, actifisio, gestión clínica, citas",
+  },
 };
 ```
 
@@ -205,6 +206,7 @@ curl https://actifisio.vercel.app
 Abrir: https://actifisio.vercel.app
 
 **Console del navegador debe mostrar:**
+
 ```
 🏢 ClientConfigService inicializado
    Cliente: Actifisio
@@ -215,6 +217,7 @@ Abrir: https://actifisio.vercel.app
 ### 3. Verificar Header HTTP
 
 En la consola del navegador (Network tab):
+
 ```
 Request URL: https://masajecorporaldeportivo-api.vercel.app/api/patients
 Request Headers:
@@ -250,11 +253,13 @@ vercel --prod --force
 ## 🌐 URLS FINALES
 
 ### Actifisio
+
 - **URL Principal:** https://actifisio.vercel.app
 - **URL de Deployment:** https://actifisio-<hash>.vercel.app (generada automáticamente)
 - **Backend API:** https://masajecorporaldeportivo-api.vercel.app/api (compartido)
 
 ### Masajecorporaldeportivo (existente)
+
 - **URL Principal:** https://masajecorporaldeportivo.vercel.app
 - **Backend API:** https://masajecorporaldeportivo-api.vercel.app/api (compartido)
 
@@ -303,6 +308,7 @@ vercel --prod
 ### Error: "Could not find table 'patients_actifisio'"
 
 Las tablas YA están creadas. Verificar:
+
 1. Backend recibe header `X-Tenant-Slug: actifisio`
 2. Backend logs muestran: "Tenant detectado: actifisio"
 3. Supabase tiene las tablas con sufijo
@@ -373,6 +379,7 @@ Las tablas YA están creadas. Verificar:
 **Estado:** ✅ Listo para ejecutar  
 **Tiempo estimado:** 10-15 minutos  
 **Comando principal:**
+
 ```powershell
 cd c:\Users\dsuarez1\git\clinic\frontend
 vercel --prod --name actifisio --env VITE_CLIENT_ID=actifisio --alias actifisio.vercel.app

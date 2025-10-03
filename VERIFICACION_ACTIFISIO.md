@@ -11,6 +11,7 @@
 ### 1. Acceso a la URL ✅
 
 **Test:**
+
 ```powershell
 # PowerShell
 Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
@@ -20,6 +21,7 @@ Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
 ```
 
 **Esperado:**
+
 - ✅ Status: 200 OK
 - ✅ Se carga la página principal
 - ✅ Logo de Actifisio visible
@@ -30,11 +32,13 @@ Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
 ### 2. Console del Navegador ✅
 
 **Test:**
+
 1. Abrir: https://actifisio.vercel.app
 2. Presionar F12 (DevTools)
 3. Ir a pestaña "Console"
 
 **Esperado:**
+
 ```
 🏢 ClientConfigService inicializado
    Cliente: Actifisio
@@ -44,6 +48,7 @@ Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
 ```
 
 **Verificar:**
+
 - ✅ Cliente: "Actifisio" (NO "Masaje Corporal Deportivo")
 - ✅ Tenant Slug: "actifisio"
 - ✅ Tema primario: "#ff6b35" (naranja)
@@ -54,6 +59,7 @@ Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
 ### 3. Network Tab - Headers HTTP ✅
 
 **Test:**
+
 1. Abrir: https://actifisio.vercel.app
 2. Presionar F12 (DevTools)
 3. Ir a pestaña "Network"
@@ -61,6 +67,7 @@ Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
 5. Hacer click en cualquier petición a `/api/`
 
 **Esperado:**
+
 ```
 Request URL: https://masajecorporaldeportivo-api.vercel.app/api/patients
 Request Headers:
@@ -69,6 +76,7 @@ Request Headers:
 ```
 
 **Verificar:**
+
 - ✅ Header `X-Tenant-Slug: actifisio` presente
 - ✅ Backend URL correcta (masajecorporaldeportivo-api.vercel.app)
 - ✅ NO aparece error 400 o 500
@@ -78,10 +86,12 @@ Request Headers:
 ### 4. Tema Visual ✅
 
 **Test:**
+
 1. Abrir: https://actifisio.vercel.app
 2. Inspeccionar visualmente
 
 **Esperado:**
+
 - ✅ **Logo:** Actifisio (naranja/amarillo, NO logo de Masaje Corporal)
 - ✅ **Color Header:** Gradiente naranja → amarillo
 - ✅ **Título:** "Actifisio" en el navegador
@@ -89,6 +99,7 @@ Request Headers:
 - ✅ **Hover:** Naranja más oscuro (#e55a2b)
 
 **Verificar en Elementos del DOM:**
+
 ```css
 /* Presionar F12 → Elements → Inspeccionar header */
 background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
@@ -99,14 +110,17 @@ background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
 ### 5. Lista de Pacientes Vacía ✅
 
 **Test:**
+
 1. Abrir: https://actifisio.vercel.app/patients
 2. Verificar lista
 
 **Esperado:**
+
 - ✅ Mensaje: "No hay pacientes registrados" o lista vacía
 - ✅ NO aparecen pacientes de Masaje Corporal Deportivo
 
 **Si aparecen pacientes de otro cliente:**
+
 - ❌ ERROR: Aislamiento de datos no funciona
 - 🔧 Verificar: Backend logs, X-Tenant-Slug header
 
@@ -115,6 +129,7 @@ background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
 ### 6. Crear Paciente de Prueba ✅
 
 **Test:**
+
 1. Ir a: https://actifisio.vercel.app/patients
 2. Click en "Nuevo Paciente"
 3. Rellenar formulario:
@@ -124,11 +139,13 @@ background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
 4. Guardar
 
 **Esperado:**
+
 - ✅ Paciente se crea correctamente
 - ✅ Aparece en la lista
 - ✅ NO aparece en Masaje Corporal Deportivo
 
 **Verificar Aislamiento:**
+
 1. Abrir: https://masajecorporaldeportivo.vercel.app/patients
 2. Verificar que NO aparece "Paciente Test Actifisio"
 3. ✅ Debe mostrar solo pacientes de Masaje Corporal
@@ -138,6 +155,7 @@ background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
 ### 7. API Directa - Test de Aislamiento ✅
 
 **Test con PowerShell:**
+
 ```powershell
 # Obtener pacientes de ACTIFISIO
 $headers = @{
@@ -157,6 +175,7 @@ $response | ConvertTo-Json -Depth 3
 ```
 
 **Esperado:**
+
 - ✅ Actifisio: Lista vacía o solo "Paciente Test Actifisio"
 - ✅ Masaje Corporal: 45 pacientes (datos existentes)
 - ✅ NO se mezclan datos entre tenants
@@ -166,6 +185,7 @@ $response | ConvertTo-Json -Depth 3
 ### 8. Crear Cita de Prueba ✅
 
 **Test:**
+
 1. Ir a: https://actifisio.vercel.app/appointments
 2. Click en "Nueva Cita"
 3. Seleccionar:
@@ -177,6 +197,7 @@ $response | ConvertTo-Json -Depth 3
 4. Guardar
 
 **Esperado:**
+
 - ✅ Cita se crea correctamente
 - ✅ Aparece en el calendario
 - ✅ Color naranja (tema de Actifisio)
@@ -186,6 +207,7 @@ $response | ConvertTo-Json -Depth 3
 ### 9. Sistema de Créditos ✅
 
 **Test:**
+
 1. Ir a: https://actifisio.vercel.app/credits
 2. Click en "Nuevo Pack"
 3. Crear pack:
@@ -196,10 +218,12 @@ $response | ConvertTo-Json -Depth 3
 4. Guardar
 
 **Esperado:**
+
 - ✅ Pack se crea correctamente
 - ✅ Saldo: 10 créditos disponibles
 
 **Redimir crédito:**
+
 1. Ir a: https://actifisio.vercel.app/appointments
 2. Abrir cita de test
 3. Marcar como "Completada"
@@ -211,10 +235,12 @@ $response | ConvertTo-Json -Depth 3
 ### 10. PWA Manifest ✅
 
 **Test:**
+
 1. Abrir: https://actifisio.vercel.app/manifest.json
 2. Verificar contenido
 
 **Esperado:**
+
 ```json
 {
   "name": "Actifisio",
@@ -233,6 +259,7 @@ $response | ConvertTo-Json -Depth 3
 ```
 
 **Verificar:**
+
 - ✅ name: "Actifisio" (NO "Masaje Corporal Deportivo")
 - ✅ theme_color: "#ff6b35" (naranja)
 - ✅ Logo correcto
@@ -242,6 +269,7 @@ $response | ConvertTo-Json -Depth 3
 ### 11. Backend Logs (Opcional) 📊
 
 **Si tienes acceso a Vercel Dashboard:**
+
 1. Ir a: https://vercel.com/dashboard
 2. Seleccionar proyecto "clinic-backend"
 3. Click en "Logs"
@@ -252,8 +280,9 @@ $response | ConvertTo-Json -Depth 3
    ```
 
 **Esperado:**
+
 - ✅ Logs muestran "actifisio" como tenant
-- ✅ Tablas con sufijo "_actifisio"
+- ✅ Tablas con sufijo "\_actifisio"
 - ✅ NO aparecen errores de tabla no encontrada
 
 ---
@@ -262,18 +291,18 @@ $response | ConvertTo-Json -Depth 3
 
 ### ✅ Verificaciones Críticas
 
-| # | Verificación | Esperado | Estado |
-|---|--------------|----------|--------|
-| 1 | URL accesible | 200 OK | ⬜ Verificar |
-| 2 | Console del navegador | Cliente: Actifisio | ⬜ Verificar |
-| 3 | Headers HTTP | X-Tenant-Slug: actifisio | ⬜ Verificar |
-| 4 | Tema visual | Naranja/Amarillo | ⬜ Verificar |
-| 5 | Lista de pacientes | Vacía o solo Actifisio | ⬜ Verificar |
-| 6 | Crear paciente | Éxito | ⬜ Verificar |
-| 7 | Aislamiento de datos | No se mezclan | ⬜ Verificar |
-| 8 | Crear cita | Éxito | ⬜ Verificar |
-| 9 | Sistema de créditos | Funcional | ⬜ Verificar |
-| 10 | PWA Manifest | Actifisio | ⬜ Verificar |
+| #   | Verificación          | Esperado                 | Estado       |
+| --- | --------------------- | ------------------------ | ------------ |
+| 1   | URL accesible         | 200 OK                   | ⬜ Verificar |
+| 2   | Console del navegador | Cliente: Actifisio       | ⬜ Verificar |
+| 3   | Headers HTTP          | X-Tenant-Slug: actifisio | ⬜ Verificar |
+| 4   | Tema visual           | Naranja/Amarillo         | ⬜ Verificar |
+| 5   | Lista de pacientes    | Vacía o solo Actifisio   | ⬜ Verificar |
+| 6   | Crear paciente        | Éxito                    | ⬜ Verificar |
+| 7   | Aislamiento de datos  | No se mezclan            | ⬜ Verificar |
+| 8   | Crear cita            | Éxito                    | ⬜ Verificar |
+| 9   | Sistema de créditos   | Funcional                | ⬜ Verificar |
+| 10  | PWA Manifest          | Actifisio                | ⬜ Verificar |
 
 ---
 
@@ -284,6 +313,7 @@ $response | ConvertTo-Json -Depth 3
 **Causa:** Cache del navegador
 
 **Solución:**
+
 ```
 1. Presionar Ctrl + Shift + R (hard reload)
 2. O borrar cache del navegador
@@ -297,10 +327,12 @@ $response | ConvertTo-Json -Depth 3
 **Causa:** Header `X-Tenant-Slug` no se envía
 
 **Verificar:**
+
 1. Console del navegador → Network → Headers
 2. Debe aparecer: `X-Tenant-Slug: actifisio`
 
 **Solución:**
+
 - Verificar `TenantInterceptor` en frontend
 - Verificar `ClientConfigService.getTenantSlug()`
 
@@ -311,11 +343,13 @@ $response | ConvertTo-Json -Depth 3
 **Causa:** Aislamiento de datos no funciona
 
 **Verificar:**
+
 1. Backend logs: ¿Se detecta tenant correctamente?
 2. ¿Se usa `getTableName()` en DatabaseManager?
 3. ¿Tablas con sufijo existen en Supabase?
 
 **Solución:**
+
 ```sql
 -- Verificar en Supabase
 SELECT * FROM patients_actifisio;
@@ -329,6 +363,7 @@ SELECT * FROM patients_actifisio;
 **Causa:** Script no está en la carpeta correcta
 
 **Verificar:**
+
 ```powershell
 # Debe existir
 Test-Path "c:\Users\dsuarez1\git\clinic\frontend\scripts\generate-manifest.js"
@@ -336,6 +371,7 @@ Test-Path "c:\Users\dsuarez1\git\clinic\frontend\scripts\generate-manifest.js"
 ```
 
 **Solución:**
+
 - El script YA está creado (deployment exitoso)
 - Si falta, copiar de `scripts/generate-manifest.js`
 
@@ -346,10 +382,12 @@ Test-Path "c:\Users\dsuarez1\git\clinic\frontend\scripts\generate-manifest.js"
 ### Problemas Técnicos
 
 **Backend Issues:**
+
 - Logs de Vercel: https://vercel.com/davids-projects-8fa96e54/clinic-backend
 - Supabase Logs: https://supabase.com (proyecto: clinic)
 
 **Frontend Issues:**
+
 - Logs de Vercel: https://vercel.com/davids-projects-8fa96e54/clinic-frontend
 - Browser DevTools: F12 → Console, Network
 
@@ -372,6 +410,7 @@ Una vez completadas todas las verificaciones:
 - [ ] PWA Manifest correcto
 
 **Si todos los items están marcados:**
+
 - ✅ **DEPLOYMENT APROBADO**
 - 🎉 **ACTIFISIO LISTO PARA PRODUCCIÓN**
 
@@ -380,16 +419,19 @@ Una vez completadas todas las verificaciones:
 ## 🎯 PRÓXIMOS PASOS POST-VERIFICACIÓN
 
 1. **Crear Datos Reales de Actifisio** (30 min)
+
    - Pacientes reales del cliente
    - Configurar packs de créditos
    - Importar citas existentes (si aplica)
 
 2. **Configurar Información del Cliente** (15 min)
+
    - Actualizar teléfono, email, dirección
    - Configurar redes sociales
    - Personalizar textos
 
 3. **Onboarding del Cliente** (1 hora)
+
    - Demostración del sistema
    - Capacitación básica
    - Entrega de credenciales

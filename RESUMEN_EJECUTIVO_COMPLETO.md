@@ -13,10 +13,12 @@
 ### ✅ Sistema Multi-Cliente Funcional
 
 **2 Clientes Desplegados:**
+
 1. **Masaje Corporal Deportivo** - https://masajecorporaldeportivo.vercel.app
 2. **Actifisio** - https://actifisio.vercel.app (NUEVO ✨)
 
 **Características:**
+
 - ✅ Backend multi-tenant con aislamiento de datos
 - ✅ Temas personalizados por cliente
 - ✅ URLs estáticas independientes
@@ -105,7 +107,7 @@ getTableName(baseTable) {
 const managerCache = new Map();
 
 async function getManagerForTenant(tenantSlug) {
-  const cacheKey = tenantSlug || 'default';
+  const cacheKey = tenantSlug || "default";
   if (managerCache.has(cacheKey)) {
     return managerCache.get(cacheKey);
   }
@@ -122,6 +124,7 @@ async function getManagerForTenant(tenantSlug) {
 - ✅ 9 tablas por cliente: patients, appointments, credit_packs, credit_redemptions, patient_files, configurations, backups, invoices, invoice_items
 
 **Script de Automatización:**
+
 ```powershell
 .\scripts\fix-multitenant-backend.ps1
 ```
@@ -133,6 +136,7 @@ async function getManagerForTenant(tenantSlug) {
 ### Sistema de Configuración
 
 **Estructura:**
+
 ```
 frontend/src/config/
 ├── client-config.interface.ts    (Interface TypeScript)
@@ -143,6 +147,7 @@ frontend/src/config/
 ```
 
 **Configuración por Cliente:**
+
 - ✅ `tenantSlug`: Identificador para backend
 - ✅ `theme`: Colores, gradientes, estilos
 - ✅ `assets`: Logo, favicon, íconos
@@ -154,11 +159,13 @@ frontend/src/config/
 ### Temas por Cliente
 
 **Masaje Corporal Deportivo:**
+
 - Primario: #667eea (Azul/Púrpura)
 - Secundario: #764ba2
 - Gradiente: Azul → Púrpura
 
 **Actifisio:**
+
 - Primario: #ff6b35 (Naranja)
 - Secundario: #f7b731 (Amarillo)
 - Gradiente: Naranja → Amarillo
@@ -170,6 +177,7 @@ frontend/src/config/
 ### Configuración por Cliente
 
 **Masaje Corporal Deportivo:**
+
 ```
 Project: clinic-frontend
 Domain: masajecorporaldeportivo.vercel.app
@@ -178,6 +186,7 @@ Build Command: npm run build
 ```
 
 **Actifisio:**
+
 ```
 Project: clinic-frontend (mismo)
 Domain: actifisio.vercel.app (alias)
@@ -186,6 +195,7 @@ Build Command: npm run build
 ```
 
 **Backend (Compartido):**
+
 ```
 Project: clinic-backend
 Domain: masajecorporaldeportivo-api.vercel.app
@@ -200,6 +210,7 @@ Environment Variables:
 **Problema Resuelto:** Script externo no funcionaba en Vercel.
 
 **Solución:**
+
 - Creado `frontend/scripts/generate-manifest.js` (local)
 - Actualizado `package.json`:
   ```json
@@ -207,6 +218,7 @@ Environment Variables:
   ```
 
 **Funcionamiento:**
+
 1. Lee `VITE_CLIENT_ID` del entorno
 2. Carga configuración del cliente
 3. Genera `manifest.json` dinámico con nombre, colores, logo
@@ -291,6 +303,7 @@ invoice_items_actifisio
 ```
 
 **RLS (Row Level Security):**
+
 - ✅ Habilitado en todas las tablas
 - ✅ Políticas configuradas para SELECT, INSERT, UPDATE, DELETE
 - ✅ Autenticación via `service_role` key
@@ -302,15 +315,18 @@ invoice_items_actifisio
 ### Commits Locales (4 total)
 
 1. **feat: Backend multi-tenant v2.5.0 - Soporte real de tenant slug en tablas**
+
    - `database-manager.js`: Constructor + getTableName()
    - `database-middleware.js`: Cache por tenant
    - 166 insertions, 177 deletions
 
 2. **feat: Frontend multi-cliente completo - Configuración dinámica por cliente**
+
    - 17 archivos: configs, assets, services, scripts
    - 1,755 insertions, 5 deletions
 
 3. **docs: Documentación completa del sistema multi-cliente v2.5.0**
+
    - 18 archivos markdown
    - 6,995 insertions, 54 deletions
 
@@ -326,15 +342,15 @@ invoice_items_actifisio
 
 ### Aplicaciones Web
 
-| Cliente                   | URL                                      | Estado |
-|---------------------------|------------------------------------------|--------|
+| Cliente                   | URL                                        | Estado    |
+| ------------------------- | ------------------------------------------ | --------- |
 | Masaje Corporal Deportivo | https://masajecorporaldeportivo.vercel.app | ✅ Online |
 | Actifisio                 | https://actifisio.vercel.app               | ✅ Online |
 
 ### Backend API (Compartido)
 
-| Servicio | URL                                              | Estado |
-|----------|--------------------------------------------------|--------|
+| Servicio | URL                                                | Estado    |
+| -------- | -------------------------------------------------- | --------- |
 | API REST | https://masajecorporaldeportivo-api.vercel.app/api | ✅ Online |
 
 ---
@@ -367,6 +383,7 @@ invoice_items_actifisio
 ## ✅ FUNCIONALIDADES COMPLETAS
 
 ### Gestión de Pacientes
+
 - ✅ Crear, editar, eliminar pacientes
 - ✅ Búsqueda y filtrado
 - ✅ Historial de citas
@@ -374,6 +391,7 @@ invoice_items_actifisio
 - ✅ Aislamiento por tenant
 
 ### Gestión de Citas
+
 - ✅ Calendario interactivo (FullCalendar)
 - ✅ Vista mensual, semanal, diaria
 - ✅ Crear, editar, eliminar citas
@@ -382,24 +400,28 @@ invoice_items_actifisio
 - ✅ Integración con sistema de créditos
 
 ### Sistema de Bonos/Créditos
+
 - ✅ Crear packs de créditos (5, 10, 20 sesiones)
 - ✅ Redimir créditos al confirmar cita
 - ✅ Saldo visible en perfil de paciente
 - ✅ Historial de redenciones
 
 ### Archivos de Pacientes
+
 - ✅ Subir archivos (PDF, imágenes)
 - ✅ Categorías: Informes, Radiografías, Recetas, Otros
 - ✅ Visualizar y descargar
 - ✅ Eliminar archivos
 
 ### Sistema de Backups
+
 - ✅ Crear backup manual de todas las tablas
 - ✅ Restaurar desde backup
 - ✅ Historial de backups
 - ✅ Descarga de backups en JSON
 
 ### Informes y Reportes
+
 - ✅ Reporte de facturación mensual
 - ✅ Exportar a CSV
 - ✅ Agrupación por cita o paciente
@@ -410,6 +432,7 @@ invoice_items_actifisio
 ## 🔐 SEGURIDAD
 
 ### Backend
+
 - ✅ Headers de seguridad (Helmet.js)
 - ✅ CORS configurado
 - ✅ Rate limiting
@@ -417,6 +440,7 @@ invoice_items_actifisio
 - ✅ RLS en Supabase
 
 ### Frontend
+
 - ✅ Sanitización de inputs
 - ✅ Validación de formularios
 - ✅ HTTP Interceptor para tenant slug
@@ -428,11 +452,11 @@ invoice_items_actifisio
 
 ### Modelo de Pricing
 
-| Cliente | Precio    | Inversión | ROI      |
-|---------|-----------|-----------|----------|
-| Cliente 1 | €6,200  | €1,700   | 264%     |
-| Cliente 2 | €1,000  | €0       | 100%     |
-| Cliente 3+ | €750   | €0       | 100%     |
+| Cliente    | Precio | Inversión | ROI  |
+| ---------- | ------ | --------- | ---- |
+| Cliente 1  | €6,200 | €1,700    | 264% |
+| Cliente 2  | €1,000 | €0        | 100% |
+| Cliente 3+ | €750   | €0        | 100% |
 
 **Inversión Inicial:** €1,700 (120 horas de desarrollo multi-cliente)  
 **Recuperación:** Cliente 2 (€1,000)  
@@ -440,14 +464,14 @@ invoice_items_actifisio
 
 ### Tiempo de Setup por Cliente
 
-| Actividad | Tiempo | Responsable |
-|-----------|--------|-------------|
-| Crear configuración | 10 min | Desarrollador |
-| Agregar logo | 5 min | Diseñador |
-| Crear tablas Supabase | 10 min | Desarrollador |
-| Deploy a Vercel | 5 min | Desarrollador |
-| Test y verificación | 10 min | QA |
-| **Total** | **40 min** | - |
+| Actividad             | Tiempo     | Responsable   |
+| --------------------- | ---------- | ------------- |
+| Crear configuración   | 10 min     | Desarrollador |
+| Agregar logo          | 5 min      | Diseñador     |
+| Crear tablas Supabase | 10 min     | Desarrollador |
+| Deploy a Vercel       | 5 min      | Desarrollador |
+| Test y verificación   | 10 min     | QA            |
+| **Total**             | **40 min** | -             |
 
 **Antes (sin multi-cliente):** 40 horas por cliente  
 **Ahora (con multi-cliente):** 40 minutos por cliente  
@@ -460,21 +484,25 @@ invoice_items_actifisio
 ### Guías Técnicas (18 archivos)
 
 1. **GUIA_SISTEMA_MULTICLIENTE.md** (600+ líneas)
+
    - Arquitectura completa
    - Guías de implementación
    - Ejemplos de código
 
 2. **BACKEND_MULTITENANT_V2.5.0.md**
+
    - Cambios en DatabaseManager
    - Middleware con cache
    - Scripts de conversión
 
 3. **CREAR_TABLAS_NUEVO_CLIENTE.md**
+
    - Scripts SQL para Supabase
    - Configuración de RLS
    - Verificación de tablas
 
 4. **DEPLOY_VERCEL_ACTIFISIO.md**
+
    - Deployment paso a paso
    - Configuración de alias
    - Troubleshooting
@@ -507,25 +535,30 @@ invoice_items_actifisio
 ## 🎓 LECCIONES APRENDIDAS
 
 ### 1. Scripts de Build
+
 - ❌ Scripts externos (`../scripts/`) no funcionan en Vercel
 - ✅ Mantener scripts dentro de la carpeta del proyecto
 
 ### 2. Variables de Entorno
+
 - ❌ `--name` flag deprecado en Vercel CLI
 - ✅ Usar `--build-env` para variables de build
 - ✅ Configurar variables permanentes en Dashboard
 
 ### 3. Certificados SSL
+
 - ❌ Corporate proxy causa errores de certificados
 - ✅ `NODE_TLS_REJECT_UNAUTHORIZED=0` para desarrollo
 - ⚠️ NO usar en producción
 
 ### 4. Alias en Vercel
+
 - ✅ Usar `vercel alias set` para URLs estáticas
 - ✅ El alias persiste entre deployments
 - ✅ Facilita cambio de deployment sin cambiar URL
 
 ### 5. Multi-Tenant en Serverless
+
 - ✅ Cache de DatabaseManager instances por tenant
 - ✅ Headers HTTP para tenant detection
 - ✅ Tablas con sufijo en vez de schema separado
@@ -537,11 +570,13 @@ invoice_items_actifisio
 ### Inmediato (1 día)
 
 1. **Crear Datos de Prueba en Actifisio** (30 min)
+
    - 5 pacientes de prueba
    - 10 citas de ejemplo
    - 2 packs de créditos
 
 2. **Verificar Aislamiento de Datos** (30 min)
+
    - Test de que no se mezclan datos entre clientes
    - Verificar RLS en Supabase
    - Logs de backend
@@ -554,11 +589,13 @@ invoice_items_actifisio
 ### Corto Plazo (1 semana)
 
 1. **Cliente 3: Fisioterapia Centro** (4 horas)
+
    - Seguir checklist de 40 minutos
    - Configuración completa
    - Deployment a `fisioterapiacentro.vercel.app`
 
 2. **Mejoras de UX** (8 horas)
+
    - Onboarding de nuevos clientes
    - Tutoriales interactivos
    - Feedback visual mejorado
@@ -571,11 +608,13 @@ invoice_items_actifisio
 ### Medio Plazo (1 mes)
 
 1. **Features Adicionales** (40 horas)
+
    - Notificaciones por email/SMS
    - Recordatorios de citas
    - Dashboard con estadísticas
 
 2. **Optimizaciones** (16 horas)
+
    - Lazy loading de módulos
    - PWA offline-first
    - Performance improvements
@@ -618,6 +657,7 @@ invoice_items_actifisio
 El proyecto ha evolucionado de una aplicación single-tenant a un sistema multi-cliente robusto y escalable. Con 2 clientes desplegados en producción, base de datos aislada, temas personalizados y URLs estáticas, el sistema está listo para escalar a múltiples clientes sin esfuerzo adicional significativo.
 
 **Principales Logros:**
+
 - 🚀 Deployment exitoso de 2 clientes
 - 💰 ROI positivo desde cliente 2
 - ⏱️ 98.3% reducción en tiempo de setup por cliente

@@ -52,12 +52,14 @@
 ## 🌐 URLS DESPLEGADAS
 
 ### Actifisio (NUEVO ✨)
+
 - **URL Principal:** https://actifisio.vercel.app
 - **URL de Deployment:** https://clinic-frontend-csuexdljr-davids-projects-8fa96e54.vercel.app
 - **Backend API:** https://masajecorporaldeportivo-api.vercel.app/api (compartido)
 - **Estado:** ✅ Online y funcional
 
 ### Masaje Corporal Deportivo (EXISTENTE)
+
 - **URL Principal:** https://masajecorporaldeportivo.vercel.app
 - **Backend API:** https://masajecorporaldeportivo-api.vercel.app/api (compartido)
 - **Estado:** ✅ Online y funcional
@@ -71,16 +73,19 @@
 **Problema:** El script `generate-manifest.js` estaba en `../scripts/` (fuera de frontend) y Vercel no lo encontraba.
 
 **Solución:**
+
 - Creado `frontend/scripts/generate-manifest.js` con rutas relativas ajustadas
 - Actualizado `package.json`: `"generate:manifest": "node scripts/generate-manifest.js"`
 
 **Archivos modificados:**
+
 - ✅ `frontend/scripts/generate-manifest.js` (creado)
 - ✅ `frontend/package.json` (actualizado)
 
 ### 2. Deployment Inicial ✅
 
 **Comando ejecutado:**
+
 ```powershell
 $env:NODE_TLS_REJECT_UNAUTHORIZED="0"
 cd c:\Users\dsuarez1\git\clinic\frontend
@@ -88,6 +93,7 @@ vercel --prod --build-env VITE_CLIENT_ID=actifisio
 ```
 
 **Resultado:**
+
 - ✅ Build exitoso
 - ✅ Deployment URL: `clinic-frontend-9y7un2p4u-davids-projects-8fa96e54.vercel.app`
 - ✅ Tiempo: 17 segundos
@@ -95,11 +101,13 @@ vercel --prod --build-env VITE_CLIENT_ID=actifisio
 ### 3. Configuración de Alias ✅
 
 **Comando ejecutado:**
+
 ```powershell
 vercel alias set clinic-frontend-9y7un2p4u-davids-projects-8fa96e54.vercel.app actifisio.vercel.app
 ```
 
 **Resultado:**
+
 - ✅ Alias configurado correctamente
 - ✅ URL estática: `actifisio.vercel.app`
 
@@ -108,26 +116,29 @@ vercel alias set clinic-frontend-9y7un2p4u-davids-projects-8fa96e54.vercel.app a
 **Archivo modificado:** `frontend/src/config/clients/actifisio.config.ts`
 
 **Cambio:**
+
 ```typescript
 // ANTES
 backend: {
-  apiUrl: 'http://localhost:3000/api'  // Desarrollo local
+  apiUrl: "http://localhost:3000/api"; // Desarrollo local
 }
 
 // DESPUÉS
 backend: {
-  apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'  // Producción
+  apiUrl: "https://masajecorporaldeportivo-api.vercel.app/api"; // Producción
 }
 ```
 
 ### 5. Redeploy con Backend Correcto ✅
 
 **Comando ejecutado:**
+
 ```powershell
 vercel --prod --build-env VITE_CLIENT_ID=actifisio
 ```
 
 **Resultado:**
+
 - ✅ Build exitoso
 - ✅ Deployment URL: `clinic-frontend-csuexdljr-davids-projects-8fa96e54.vercel.app`
 - ✅ Tiempo: 3 segundos (cache)
@@ -135,11 +146,13 @@ vercel --prod --build-env VITE_CLIENT_ID=actifisio
 ### 6. Actualización de Alias ✅
 
 **Comando ejecutado:**
+
 ```powershell
 vercel alias set clinic-frontend-csuexdljr-davids-projects-8fa96e54.vercel.app actifisio.vercel.app
 ```
 
 **Resultado:**
+
 - ✅ Alias actualizado correctamente
 - ✅ URL final: https://actifisio.vercel.app
 
@@ -161,6 +174,7 @@ Invoke-WebRequest https://actifisio.vercel.app -UseBasicParsing
 Abrir: https://actifisio.vercel.app
 
 **Console del navegador debe mostrar:**
+
 ```
 🏢 ClientConfigService inicializado
    Cliente: Actifisio
@@ -172,6 +186,7 @@ Abrir: https://actifisio.vercel.app
 ### 3. Header HTTP
 
 En la consola del navegador (Network tab):
+
 ```
 Request URL: https://masajecorporaldeportivo-api.vercel.app/api/patients
 Request Headers:
@@ -188,6 +203,7 @@ Request Headers:
 ### 5. Base de Datos
 
 **Tablas en Supabase (ya creadas):**
+
 ```sql
 ✅ patients_actifisio
 ✅ appointments_actifisio
@@ -209,6 +225,7 @@ Todas con RLS habilitado y políticas configuradas.
 ### Project: clinic-frontend
 
 **Build Settings:**
+
 ```
 Framework Preset: Angular
 Build Command: npm run build
@@ -218,12 +235,14 @@ Development Command: ng serve
 ```
 
 **Environment Variables (Production):**
+
 ```
 Name: VITE_CLIENT_ID
 Value: actifisio
 ```
 
 **Domains:**
+
 ```
 actifisio.vercel.app (Alias principal)
 clinic-frontend-csuexdljr-davids-projects-8fa96e54.vercel.app (Deployment)
@@ -234,16 +253,19 @@ clinic-frontend-csuexdljr-davids-projects-8fa96e54.vercel.app (Deployment)
 ## 📝 ARCHIVOS MODIFICADOS
 
 ### 1. `frontend/scripts/generate-manifest.js`
+
 - **Acción:** Creado nuevo archivo
 - **Propósito:** Script de manifest optimizado para Vercel con rutas relativas
 - **Funcionalidad:** Genera manifest.json dinámico basado en VITE_CLIENT_ID
 
 ### 2. `frontend/package.json`
+
 - **Línea 11:** `"generate:manifest": "node scripts/generate-manifest.js"`
 - **Cambio:** Ruta actualizada de `../scripts/` a `scripts/`
 - **Propósito:** Usar script local en lugar del externo
 
 ### 3. `frontend/src/config/clients/actifisio.config.ts`
+
 - **Línea 48:** `apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'`
 - **Cambio:** Cambio de localhost a URL de producción
 - **Propósito:** Conectar con backend compartido en Vercel
@@ -285,6 +307,7 @@ Invoke-WebRequest -Uri "https://masajecorporaldeportivo-api.vercel.app/api/patie
 ### 5. Configurar Info del Cliente (5 min)
 
 Actualizar en `actifisio.config.ts`:
+
 ```typescript
 info: {
   phone: '+34 XXX XXX XXX',  // TODO: Teléfono real
@@ -303,17 +326,20 @@ info: {
 **Problema:** Scripts externos (`../scripts/`) no funcionan en Vercel.
 
 **Solución:** Mantener scripts de build dentro de la carpeta del proyecto:
+
 - ✅ `frontend/scripts/generate-manifest.js`
 - ❌ `scripts/generate-manifest.js` (fuera de frontend)
 
 ### 2. Variables de Entorno en CLI
 
 **Comando correcto:**
+
 ```powershell
 vercel --prod --build-env VITE_CLIENT_ID=actifisio
 ```
 
 **Alternativa (menos recomendada):**
+
 ```powershell
 # Configurar en Vercel Dashboard → Project Settings → Environment Variables
 ```
@@ -323,6 +349,7 @@ vercel --prod --build-env VITE_CLIENT_ID=actifisio
 **Problema:** Error de certificados self-signed.
 
 **Solución:**
+
 ```powershell
 $env:NODE_TLS_REJECT_UNAUTHORIZED="0"
 ```
@@ -330,6 +357,7 @@ $env:NODE_TLS_REJECT_UNAUTHORIZED="0"
 ### 4. Alias en Vercel
 
 **Patrón correcto:**
+
 ```powershell
 # 1. Deploy
 vercel --prod
@@ -386,10 +414,12 @@ vercel alias set <deployment-url> <alias>
 - ✅ Listo para agregar más clientes en 10 minutos
 
 **URLs Finales:**
+
 - Masaje Corporal: https://masajecorporaldeportivo.vercel.app
 - Actifisio: https://actifisio.vercel.app
 
 **Backend API (compartido):**
+
 - https://masajecorporaldeportivo-api.vercel.app/api
 
 ---
