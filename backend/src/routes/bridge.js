@@ -403,9 +403,17 @@ router.get('/appointments/all', async (req, res) => {
     const endpoint = `${req.getTable('appointments')}?select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
     
+    console.log('🔍 [GET /appointments/all] Raw appointments from Supabase:', JSON.stringify(appointments, null, 2));
+    console.log('🔍 [GET /appointments/all] tableSuffix:', req.tableSuffix);
+    console.log('🔍 [GET /appointments/all] credit_redemptions key:', getTablePropertyKey('credit_redemptions', req.tableSuffix));
+    
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => {
-      const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+      console.log('🔍 [GET /appointments/all] Processing appointment:', apt.id);
+      console.log('🔍 [GET /appointments/all] Appointment keys:', Object.keys(apt));
+      const redemptionsRaw = getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix);
+      console.log('🔍 [GET /appointments/all] redemptionsRaw:', redemptionsRaw);
+      const redemptions = (redemptionsRaw || []).map(cr => {
         const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
         deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
         return {
