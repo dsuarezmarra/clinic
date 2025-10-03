@@ -1,13 +1,13 @@
 // Endpoints "bridge" usando fetch directo a Supabase REST API
 // Estos endpoints evitan el bug del SDK @supabase/supabase-js en Vercel
-// VERSION: 2.3.0 - Multi-tenant JOINs corregidos con helpers dinámicos
+// VERSION: 2.4.0 - Tablas patient_files/configurations multi-tenant completadas
 
 const express = require('express');
 const router = express.Router();
 const { loadTenant } = require('../middleware/tenant');
 
 // Log de versión al cargar el módulo
-console.log('🔄 bridge.js VERSION 2.3.0 cargado - Multi-tenant JOINs fixed');
+console.log('🔄 bridge.js VERSION 2.4.0 cargado - Multi-tenant tables fixed');
 const multer = require('multer');
 
 // Cargar locations.json una sola vez al inicio del módulo
@@ -110,8 +110,8 @@ function deleteEmbeddedProperty(obj, baseTableName, suffix) {
 // GET /api/version - Devolver versión del bridge
 router.get('/version', (req, res) => {
   res.json({ 
-    version: '2.3.0',
-    description: 'Multi-tenant JOINs corregidos - usa helpers dinámicos para embedded resources',
+    version: '2.4.0',
+    description: 'Multi-tenant completo - patient_files y configurations migradas correctamente',
     timestamp: new Date().toISOString()
   });
 });
@@ -191,7 +191,7 @@ router.get('/patients/:patientId/files', async (req, res) => {
   try {
     const { patientId } = req.params;
     
-    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
+    const endpoint = `${req.getTable('patient_files')}?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
     
     res.json(files || []);
@@ -220,7 +220,7 @@ router.post('/patients/:patientId/files', async (req, res) => {
       createdAt: new Date().toISOString()
     };
     
-    const { data } = await supabaseFetch('patient_files', {
+    const { data } = await supabaseFetch(req.getTable('patient_files'), {
       method: 'POST',
       body: JSON.stringify(fileData)
     });
@@ -237,7 +237,7 @@ router.delete('/patients/:patientId/files/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
     
-    const endpoint = `patient_files?id=eq.${fileId}`;
+    const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
@@ -1160,7 +1160,7 @@ router.get('/files/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
     
-    const endpoint = `patient_files?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
+    const endpoint = `${req.getTable('patient_files')}?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
     
     // Para archivos de imagen, generar thumbnail más pequeño del storedPath
@@ -1203,7 +1203,7 @@ router.post('/files/patient/:patientId', upload.single('file'), async (req, res)
       createdAt: new Date().toISOString()
     };
     
-    const { data } = await supabaseFetch('patient_files', {
+    const { data } = await supabaseFetch(req.getTable('patient_files'), {
       method: 'POST',
       body: JSON.stringify(fileData)
     });
@@ -1220,7 +1220,7 @@ router.get('/files/:fileId/preview', async (req, res) => {
   try {
     const { fileId } = req.params;
     
-    const endpoint = `patient_files?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
+    const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
     const { data: files } = await supabaseFetch(endpoint);
     
     if (!files || files.length === 0) {
@@ -1255,7 +1255,7 @@ router.get('/files/:fileId/download', async (req, res) => {
   try {
     const { fileId } = req.params;
     
-    const endpoint = `patient_files?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
+    const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
     const { data: files } = await supabaseFetch(endpoint);
     
     if (!files || files.length === 0) {
@@ -1290,7 +1290,7 @@ router.delete('/files/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
     
-    const endpoint = `patient_files?id=eq.${fileId}`;
+    const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
@@ -1310,13 +1310,13 @@ router.delete('/files/:fileId', async (req, res) => {
 // GET /api/config - Obtener configuración
 router.get('/config', async (req, res) => {
   try {
-    const endpoint = `${req.getTable('configurations')}?select=*&limit=1`;
+    // Buscar la configuración principal usando key='config'
+    const endpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
       // Devolver configuración por defecto
       return res.json({
-        id: 1,
         businessName: 'Clínica',
         appointmentDuration: 30,
         workingHours: {
@@ -1337,7 +1337,9 @@ router.get('/config', async (req, res) => {
       });
     }
     
-    res.json(configs[0]);
+    // Parsear el value que está en JSON
+    const configData = JSON.parse(configs[0].value);
+    res.json(configData);
   } catch (error) {
     console.error('Error fetching config:', error);
     res.status(500).json({ error: error.message });
@@ -1349,26 +1351,32 @@ router.put('/config', async (req, res) => {
   try {
     const configData = req.body;
     
-    // Verificar si existe una configuración
-    const checkEndpoint = `${req.getTable('configurations')}?select=id&limit=1`;
+    // Verificar si existe la configuración con key='config'
+    const checkEndpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
+    
+    // Convertir configData a JSON string para almacenar en la columna 'value'
+    const configRecord = {
+      key: 'config',
+      value: JSON.stringify(configData)
+    };
     
     let result;
     if (existing && existing.length > 0) {
-      // Actualizar
-      const updateEndpoint = `${req.getTable('configurations')}?id=eq.${existing[0].id}`;
+      // Actualizar usando key='config'
+      const updateEndpoint = `${req.getTable('configurations')}?key=eq.config`;
       const { data } = await supabaseFetch(updateEndpoint, {
         method: 'PATCH',
-        body: JSON.stringify(configData)
+        body: JSON.stringify({ value: configRecord.value })
       });
-      result = data[0];
+      result = JSON.parse(data[0].value);
     } else {
-      // Crear
+      // Crear nuevo registro
       const { data } = await supabaseFetch(`${req.getTable('configurations')}`, {
         method: 'POST',
-        body: JSON.stringify(configData)
+        body: JSON.stringify(configRecord)
       });
-      result = data[0];
+      result = JSON.parse(data[0].value);
     }
     
     res.json(result);
@@ -1401,23 +1409,28 @@ router.post('/config/reset', async (req, res) => {
       }
     };
     
-    const checkEndpoint = `${req.getTable('configurations')}?select=id&limit=1`;
+    const checkEndpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
+    
+    const configRecord = {
+      key: 'config',
+      value: JSON.stringify(defaultConfig)
+    };
     
     let result;
     if (existing && existing.length > 0) {
-      const updateEndpoint = `${req.getTable('configurations')}?id=eq.${existing[0].id}`;
+      const updateEndpoint = `${req.getTable('configurations')}?key=eq.config`;
       const { data } = await supabaseFetch(updateEndpoint, {
         method: 'PATCH',
-        body: JSON.stringify(defaultConfig)
+        body: JSON.stringify({ value: configRecord.value })
       });
-      result = data[0];
+      result = JSON.parse(data[0].value);
     } else {
       const { data } = await supabaseFetch(`${req.getTable('configurations')}`, {
         method: 'POST',
-        body: JSON.stringify(defaultConfig)
+        body: JSON.stringify(configRecord)
       });
-      result = data[0];
+      result = JSON.parse(data[0].value);
     }
     
     res.json(result);
@@ -1432,16 +1445,18 @@ router.get('/config/working-hours/:date', async (req, res) => {
   try {
     const { date } = req.params;
     
-    // Obtener configuración
-    const endpoint = `${req.getTable('configurations')}?select=workingHours&limit=1`;
+    // Obtener configuración usando key='config'
+    const endpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
     
-    const dayOfWeek = new Date(date).toLocaleLowerCase('en-US', { weekday: 'long' });
-    const workingHours = configs[0].workingHours || {};
+    // Parsear el value JSON
+    const configData = JSON.parse(configs[0].value);
+    const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    const workingHours = configData.workingHours || {};
     const dayConfig = workingHours[dayOfWeek];
     
     res.json({
@@ -1458,7 +1473,7 @@ router.get('/config/working-hours/:date', async (req, res) => {
 // GET /api/config/prices - Obtener precios
 router.get('/config/prices', async (req, res) => {
   try {
-    const endpoint = `${req.getTable('configurations')}?select=prices&limit=1`;
+    const endpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: configs } = await supabaseFetch(endpoint);
     
     if (!configs || configs.length === 0) {
@@ -1470,7 +1485,9 @@ router.get('/config/prices', async (req, res) => {
       });
     }
     
-    res.json(configs[0].prices || {});
+    // Parsear el value JSON
+    const configData = JSON.parse(configs[0].value);
+    res.json(configData.prices || {});
   } catch (error) {
     console.error('Error fetching prices:', error);
     res.status(500).json({ error: error.message });
@@ -1482,20 +1499,25 @@ router.put('/config/prices', async (req, res) => {
   try {
     const prices = req.body;
     
-    const checkEndpoint = `${req.getTable('configurations')}?select=id&limit=1`;
+    // Verificar que existe la configuración
+    const checkEndpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
     
     if (!existing || existing.length === 0) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
     
-    const updateEndpoint = `${req.getTable('configurations')}?id=eq.${existing[0].id}`;
+    // Parsear, actualizar y serializar
+    const configData = JSON.parse(existing[0].value);
+    configData.prices = prices;
+    
+    const updateEndpoint = `${req.getTable('configurations')}?key=eq.config`;
     const { data } = await supabaseFetch(updateEndpoint, {
       method: 'PATCH',
-      body: JSON.stringify({ prices })
+      body: JSON.stringify({ value: JSON.stringify(configData) })
     });
     
-    res.json(data[0].prices);
+    res.json(prices);
   } catch (error) {
     console.error('Error updating prices:', error);
     res.status(500).json({ error: error.message });
@@ -1638,7 +1660,7 @@ router.post('/backup/create', async (req, res) => {
       supabaseFetch(`${req.getTable('appointments')}?select=*`).then(r => r.data || []),
       supabaseFetch(`${req.getTable('credit_packs')}?select=*`).then(r => r.data || []),
       supabaseFetch(`${req.getTable('credit_redemptions')}?select=*`).then(r => r.data || []),
-      supabaseFetch('patient_files?select=*').then(r => r.data || [])
+      supabaseFetch(`${req.getTable('patient_files')}?select=*`).then(r => r.data || [])
     ]);
     
     // 2. Crear objeto backup
@@ -1805,7 +1827,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     await Promise.all([
       supabaseFetch(`${req.getTable('credit_redemptions')}?id=gt.0`, { method: 'DELETE' }),
       supabaseFetch(`${req.getTable('appointments')}?id=gt.0`, { method: 'DELETE' }),
-      supabaseFetch('patient_files?id=gt.0', { method: 'DELETE' }),
+      supabaseFetch(`${req.getTable('patient_files')}?id=gt.0`, { method: 'DELETE' }),
       supabaseFetch(`${req.getTable('credit_packs')}?id=gt.0`, { method: 'DELETE' }),
       supabaseFetch(`${req.getTable('patients')}?id=gt.0`, { method: 'DELETE' })
     ]);
@@ -1873,7 +1895,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     
     // 4.5 Patient files (dependen de pacientes)
     if (files.length > 0) {
-      const { error: filesError } = await supabaseFetch('patient_files', {
+      const { error: filesError } = await supabaseFetch(req.getTable('patient_files'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
         body: JSON.stringify(files)
@@ -2198,8 +2220,8 @@ router.get('/reports/billing', async (req, res) => {
         let totalPending = 0;
         
         for (const apt of apts) {
-          const price = calculateAppointmentPrice(apt);
-          const isPaid = getAppointmentPaidStatus(apt);
+          const price = calculateAppointmentPrice(apt, req.tableSuffix);
+          const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);
           
           if (isPaid) {
             totalPaid += price;
@@ -2222,10 +2244,10 @@ router.get('/reports/billing', async (req, res) => {
         const dateStr = date.toLocaleDateString('es-ES');
         const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         const duration = apt.durationMinutes || 0;
-        const type = getAppointmentType(apt);
-        const isPaid = getAppointmentPaidStatus(apt);
+        const type = getAppointmentType(apt, req.tableSuffix);
+        const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);
         const paidStatus = isPaid ? 'Pagado' : 'Pendiente';
-        const price = calculateAppointmentPrice(apt);
+        const price = calculateAppointmentPrice(apt, req.tableSuffix);
         const priceEuros = (price / 100).toFixed(2);
         
         const row = `${dateStr};${timeStr};${patient.firstName} ${patient.lastName};${patient.dni || ''};${duration};${type};${paidStatus};${priceEuros}\n`;
@@ -2240,8 +2262,8 @@ router.get('/reports/billing', async (req, res) => {
   }
 });
 
-// Helper: Calcular precio de una cita
-function calculateAppointmentPrice(appointment) {
+// Helper: Calcular precio de una cita (MULTI-TENANT COMPATIBLE)
+function calculateAppointmentPrice(appointment, tableSuffix) {
   const DEFAULT_PRICE_30 = 3000; // 30€
   const DEFAULT_PRICE_60 = 5500; // 55€
   
@@ -2253,13 +2275,14 @@ function calculateAppointmentPrice(appointment) {
   }
   
   // Si tiene creditRedemptions, calcular proporcional
-  const redemptions = appointment.credit_redemptions || appointment.creditRedemptions || [];
+  // IMPORTANTE: Usar getEmbeddedProperty para acceder a las propiedades con sufijo
+  const redemptions = getEmbeddedProperty(appointment, 'credit_redemptions', tableSuffix) || [];
   if (redemptions.length > 0) {
     const r = redemptions[0];
-    const pack = r.credit_packs || r.creditPack || {};
-    const priceCents = Number(pack.priceCents || pack.price_cents || pack.price || 0) || 0;
-    const unitsTotal = Number(pack.unitsTotal || pack.units_total || 0) || 0;
-    const unitsUsed = Number(r.unitsUsed || r.units_used || 0);
+    const pack = getEmbeddedProperty(r, 'credit_packs', tableSuffix) || {};
+    const priceCents = Number(pack.priceCents) || 0;
+    const unitsTotal = Number(pack.unitsTotal) || 0;
+    const unitsUsed = Number(r.unitsUsed) || 0;
     
     if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
       return Math.round(unitsUsed * (priceCents / unitsTotal));
@@ -2271,14 +2294,14 @@ function calculateAppointmentPrice(appointment) {
   return mins >= 60 ? DEFAULT_PRICE_60 : DEFAULT_PRICE_30;
 }
 
-// Helper: Determinar si una cita está pagada
-function getAppointmentPaidStatus(appointment) {
+// Helper: Determinar si una cita está pagada (MULTI-TENANT COMPATIBLE)
+function getAppointmentPaidStatus(appointment, tableSuffix) {
   if (!appointment) return false;
   
-  const redemptions = appointment.credit_redemptions || appointment.creditRedemptions || [];
+  const redemptions = getEmbeddedProperty(appointment, 'credit_redemptions', tableSuffix) || [];
   if (redemptions.length > 0) {
     const r = redemptions[0];
-    const pack = r.credit_packs || r.creditPack || {};
+    const pack = getEmbeddedProperty(r, 'credit_packs', tableSuffix) || {};
     return pack.paid === true;
   }
   
@@ -2290,20 +2313,20 @@ function getAppointmentPaidStatus(appointment) {
   return false;
 }
 
-// Helper: Obtener tipo de cita
-function getAppointmentType(appointment) {
+// Helper: Obtener tipo de cita (MULTI-TENANT COMPATIBLE)
+function getAppointmentType(appointment, tableSuffix) {
   if (!appointment) return '';
   
-  const redemptions = appointment.credit_redemptions || appointment.creditRedemptions || [];
+  const redemptions = getEmbeddedProperty(appointment, 'credit_redemptions', tableSuffix) || [];
   if (redemptions.length > 0) {
     const r = redemptions[0];
-    const pack = r.credit_packs || r.creditPack || {};
+    const pack = getEmbeddedProperty(r, 'credit_packs', tableSuffix) || {};
     if (pack && pack.label) {
       return String(pack.label || '').trim();
     }
     
-    const unitsTotal = Number(pack.unitsTotal || pack.units_total || 0);
-    const unitMinutes = Number(pack.unitMinutes || pack.unit_minutes || 0) || 30;
+    const unitsTotal = Number(pack.unitsTotal) || 0;
+    const unitMinutes = Number(pack.unitMinutes) || 30;
     
     if (unitsTotal > 0) {
       if (unitsTotal === 1 || unitsTotal === 2) return `Sesión ${unitMinutes}m`;
