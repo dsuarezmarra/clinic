@@ -2,6 +2,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { APP_CONFIG } from '../config/app.config';
 import {
   Appointment,
@@ -20,7 +21,15 @@ export class AppointmentService {
 
   // Obtener todas las citas sin filtrar por fecha
   getAllAppointments(): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}/all`);
+    return this.http.get<Appointment[]>(`${this.apiUrl}/all`).pipe(
+      tap((appointments: Appointment[]) => {
+        console.log('🔍 [AppointmentService] getAllAppointments response:', appointments);
+        if (appointments && appointments.length > 0) {
+          console.log('🔍 [AppointmentService] Primera cita:', appointments[0]);
+          console.log('🔍 [AppointmentService] creditRedemptions de primera cita:', appointments[0].creditRedemptions);
+        }
+      })
+    );
   }
 
   // Obtener citas por rango de fechas
