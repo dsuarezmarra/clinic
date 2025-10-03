@@ -1,13 +1,13 @@
 // Endpoints "bridge" usando fetch directo a Supabase REST API
 // Estos endpoints evitan el bug del SDK @supabase/supabase-js en Vercel
-// VERSION: 2.2.0 - Multi-tenant con sufijos de tabla
+// VERSION: 2.3.0 - Multi-tenant JOINs corregidos con helpers dinámicos
 
 const express = require('express');
 const router = express.Router();
 const { loadTenant } = require('../middleware/tenant');
 
 // Log de versión al cargar el módulo
-console.log('🔄 bridge.js VERSION 2.2.0 cargado - Multi-tenant');
+console.log('🔄 bridge.js VERSION 2.3.0 cargado - Multi-tenant JOINs fixed');
 const multer = require('multer');
 
 // Cargar locations.json una sola vez al inicio del módulo
@@ -65,45 +65,55 @@ async function supabaseFetch(endpoint, options = {}) {
 }
 
 // ============================================================
+// HELPER FUNCTIONS FOR MULTI-TENANT EMBEDDED RESOURCES
+// ============================================================
+
+/**
+ * Obtiene el nombre de la propiedad con sufijo dinámico para tablas relacionadas
+ * @param {string} baseTableName - Nombre base de la tabla (ej: 'credit_packs')
+ * @param {string} suffix - Sufijo del tenant (ej: 'masajecorporaldeportivo')
+ * @returns {string} - Nombre completo (ej: 'credit_packs_masajecorporaldeportivo' o 'credit_packs')
+ */
+function getTablePropertyKey(baseTableName, suffix) {
+  return suffix ? `${baseTableName}_${suffix}` : baseTableName;
+}
+
+/**
+ * Obtiene una propiedad embedded de PostgREST usando el sufijo correcto
+ * @param {Object} obj - Objeto que contiene la propiedad embedded
+ * @param {string} baseTableName - Nombre base de la tabla (ej: 'credit_packs')
+ * @param {string} suffix - Sufijo del tenant
+ * @returns {any} - Valor de la propiedad o undefined
+ */
+function getEmbeddedProperty(obj, baseTableName, suffix) {
+  if (!obj) return undefined;
+  const key = getTablePropertyKey(baseTableName, suffix);
+  return obj[key];
+}
+
+/**
+ * Elimina una propiedad embedded usando el sufijo correcto
+ * @param {Object} obj - Objeto que contiene la propiedad
+ * @param {string} baseTableName - Nombre base de la tabla
+ * @param {string} suffix - Sufijo del tenant
+ */
+function deleteEmbeddedProperty(obj, baseTableName, suffix) {
+  if (!obj) return;
+  const key = getTablePropertyKey(baseTableName, suffix);
+  delete obj[key];
+}
+
+// ============================================================
 // VERSION ENDPOINT
 // ============================================================
 
 // GET /api/version - Devolver versión del bridge
 router.get('/version', (req, res) => {
   res.json({ 
-    version: '2.1.0',
-    description: 'POST/PUT appointments devuelve creditRedemptions completos',
+    version: '2.3.0',
+    description: 'Multi-tenant JOINs corregidos - usa helpers dinámicos para embedded resources',
     timestamp: new Date().toISOString()
   });
-});
-
-// GET /api/test-join - TEMPORAL: Probar JOINs con tablas sufijadas
-router.get('/test-join', loadTenant, async (req, res) => {
-  try {
-    const tableName = req.getTable('credit_packs');
-    console.log('🔍 Testing JOIN with table:', tableName);
-    
-    // Probar consulta con JOIN
-    const endpoint = `${req.getTable('credit_redemptions')}?select=*,${tableName}(*)&limit=1`;
-    console.log('📡 Endpoint:', endpoint);
-    
-    const { data, total } = await supabaseFetch(endpoint);
-    
-    res.json({
-      success: true,
-      tableName,
-      endpoint,
-      data,
-      keys: data && data[0] ? Object.keys(data[0]) : []
-    });
-  } catch (error) {
-    console.error('❌ Test JOIN error:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      tableName: req.getTable('credit_packs')
-    });
-  }
 });
 
 // ============================================================
@@ -143,13 +153,17 @@ router.get('/patients', async (req, res) => {
     
     // Calcular activeSessions para cada paciente
     const patientsWithActiveSessions = (patients || []).map(patient => {
-      const packs = Array.isArray(patient.credit_packs) ? patient.credit_packs : [];
+      // Usar helper para obtener credit_packs con sufijo correcto
+      const packsKey = getTablePropertyKey('credit_packs', req.tableSuffix);
+      const packs = Array.isArray(patient[packsKey]) ? patient[packsKey] : [];
       const totalUnitsRemaining = packs.reduce((sum, pack) => sum + (Number(pack.unitsRemaining) || 0), 0);
+      
+      // Eliminar la propiedad embedded con sufijo
+      delete patient[packsKey];
       
       return {
         ...patient,
-        activeSessions: totalUnitsRemaining,
-        credit_packs: undefined // Eliminar credit_packs del response
+        activeSessions: totalUnitsRemaining
       };
     });
     
@@ -342,28 +356,29 @@ router.get('/appointments', async (req, res) => {
     });
     
     // Mapear las relaciones a los nombres esperados por el frontend
-    const mapped = (appointments || []).map(apt => ({
-      ...apt,
-      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
-      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
-      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
-      patient: apt.patients || null,
-      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
-        ...cr,
-        creditPack: cr.credit_packs || null,
-        creditPackId: cr.creditPackId || cr.credit_pack_id
-      }))
-    }));
-    
-    // Eliminar las propiedades originales con guiones bajos
-    mapped.forEach(apt => {
-      delete apt.patients;
-      delete apt.credit_redemptions;
-      if (apt.creditRedemptions) {
-        apt.creditRedemptions.forEach(cr => {
-          delete cr.credit_packs;
-        });
-      }
+    const mapped = (appointments || []).map(apt => {
+      const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+        const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
+        deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
+        return {
+          ...cr,
+          creditPack,
+          creditPackId: cr.creditPackId || cr.credit_pack_id
+        };
+      });
+      
+      const result = {
+        ...apt,
+        start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+        end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
+        patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
+        creditRedemptions: redemptions
+      };
+      
+      deleteEmbeddedProperty(result, 'patients', req.tableSuffix);
+      deleteEmbeddedProperty(result, 'credit_redemptions', req.tableSuffix);
+      
+      return result;
     });
     
     res.json({
@@ -389,28 +404,29 @@ router.get('/appointments/all', async (req, res) => {
     const { data: appointments } = await supabaseFetch(endpoint);
     
     // Mapear las relaciones a los nombres esperados por el frontend
-    const mapped = (appointments || []).map(apt => ({
-      ...apt,
-      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
-      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
-      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
-      patient: apt.patients || null,
-      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
-        ...cr,
-        creditPack: cr.credit_packs || null,
-        creditPackId: cr.creditPackId || cr.credit_pack_id
-      }))
-    }));
-    
-    // Eliminar las propiedades originales con guiones bajos
-    mapped.forEach(apt => {
-      delete apt.patients;
-      delete apt.credit_redemptions;
-      if (apt.creditRedemptions) {
-        apt.creditRedemptions.forEach(cr => {
-          delete cr.credit_packs;
-        });
-      }
+    const mapped = (appointments || []).map(apt => {
+      const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+        const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
+        deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
+        return {
+          ...cr,
+          creditPack,
+          creditPackId: cr.creditPackId || cr.credit_pack_id
+        };
+      });
+      
+      const result = {
+        ...apt,
+        start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+        end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
+        patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
+        creditRedemptions: redemptions
+      };
+      
+      deleteEmbeddedProperty(result, 'patients', req.tableSuffix);
+      deleteEmbeddedProperty(result, 'credit_redemptions', req.tableSuffix);
+      
+      return result;
     });
     
     res.json(mapped);
@@ -453,26 +469,36 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
     const { data: appointments } = await supabaseFetch(endpoint);
     
     // Mapear las relaciones a los nombres esperados por el frontend
-    const mapped = (appointments || []).map(apt => ({
-      ...apt,
-      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
-      start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
-      end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
-      patient: apt.patients || null,
-      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
-        ...cr,
-        creditPack: cr.credit_packs || null,
-        creditPackId: cr.creditPackId || cr.credit_pack_id
-      }))
-    }));
+    const mapped = (appointments || []).map(apt => {
+      const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+        const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
+        deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
+        return {
+          ...cr,
+          creditPack,
+          creditPackId: cr.creditPackId || cr.credit_pack_id
+        };
+      });
+      
+      const result = {
+        ...apt,
+        start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
+        end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
+        patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
+        creditRedemptions: redemptions
+      };
+      
+      deleteEmbeddedProperty(result, 'patients', req.tableSuffix);
+      deleteEmbeddedProperty(result, 'credit_redemptions', req.tableSuffix);
+      
+      return result;
+    });
     
-    // Eliminar las propiedades originales con guiones bajos
+    // Ya no necesitamos este forEach, el delete se hace arriba
     mapped.forEach(apt => {
-      delete apt.patients;
-      delete apt.credit_redemptions;
       if (apt.creditRedemptions) {
         apt.creditRedemptions.forEach(cr => {
-          delete cr.credit_packs;
+          // Ya limpiamos credit_packs arriba
         });
       }
     });
@@ -499,27 +525,26 @@ router.get('/appointments/:id', async (req, res) => {
     
     // Mapear las relaciones a los nombres esperados por el frontend
     const apt = data[0];
+    const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+      const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
+      deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
+      return {
+        ...cr,
+        creditPack,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      };
+    });
+    
     const mapped = {
       ...apt,
-      // Asegurar que las fechas estén en formato ISO completo (agregar Z si no tiene timezone)
       start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
       end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
-      patient: apt.patients || null,
-      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
-        ...cr,
-        creditPack: cr.credit_packs || null,
-        creditPackId: cr.creditPackId || cr.credit_pack_id
-      }))
+      patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
+      creditRedemptions: redemptions
     };
     
-    // Eliminar las propiedades originales con guiones bajos
-    delete mapped.patients;
-    delete mapped.credit_redemptions;
-    if (mapped.creditRedemptions) {
-      mapped.creditRedemptions.forEach(cr => {
-        delete cr.credit_packs;
-      });
-    }
+    deleteEmbeddedProperty(mapped, 'patients', req.tableSuffix);
+    deleteEmbeddedProperty(mapped, 'credit_redemptions', req.tableSuffix);
     
     res.json(mapped);
   } catch (error) {
@@ -729,27 +754,26 @@ router.post('/appointments', async (req, res) => {
     
     // Mapear las relaciones a los nombres esperados por el frontend
     const apt = fullAppointments[0];
+    const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+      const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
+      deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
+      return {
+        ...cr,
+        creditPack,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      };
+    });
+    
     const mapped = {
       ...apt,
-      // Asegurar que las fechas estén en formato ISO completo
       start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
       end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
-      patient: apt.patients || null,
-      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
-        ...cr,
-        creditPack: cr.credit_packs || null,
-        creditPackId: cr.creditPackId || cr.credit_pack_id
-      }))
+      patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
+      creditRedemptions: redemptions
     };
     
-    // Eliminar las propiedades originales con guiones bajos
-    delete mapped.patients;
-    delete mapped.credit_redemptions;
-    if (mapped.creditRedemptions) {
-      mapped.creditRedemptions.forEach(cr => {
-        delete cr.credit_packs;
-      });
-    }
+    deleteEmbeddedProperty(mapped, 'patients', req.tableSuffix);
+    deleteEmbeddedProperty(mapped, 'credit_redemptions', req.tableSuffix);
     
     console.log('✅ Returning mapped appointment with creditRedemptions:', mapped.creditRedemptions?.length || 0);
     res.status(201).json(mapped);
@@ -838,27 +862,26 @@ router.put('/appointments/:id', async (req, res) => {
     
     // Mapear las relaciones a los nombres esperados por el frontend
     const apt = fullAppointments[0];
+    const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
+      const creditPack = getEmbeddedProperty(cr, 'credit_packs', req.tableSuffix) || null;
+      deleteEmbeddedProperty(cr, 'credit_packs', req.tableSuffix);
+      return {
+        ...cr,
+        creditPack,
+        creditPackId: cr.creditPackId || cr.credit_pack_id
+      };
+    });
+    
     const mapped = {
       ...apt,
-      // Asegurar que las fechas estén en formato ISO completo
       start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
       end: apt.end && !apt.end.endsWith('Z') ? apt.end + 'Z' : apt.end,
-      patient: apt.patients || null,
-      creditRedemptions: (apt.credit_redemptions || []).map(cr => ({
-        ...cr,
-        creditPack: cr.credit_packs || null,
-        creditPackId: cr.creditPackId || cr.credit_pack_id
-      }))
+      patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
+      creditRedemptions: redemptions
     };
     
-    // Eliminar las propiedades originales con guiones bajos
-    delete mapped.patients;
-    delete mapped.credit_redemptions;
-    if (mapped.creditRedemptions) {
-      mapped.creditRedemptions.forEach(cr => {
-        delete cr.credit_packs;
-      });
-    }
+    deleteEmbeddedProperty(mapped, 'patients', req.tableSuffix);
+    deleteEmbeddedProperty(mapped, 'credit_redemptions', req.tableSuffix);
     
     res.json(mapped);
   } catch (error) {
@@ -2187,7 +2210,7 @@ router.get('/reports/billing', async (req, res) => {
         const patientId = apt.patientId;
         if (!patientMap.has(patientId)) {
           patientMap.set(patientId, {
-            patient: apt.patients,
+            patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix),
             appointments: []
           });
         }
@@ -2224,7 +2247,7 @@ router.get('/reports/billing', async (req, res) => {
       res.write('Fecha;Hora;Paciente;DNI;Duración (min);Tipo;Estado Pago;Precio (€)\n');
       
       for (const apt of appointments || []) {
-        const patient = apt.patients;
+        const patient = getEmbeddedProperty(apt, 'patients', req.tableSuffix);
         const date = new Date(apt.start);
         const dateStr = date.toLocaleDateString('es-ES');
         const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
