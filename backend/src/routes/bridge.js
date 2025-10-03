@@ -1,13 +1,13 @@
 // Endpoints "bridge" usando fetch directo a Supabase REST API
 // Estos endpoints evitan el bug del SDK @supabase/supabase-js en Vercel
-// VERSION: 2.4.1 - Files/CSV billing endpoints multi-tenant fix
+// VERSION: 2.4.2 - CSV billing SELECT fix (use req.getTable for relations)
 
 const express = require('express');
 const router = express.Router();
 const { loadTenant } = require('../middleware/tenant');
 
 // Log de versión al cargar el módulo
-console.log('🔄 bridge.js VERSION 2.4.1 cargado - Files/CSV billing endpoints fixed');
+console.log('🔄 bridge.js VERSION 2.4.2 cargado - CSV billing SELECT fixed');
 const multer = require('multer');
 
 // Cargar locations.json una sola vez al inicio del módulo
@@ -2186,9 +2186,9 @@ router.get('/reports/billing', async (req, res) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
     
-    // IMPORTANTE: En el select usamos nombres de tabla SIN sufijo, solo en el endpoint base
+    // IMPORTANTE: Usar req.getTable() tanto en el endpoint base como en las relaciones del SELECT
     const { data: appointments } = await supabaseFetch(
-      `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
+      `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`
     );
 
     const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
