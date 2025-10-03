@@ -543,9 +543,15 @@
     margin-bottom: 8px;
     cursor: pointer;
     transition: all 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 123, 255, 0.2);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
 }
 
-.patient-card:hover {
+.patient-card:hover,
+.patient-card:active {
     border-color: #007bff;
     background: #f8f9fa;
 }
@@ -557,6 +563,39 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .patient-card {
+        padding: 18px;
+        min-height: 70px;
+        font-size: 16px;
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer .btn {
+        padding: 12px 20px;
+        font-size: 16px;
+        min-height: 44px;
+    }
+
+    .form-control,
+    .form-select {
+        font-size: 16px;
+        padding: 12px;
+        min-height: 44px;
+    }
+
+    .patient-list {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+
     .calendar-container {
         padding: 10px;
     }

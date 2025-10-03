@@ -106,6 +106,10 @@ export class CalendarComponent implements OnInit {
     editingTimeLocal: string = '';
     // Nuevo: bandera para marcar la cita como pagada en el modal
     editingPaid: boolean = false;
+    // Flag para evitar creación duplicada de citas (race condition)
+    isCreatingAppointment: boolean = false;
+    // Flag para evitar actualización duplicada de citas (race condition con click + touchstart)
+    isUpdatingAppointment: boolean = false;
 
     timeSlots: string[] = [];
     weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -479,8 +483,18 @@ export class CalendarComponent implements OnInit {
     }
 
     createAppointment() {
+        // EVITAR CREACIÓN DUPLICADA (race condition con click + touchstart)
+        if (this.isCreatingAppointment) {
+            console.warn('⚠️ Ya se está creando una cita, ignorando clic duplicado');
+            return;
+        }
+
+        // ⚡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
+        this.isCreatingAppointment = true;
+
         if (!this.selectedPatient) {
             this.notificationService.showError('Selecciona un paciente');
+            this.isCreatingAppointment = false; // Reset si falla validación
             return;
         }
         const requiredUnits = 1;
@@ -489,6 +503,7 @@ export class CalendarComponent implements OnInit {
             const createCredit = confirm(
                 `${this.selectedPatient.firstName} no tiene sesiones disponibles para agendar. ¿Deseas crear un nuevo bono/sesión?`
             );
+            this.isCreatingAppointment = false; // Reset flag antes de salir
             if (createCredit) {
                 this.router.navigate(['/pacientes', this.selectedPatient.id], {
                     queryParams: { showCreditForm: 'true' }
@@ -517,9 +532,10 @@ export class CalendarComponent implements OnInit {
             this.notificationService.showError(
                 `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
             );
+            this.isCreatingAppointment = false; // Reset flag si falla validación
             return;
         }
-        
+
         const appointmentData: CreateAppointmentRequest = {
             patientId: this.selectedPatient.id,
             start: startDateTime.toISOString(),
@@ -532,12 +548,26 @@ export class CalendarComponent implements OnInit {
             next: (appointment) => {
                 this.notificationService.showSuccess('Cita creada exitosamente');
                 this.closeModal();
-                this.loadAppointments();
                 this.loadPatients();
+                
+                // ⚡ ESPERAR a que loadAppointments() termine antes de resetear flag
+                // Esto previene errores de validación si el usuario crea otra cita inmediatamente
+                this.appointmentService.getAllAppointments().subscribe({
+                    next: (appointments) => {
+                        this.appointments = appointments;
+                        this.isCreatingAppointment = false; // ← RESET FLAG después de recargar
+                        console.log('✅ Appointments reloaded, flag reset');
+                    },
+                    error: (error) => {
+                        console.error('Error reloading appointments:', error);
+                        this.isCreatingAppointment = false; // ← RESET FLAG incluso si falla recarga
+                    }
+                });
             },
             error: (error) => {
                 this.notificationService.showError('Error al crear la cita');
                 console.error('Error creating appointment:', error);
+                this.isCreatingAppointment = false; // ← RESET FLAG TAMBIÉN EN ERROR
             }
         });
     }
@@ -579,6 +609,48 @@ export class CalendarComponent implements OnInit {
     updateAppointment() {
         if (!this.editingAppointment) return;
 
+        // EVITAR ACTUALIZACIÓN DUPLICADA (race condition con click + touchstart)
+        if (this.isUpdatingAppointment) {
+            console.warn('⚠️ Ya se está actualizando la cita, ignorando clic duplicado');
+            return;
+        }
+
+        // ⚡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
+        this.isUpdatingAppointment = true;
+
+        // Detectar si cambió el estado de pago comparando con el original
+        const originalPaymentStatus = this.getAppointmentPaymentStatus(this.editingAppointment);
+        const originalPaid = (originalPaymentStatus === 'paid');
+        const paymentStatusChanged = (this.editingPaid !== originalPaid);
+
+        // Detectar si SOLO cambió el estado de pago (checkbox)
+        const originalStart = this.formatDateTimeLocal(this.editingAppointment.start);
+        const currentDateTime = `${this.editingDateLocal}T${this.editingTimeLocal}`;
+        const dateTimeChanged = originalStart !== currentDateTime;
+
+        // Si SOLO cambió el checkbox de pago, actualizar directamente el pack
+        if (!dateTimeChanged && paymentStatusChanged && this.editingAppointment?.creditRedemptions?.length) {
+            const packId = this.editingAppointment.creditRedemptions[0].creditPackId;
+            console.log(`[DEBUG] ONLY payment status changed. Updating pack ${packId} to ${this.editingPaid}`);
+            this.creditService.updatePackPaymentStatus(packId, this.editingPaid).subscribe({
+                next: () => {
+                    console.log(`[DEBUG] Pack payment status updated successfully`);
+                    this.notificationService.showSuccess('Estado de pago actualizado exitosamente');
+                    this.closeModal();
+                    this.loadAppointments();
+                    this.loadPatients();
+                    this.isUpdatingAppointment = false; // ← RESET FLAG en success
+                },
+                error: (error) => {
+                    console.error('Error updating payment status:', error);
+                    this.notificationService.showError('Error al actualizar estado de pago');
+                    this.isUpdatingAppointment = false; // ← RESET FLAG en error
+                }
+            });
+            return; // ← IMPORTANTE: Salir aquí sin actualizar la cita
+        }
+
+        // Si cambió fecha/hora, continuar con actualización de cita
         const payload: any = {};
 
         // If user edited the datetime in the modal, use editingDateLocal + editingTimeLocal; otherwise keep existing
@@ -594,6 +666,7 @@ export class CalendarComponent implements OnInit {
             const maxAllowedStart = 21 * 60 + 30; // 21:30
             if (minutesFromMidnight < minAllowed || minutesFromMidnight > maxAllowedStart || (minute % 30) !== 0) {
                 this.notificationService.showError('La hora debe estar entre 09:00 y 22:00 en pasos de 30 minutos');
+                this.isUpdatingAppointment = false; // ← RESET FLAG si falla validación
                 return;
             }
 
@@ -605,20 +678,8 @@ export class CalendarComponent implements OnInit {
             const endDt = new Date(startDt.getTime() + mins * 60000);
             payload.end = endDt.toISOString();
             payload.durationMinutes = mins;
-        } else {
-            // No edit to datetime — keep existing times (convert to ISO)
-            if (this.editingAppointment.start) payload.start = new Date(this.editingAppointment.start).toISOString();
-            if (this.editingAppointment.end) payload.end = new Date(this.editingAppointment.end).toISOString();
-            if (this.editingAppointment.durationMinutes !== undefined) payload.durationMinutes = this.editingAppointment.durationMinutes;
-        }
 
-        if (this.editingAppointment.patientId !== undefined) payload.patientId = this.editingAppointment.patientId;
-        if (this.editingAppointment.consumesCredit !== undefined) payload.consumesCredit = this.editingAppointment.consumesCredit;
-        if (this.editingAppointment.notes !== undefined) payload.notes = this.editingAppointment.notes === null ? '' : this.editingAppointment.notes;
-        if ((this as any).editingAppointment.status !== undefined) payload.status = (this as any).editingAppointment.status;
-
-        // Validar solapamiento si se cambió el horario
-        if (payload.start && payload.end) {
+            // Validar solapamiento SOLO si se cambió el horario
             const newStart = new Date(payload.start);
             const newEnd = new Date(payload.end);
             const overlappingApt = this.checkAppointmentOverlap(newStart, newEnd, this.editingAppointment.id);
@@ -629,26 +690,40 @@ export class CalendarComponent implements OnInit {
                 this.notificationService.showError(
                     `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
                 );
+                this.isUpdatingAppointment = false; // ← RESET FLAG si falla validación
                 return;
             }
         }
 
+        if (this.editingAppointment.patientId !== undefined) payload.patientId = this.editingAppointment.patientId;
+        if (this.editingAppointment.consumesCredit !== undefined) payload.consumesCredit = this.editingAppointment.consumesCredit;
+        if (this.editingAppointment.notes !== undefined) payload.notes = this.editingAppointment.notes === null ? '' : this.editingAppointment.notes;
+        if ((this as any).editingAppointment.status !== undefined) payload.status = (this as any).editingAppointment.status;
+
         console.info('[DEBUG] updateAppointment payload:', payload);
         
-        // First update the appointment
+        // Update the appointment only if there are changes
+        if (Object.keys(payload).length === 0) {
+            this.notificationService.showInfo('No hay cambios para guardar');
+            this.isUpdatingAppointment = false; // ← RESET FLAG si no hay cambios
+            return;
+        }
+
         this.appointmentService.updateAppointment(this.editingAppointment.id, payload).subscribe({
             next: (appointment) => {
-                // If paid status changed, update the associated credit pack
-                if (typeof this.editingPaid === 'boolean' && this.editingAppointment?.creditRedemptions?.length) {
+                // Si el pago CAMBIÓ (además del datetime), actualizar el pack
+                if (paymentStatusChanged && this.editingAppointment?.creditRedemptions?.length) {
                     const packId = this.editingAppointment.creditRedemptions[0].creditPackId;
-                    console.log(`[DEBUG] Updating pack ${packId} payment status to ${this.editingPaid}`);
+                    console.log(`[DEBUG] Payment status also changed. Updating pack ${packId} to ${this.editingPaid}`);
                     this.creditService.updatePackPaymentStatus(packId, this.editingPaid).subscribe({
                         next: () => {
                             console.log(`[DEBUG] Pack payment status updated successfully`);
-                            this.notificationService.showSuccess('Cita y estado de pago actualizados exitosamente');
+                            // ✅ UN SOLO MENSAJE: Cita actualizada (incluye cambio de pago si hubo)
+                            this.notificationService.showSuccess('Cita actualizada exitosamente');
                             this.closeModal();
                             this.loadAppointments();
                             this.loadPatients();
+                            this.isUpdatingAppointment = false; // ← RESET FLAG en success
                         },
                         error: (error) => {
                             console.error('Error updating payment status:', error);
@@ -656,18 +731,22 @@ export class CalendarComponent implements OnInit {
                             this.closeModal();
                             this.loadAppointments();
                             this.loadPatients();
+                            this.isUpdatingAppointment = false; // ← RESET FLAG en error
                         }
                     });
                 } else {
+                    // ✅ UN SOLO MENSAJE: Cita actualizada (pago NO cambió)
                     this.notificationService.showSuccess('Cita actualizada exitosamente');
                     this.closeModal();
                     this.loadAppointments();
                     this.loadPatients();
+                    this.isUpdatingAppointment = false; // ← RESET FLAG en success
                 }
             },
             error: (error) => {
                 console.error('Error updating appointment:', error);
                 this.notificationService.showError('Error al actualizar la cita');
+                this.isUpdatingAppointment = false; // ← RESET FLAG en error
             }
         });
     }
@@ -697,6 +776,8 @@ export class CalendarComponent implements OnInit {
         this.selectedPatient = null;
         this.editingAppointment = null;
         this.patientSearchTerm = '';
+        this.isCreatingAppointment = false; // ← RESET FLAG al cerrar modal
+        this.isUpdatingAppointment = false; // ← RESET FLAG al cerrar modal
     }
 
     getPatientName(appointment: Appointment): string {
