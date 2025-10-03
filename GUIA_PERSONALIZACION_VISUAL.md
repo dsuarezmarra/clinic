@@ -403,8 +403,8 @@ Para personalizar tu sistema, necesito la siguiente información:
 
 **1. Nombre de la aplicación:**
 
-- Nombre completo: ******\_\_\_******
-- Nombre corto (máx 10 caracteres): ******\_\_\_******
+- Nombre completo: **\*\***\_\_\_**\*\***
+- Nombre corto (máx 10 caracteres): **\*\***\_\_\_**\*\***
 
 **2. Logo:**
 
@@ -414,22 +414,22 @@ Para personalizar tu sistema, necesito la siguiente información:
 
 **3. Colores corporativos:**
 
-- Color principal (si no sabes el código, descríbelo): ******\_\_\_******
-- ¿Algún color que NO quieras? ******\_\_\_******
+- Color principal (si no sabes el código, descríbelo): **\*\***\_\_\_**\*\***
+- ¿Algún color que NO quieras? **\*\***\_\_\_**\*\***
 
 **4. Información de la clínica:**
 
-- Nombre: ******\_\_\_******
-- Dirección completa: ******\_\_\_******
-- Teléfono: ******\_\_\_******
-- Email: ******\_\_\_******
-- Horario: ******\_\_\_******
+- Nombre: **\*\***\_\_\_**\*\***
+- Dirección completa: **\*\***\_\_\_**\*\***
+- Teléfono: **\*\***\_\_\_**\*\***
+- Email: **\*\***\_\_\_**\*\***
+- Horario: **\*\***\_\_\_**\*\***
 
 **5. URL deseada:**
 
 - ¿Qué URL te gustaría? (ejemplo: `tusitio.vercel.app`)
-- Opción 1: ******\_\_\_******.vercel.app
-- Opción 2: ******\_\_\_******.vercel.app
+- Opción 1: **\*\***\_\_\_**\*\***.vercel.app
+- Opción 2: **\*\***\_\_\_**\*\***.vercel.app
 
 **6. Precios:**
 
