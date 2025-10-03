@@ -43,7 +43,7 @@ const CLIENT_CONFIGS: Record<string, ClientConfig> = {
     primaryColor: '#0066cc',
     supabaseUrl: 'https://nnfxzgvplvavgdfmgrrb.supabase.co',
     supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5uZnh6Z3ZwbHZhdmdkZm1ncnJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc3MjgzMDQsImV4cCI6MjA1MzMwNDMwNH0.nEVlE8MJOlBcEqPIDcD3Y8L6gGIMNn5EInBFAkmzIQQ',
-    apiUrl: 'https://clinic-backend-mez2afrjg-davids-projects-8fa96e54.vercel.app/api',
+    apiUrl: 'https://clinic-backend-87010wzns-davids-projects-8fa96e54.vercel.app/api',
     defaultClinicInfo: {
       name: 'Masaje Corporal Deportivo',
       address: '',

@@ -15,10 +15,11 @@
 Ejecuta el archivo `backend/PRUEBA_FINAL_ANTES_DEPLOY.sql` en Supabase SQL Editor.
 
 **Verifica que devuelva:**
+
 - ✅ 1 fila del tenant masajecorporaldeportivo
 - ✅ Políticas RLS activas
 - ✅ service_role con permisos DELETE, INSERT, SELECT, UPDATE
-- ✅ 10 tablas con sufijo _masajecorporaldeportivo
+- ✅ 10 tablas con sufijo \_masajecorporaldeportivo
 
 ### PASO 2: Verificar Variables de Entorno en Vercel
 
@@ -30,11 +31,13 @@ Ejecuta el archivo `backend/PRUEBA_FINAL_ANTES_DEPLOY.sql` en Supabase SQL Edito
    SUPABASE_SERVICE_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
 
-⚠️ **MUY IMPORTANTE**: 
+⚠️ **MUY IMPORTANTE**:
+
 - Debe ser `SUPABASE_SERVICE_KEY` (service_role)
 - NO debe ser `SUPABASE_ANON_KEY`
 
 Para verificar:
+
 1. Ve a Supabase → **Project Settings** → **API**
 2. Compara el valor en Vercel con **service_role (secret)**
 3. Si no coincide, actualízalo en Vercel
@@ -70,9 +73,11 @@ vercel --prod --yes
 ### PASO 6: Verificar Deployment
 
 1. **Backend**: Abre la URL y verifica que `/api/version` responda
+
    ```
    https://tu-backend.vercel.app/api/version
    ```
+
    Debe devolver: `{ version: "2.4.0", ... }`
 
 2. **Frontend**: Abre la aplicación
@@ -83,23 +88,27 @@ vercel --prod --yes
 ## 🧪 PRUEBAS POST-DEPLOYMENT
 
 ### 1. Verificar Calendario
+
 - [ ] Abre el calendario
 - [ ] Se muestran las citas existentes
 - [ ] NO hay errores 500 en la consola
 
 ### 2. Verificar Detalle de Paciente
+
 - [ ] Abre un paciente (ej: pruebas pruebas)
 - [ ] Se carga la información correctamente
 - [ ] Se muestran las citas del paciente
 - [ ] **CRÍTICO**: Los archivos del paciente se cargan (GET /api/files/patient/:id) ✅
 
 ### 3. Probar Subida de Archivo
+
 - [ ] En el detalle del paciente
 - [ ] Sube un archivo de prueba
 - [ ] Verifica que se sube correctamente (POST /api/files/patient/:id) ✅
 - [ ] El archivo aparece en la lista
 
 ### 4. Verificar Configuración → Precios
+
 - [ ] Ve a Configuración → Precios
 - [ ] Se cargan los precios actuales (GET /api/meta/config/prices) ✅
 - [ ] Modifica un precio
@@ -107,16 +116,19 @@ vercel --prod --yes
 - [ ] Verifica que se guardó correctamente
 
 ### 5. Probar Exportación CSV
+
 - [ ] Ve al Calendario
 - [ ] Haz clic en "Exportar CSV" del mes actual
 - [ ] Se descarga el archivo CSV correctamente ✅
 
 ### 6. Verificar Backups (si usas la funcionalidad)
+
 - [ ] Ve a Configuración → Backups
 - [ ] Se carga la lista de backups (GET /api/backup/list) ✅
 - [ ] Se muestran las estadísticas (GET /api/backup/stats) ✅
 
 ### 7. Crear Nueva Cita
+
 - [ ] Crea una nueva cita para el paciente de prueba
 - [ ] Verifica que se crea correctamente
 - [ ] Verifica que consume créditos del pack correcto
@@ -125,6 +137,7 @@ vercel --prod --yes
 ## ✅ CONFIRMACIÓN FINAL
 
 Si TODAS las pruebas pasan:
+
 - ✅ **DEPLOYMENT EXITOSO**
 - ✅ Sistema multi-tenant funcionando correctamente
 - ✅ Migración completada
@@ -139,6 +152,7 @@ Si TODAS las pruebas pasan:
 5. **Compartir conmigo para diagnosticar**
 
 También:
+
 - Ver logs del backend en Vercel
 - Buscar mensajes de error específicos
 - Verificar que el header X-Tenant-Slug se está enviando
