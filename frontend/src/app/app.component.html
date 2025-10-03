@@ -6,8 +6,8 @@
       <div class="row align-items-center">
         <div class="col-md-8">
           <button class="clinic-brand-btn" (click)="navigateToInicio()">
-            <img src="assets/logo-clinica.png" alt="Logo Clínica" class="clinic-logo">
-            Masaje Corporal Deportivo
+            <img [src]="clientConfig.getAssets().logo" [alt]="clientConfig.getClientInfo().name + ' Logo'" class="clinic-logo">
+            {{ clientConfig.getClientInfo().name }}
           </button>
         </div>
         <div class="col-md-4 text-end">

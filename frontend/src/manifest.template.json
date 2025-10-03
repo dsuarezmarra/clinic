@@ -1,0 +1,57 @@
+{
+    "name": "{{APP_NAME}}",
+    "short_name": "{{SHORT_NAME}}",
+    "description": "{{DESCRIPTION}}",
+    "theme_color": "{{THEME_COLOR}}",
+    "background_color": "#ffffff",
+    "display": "standalone",
+    "orientation": "portrait",
+    "scope": "/",
+    "start_url": "/",
+    "icons": [
+        {
+            "src": "{{LOGO_PATH}}",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "{{LOGO_PATH}}",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable any"
+        },
+        {
+            "src": "{{LOGO_PATH}}",
+            "sizes": "144x144",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "{{LOGO_PATH}}",
+            "sizes": "96x96",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "{{LOGO_PATH}}",
+            "sizes": "72x72",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "{{LOGO_PATH}}",
+            "sizes": "48x48",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "categories": [
+        "health",
+        "medical",
+        "productivity"
+    ],
+    "dir": "ltr",
+    "lang": "es",
+    "screenshots": []
+}

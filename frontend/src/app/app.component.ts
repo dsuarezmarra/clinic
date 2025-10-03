@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { ClientConfigService } from './services/client-config.service';
 
 @Component({
     selector: 'app-root',
@@ -12,10 +13,27 @@ import { Router, RouterModule, RouterOutlet } from '@angular/router';
     templateUrl: './app.component.html',
     styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Masaje Corporal Deportivo';
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    public clientConfig: ClientConfigService  // ✅ Cambiado a public para usar en template
+  ) { }
+
+  ngOnInit(): void {
+    // 🎨 Aplicar tema del cliente (colores, gradientes)
+    this.clientConfig.applyTheme();
+    
+    // 📝 Actualizar título de la página con el nombre del cliente
+    this.clientConfig.setPageTitle();
+    
+    // 📊 Log de información del cliente cargado
+    const clientInfo = this.clientConfig.getClientInfo();
+    console.log('🏢 Cliente cargado:', clientInfo.name);
+    console.log('🎨 Tema aplicado:', this.clientConfig.getTheme().primary);
+    console.log('🔑 Tenant Slug:', this.clientConfig.getTenantSlug());
+  }
 
   navigateToAgenda() {
     this.router.navigate(['/agenda']);
