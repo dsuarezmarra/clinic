@@ -134,7 +134,12 @@ export class CalendarComponent implements OnInit {
         try {
             const month = monthIdx + 1;
             const url = `${APP_CONFIG.apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
-            const resp = await fetch(url, { headers: { Accept: 'text/csv' } });
+            const resp = await fetch(url, { 
+                headers: { 
+                    'Accept': 'text/csv',
+                    'X-Tenant-Slug': APP_CONFIG.clientId 
+                } 
+            });
             if (!resp.ok) throw new Error('Error generando CSV');
 
             // Validate content-type to detect misrouted HTML responses (dev servers can return index.html)
