@@ -21,8 +21,12 @@ export class AppointmentService {
 
   // Obtener todas las citas sin filtrar por fecha
   getAllAppointments(): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.apiUrl}/all`).pipe(
+    const url = `${this.apiUrl}/all`;
+    console.log('🌐 [AppointmentService] Calling URL:', url);
+    console.log('🌐 [AppointmentService] apiUrl:', this.apiUrl);
+    return this.http.get<Appointment[]>(url).pipe(
       tap((appointments: Appointment[]) => {
+        console.log('🔍 [AppointmentService] RAW HTTP Response:', JSON.stringify(appointments, null, 2));
         console.log('🔍 [AppointmentService] getAllAppointments response:', appointments);
         if (appointments && appointments.length > 0) {
           console.log('🔍 [AppointmentService] Primera cita:', appointments[0]);
