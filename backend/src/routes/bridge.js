@@ -622,135 +622,91 @@ router.post('/appointments', async (req, res) => {
         return res.status(400).json({ error: 'Créditos insuficientes' });
       }
       
-      let remainingUnits = requiredUnits;
-      const redemptions = [];
-      
-      // Función helper para calcular unidades a usar
-      const calculateUnitsToUse = (pack, remainingUnits, requiredUnits) => {
+      // Función helper para verificar si un pack PUEDE cumplir SOLO la cita completa
+      const canPackFulfillAppointment = (pack, requiredUnits) => {
         const isSession60 = pack.label?.startsWith('Sesión') && pack.unitMinutes === 60;
         const isBono60 = pack.label?.startsWith('Bono') && pack.unitMinutes === 60;
         
-        console.log(`    🔍 calculateUnitsToUse: label="${pack.label}", unitMinutes=${pack.unitMinutes}, unitsRemaining=${pack.unitsRemaining}, remainingUnits=${remainingUnits}, isSession60=${isSession60}, isBono60=${isBono60}`);
-        
-        // REGLA 1: Sesiones/Bonos de 60min son INDIVISIBLES
-        // Solo se consumen si tienen al menos 2 unidades completas
+        // REGLA 1: Packs de 60min son INDIVISIBLES (requieren 2 unidades completas)
         if (isSession60 || isBono60) {
-          if (pack.unitsRemaining >= 2 && remainingUnits >= 2) {
-            // Consumir 2 unidades completas (indivisible)
-            console.log(`    ✅ Pack 60min INDIVISIBLE: consumiendo 2 unidades`);
-            return 2;
-          } else {
-            // No se puede consumir - es indivisible
-            console.log(`    ❌ Pack 60min INDIVISIBLE: NO se puede consumir (pack.unitsRemaining=${pack.unitsRemaining}, remainingUnits=${remainingUnits})`);
-            return 0;
-          }
+          // Para una cita de 60min (requiredUnits=2), necesitamos al menos 2 unidades
+          // Para una cita de 30min (requiredUnits=1), NO se puede usar pack de 60min
+          return requiredUnits === 2 && pack.unitsRemaining >= 2;
         }
         
-        // REGLA 2: Sesiones/Bonos de 30min son flexibles
-        // Se consumen según lo que se necesite (1 unidad a la vez)
-        const unitsToUse = Math.min(remainingUnits, pack.unitsRemaining);
-        console.log(`    ✅ Pack 30min flexible: consumiendo ${unitsToUse} unidades`);
-        return unitsToUse;
+        // REGLA 2: Packs de 30min son flexibles (pueden cumplir cualquier requisito)
+        return pack.unitsRemaining >= requiredUnits;
       };
       
-      // PRIMERA PASADA: Consumir SOLO de packs PAGADOS (más antiguos primero por la query)
-      console.log('🔄 Primera pasada: Consumiendo de packs PAGADOS (más antiguos primero)...');
+      // REGLA CRÍTICA: Cada cita consume de UN SOLO pack
+      // Buscar EL PRIMER pack que pueda cumplir TODA la cita (PAGADOS primero, luego PENDIENTES)
+      console.log(`🎯 Buscando UN SOLO pack que pueda cumplir ${requiredUnits} unidades...`);
+      
+      let selectedPack = null;
+      
+      // PRIMERA PASADA: Buscar en packs PAGADOS
+      console.log('🔄 Buscando en packs PAGADOS...');
       for (const pack of packs) {
-        if (remainingUnits <= 0) break;
-        if (!pack.paid) continue; // Solo packs pagados en esta pasada
+        if (!pack.paid) continue; // Solo pagados
         
-        const unitsToUse = calculateUnitsToUse(pack, remainingUnits, requiredUnits);
+        const canFulfill = canPackFulfillAppointment(pack, requiredUnits);
+        console.log(`  📦 "${pack.label}" (${pack.unitMinutes}min) - ${pack.unitsRemaining} units disponibles - ¿Puede cumplir? ${canFulfill ? '✅ SÍ' : '❌ NO'}`);
         
-        if (unitsToUse === 0) {
-          const is60min = pack.unitMinutes === 60;
-          const reason = is60min && pack.unitsRemaining < 2 
-            ? 'pack de 60min INDIVISIBLE con <2 units'
-            : 'sin unidades disponibles';
-          console.log(`  ⏭️  Pack PAGADO "${pack.label}" saltado (${reason})`);
-          continue;
+        if (canFulfill) {
+          selectedPack = pack;
+          console.log(`  ✅ Pack PAGADO seleccionado: "${pack.label}"`);
+          break;
         }
-        
-        console.log(`  ✅ Usando pack PAGADO "${pack.label}" (${pack.unitMinutes}min) - ${unitsToUse} unidades | Created: ${pack.createdAt}`);
-        
-        // Crear redemption
-        const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
-          method: 'POST',
-          body: JSON.stringify({
-            creditPackId: pack.id,
-            appointmentId: appointment.id,
-            unitsUsed: unitsToUse
-          })
-        });
-        
-        redemptions.push(redemption[0]);
-        
-        // Actualizar unitsRemaining del pack
-        await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${pack.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({
-            unitsRemaining: pack.unitsRemaining - unitsToUse
-          })
-        });
-        
-        remainingUnits -= unitsToUse;
       }
       
-      // SEGUNDA PASADA: Si aún faltan unidades, consumir de packs PENDIENTES (más antiguos primero)
-      if (remainingUnits > 0) {
-        console.log(`🔄 Segunda pasada: Consumiendo de packs PENDIENTES (faltan ${remainingUnits} unidades)...`);
+      // SEGUNDA PASADA: Si no hay pack pagado, buscar en PENDIENTES
+      if (!selectedPack) {
+        console.log('🔄 No hay pack PAGADO disponible. Buscando en packs PENDIENTES...');
         for (const pack of packs) {
-          if (remainingUnits <= 0) break;
-          if (pack.paid) continue; // Solo packs pendientes en esta pasada
+          if (pack.paid) continue; // Solo pendientes
           
-          const unitsToUse = calculateUnitsToUse(pack, remainingUnits, requiredUnits);
+          const canFulfill = canPackFulfillAppointment(pack, requiredUnits);
+          console.log(`  📦 "${pack.label}" (${pack.unitMinutes}min) - ${pack.unitsRemaining} units disponibles - ¿Puede cumplir? ${canFulfill ? '✅ SÍ' : '❌ NO'}`);
           
-          if (unitsToUse === 0) {
-            const is60min = pack.unitMinutes === 60;
-            const reason = is60min && pack.unitsRemaining < 2 
-              ? 'pack de 60min INDIVISIBLE con <2 units'
-              : 'sin unidades disponibles';
-            console.log(`  ⏭️  Pack PENDIENTE "${pack.label}" saltado (${reason})`);
-            continue;
+          if (canFulfill) {
+            selectedPack = pack;
+            console.log(`  ⚠️  Pack PENDIENTE seleccionado: "${pack.label}"`);
+            break;
           }
-          
-          console.log(`  ⚠️  Usando pack PENDIENTE "${pack.label}" (${pack.unitMinutes}min) - ${unitsToUse} unidades | Created: ${pack.createdAt}`);
-          
-          // Crear redemption
-          const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
-            method: 'POST',
-            body: JSON.stringify({
-              creditPackId: pack.id,
-              appointmentId: appointment.id,
-              unitsUsed: unitsToUse
-            })
-          });
-          
-          redemptions.push(redemption[0]);
-          
-          // Actualizar unitsRemaining del pack
-          await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${pack.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({
-              unitsRemaining: pack.unitsRemaining - unitsToUse
-            })
-          });
-          
-          remainingUnits -= unitsToUse;
         }
       }
       
-      if (remainingUnits > 0) {
-        // Eliminar la cita y las redemptions creadas si no se pudieron consumir todos los créditos
-        for (const redemption of redemptions) {
-          await supabaseFetch(`${req.getTable('credit_redemptions')}?id=eq.${redemption.id}`, {
-            method: 'DELETE'
-          });
-        }
+      // Si no hay ningún pack que pueda cumplir SOLO la cita, rechazar
+      if (!selectedPack) {
         await supabaseFetch(`${req.getTable('appointments')}?id=eq.${appointment.id}`, {
           method: 'DELETE'
         });
-        return res.status(400).json({ error: 'Créditos insuficientes' });
+        console.log('❌ No hay ningún pack que pueda cumplir la cita COMPLETA');
+        return res.status(400).json({ 
+          error: 'No hay ningún pack disponible que pueda cumplir esta cita completa. Los packs no se pueden mezclar.' 
+        });
       }
+      
+      // Crear UNA SOLA redemption del pack seleccionado
+      console.log(`💳 Creando redemption de ${requiredUnits} unidades del pack "${selectedPack.label}"...`);
+      const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          creditPackId: selectedPack.id,
+          appointmentId: appointment.id,
+          unitsUsed: requiredUnits
+        })
+      });
+      
+      // Actualizar unitsRemaining del pack
+      await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${selectedPack.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({
+          unitsRemaining: selectedPack.unitsRemaining - requiredUnits
+        })
+      });
+      
+      console.log(`✅ Cita creada usando SOLO el pack "${selectedPack.label}" (${selectedPack.paid ? 'PAGADO' : 'PENDIENTE'})`);
     }
     
     // 3. Obtener la cita completa con todas sus relaciones para devolverla
