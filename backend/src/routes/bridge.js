@@ -622,21 +622,27 @@ router.post('/appointments', async (req, res) => {
         const isSession60 = pack.label?.startsWith('Sesión') && pack.unitMinutes === 60;
         const isBono60 = pack.label?.startsWith('Bono') && pack.unitMinutes === 60;
         
+        console.log(`    🔍 calculateUnitsToUse: label="${pack.label}", unitMinutes=${pack.unitMinutes}, unitsRemaining=${pack.unitsRemaining}, remainingUnits=${remainingUnits}, isSession60=${isSession60}, isBono60=${isBono60}`);
+        
         // REGLA 1: Sesiones/Bonos de 60min son INDIVISIBLES
         // Solo se consumen si tienen al menos 2 unidades completas
         if (isSession60 || isBono60) {
           if (pack.unitsRemaining >= 2 && remainingUnits >= 2) {
             // Consumir 2 unidades completas (indivisible)
+            console.log(`    ✅ Pack 60min INDIVISIBLE: consumiendo 2 unidades`);
             return 2;
           } else {
             // No se puede consumir - es indivisible
+            console.log(`    ❌ Pack 60min INDIVISIBLE: NO se puede consumir (pack.unitsRemaining=${pack.unitsRemaining}, remainingUnits=${remainingUnits})`);
             return 0;
           }
         }
         
         // REGLA 2: Sesiones/Bonos de 30min son flexibles
         // Se consumen según lo que se necesite (1 unidad a la vez)
-        return Math.min(remainingUnits, pack.unitsRemaining);
+        const unitsToUse = Math.min(remainingUnits, pack.unitsRemaining);
+        console.log(`    ✅ Pack 30min flexible: consumiendo ${unitsToUse} unidades`);
+        return unitsToUse;
       };
       
       // PRIMERA PASADA: Consumir SOLO de packs PAGADOS (más antiguos primero por la query)
