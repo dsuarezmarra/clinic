@@ -392,6 +392,13 @@ export class CalendarComponent implements OnInit {
                     console.log('📦 Credits received:', res);
                     const packs = res.creditPacks || [];
                     
+                    // ACTUALIZAR activeSessions del paciente seleccionado con el total de unidades restantes
+                    const totalUnitsRemaining = packs.reduce((sum: number, p: any) => sum + (Number(p.unitsRemaining) || 0), 0);
+                    if (this.selectedPatient) {
+                        this.selectedPatient.activeSessions = totalUnitsRemaining;
+                        console.log(`✅ activeSessions actualizado a ${totalUnitsRemaining} para ${this.selectedPatient.firstName}`);
+                    }
+                    
                     // PRIORIDAD 1: Buscar packs PAGADOS
                     const paidPacks = packs.filter((p: any) => p.paid === true && p.unitsRemaining > 0);
                     console.log(`📦 Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
