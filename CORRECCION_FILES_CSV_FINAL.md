@@ -17,22 +17,28 @@ Después del despliegue v2.4.0, las siguientes funcionalidades continuaban falla
 ### Causa Raíz Identificada
 
 **PROBLEMA 1: Middleware `loadTenant` no aplicado a `/files`**
+
 ```javascript
 // ❌ ANTES (bridge.js líneas 124-129)
-router.use('/patients*', loadTenant);
-router.use('/appointments*', loadTenant);
-router.use('/credits*', loadTenant);
-router.use('/reports*', loadTenant);
-router.use('/backup*', loadTenant);
-router.use('/meta/config*', loadTenant);
+router.use("/patients*", loadTenant);
+router.use("/appointments*", loadTenant);
+router.use("/credits*", loadTenant);
+router.use("/reports*", loadTenant);
+router.use("/backup*", loadTenant);
+router.use("/meta/config*", loadTenant);
 // ⚠️ FALTABA: /files*
 ```
 
 **PROBLEMA 2: Select con nombres de tabla con sufijo en billing endpoint**
+
 ```javascript
 // ❌ ANTES (línea 2189)
 const { data: appointments } = await supabaseFetch(
-  `${req.getTable('appointments')}?...&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`
+  `${req.getTable("appointments")}?...&select=*,${req.getTable(
+    "patients"
+  )}(*),${req.getTable("credit_redemptions")}(*,${req.getTable(
+    "credit_packs"
+  )}(*))`
 );
 // ⚠️ Supabase no reconoce "patients_masajecorporaldeportivo" como nombre de relación
 ```
@@ -48,13 +54,13 @@ const { data: appointments } = await supabaseFetch(
 
 ```javascript
 // ✅ DESPUÉS
-router.use('/patients*', loadTenant);
-router.use('/appointments*', loadTenant);
-router.use('/credits*', loadTenant);
-router.use('/reports*', loadTenant);
-router.use('/backup*', loadTenant);
-router.use('/meta/config*', loadTenant);
-router.use('/files*', loadTenant);  // ✅ AGREGADO
+router.use("/patients*", loadTenant);
+router.use("/appointments*", loadTenant);
+router.use("/credits*", loadTenant);
+router.use("/reports*", loadTenant);
+router.use("/backup*", loadTenant);
+router.use("/meta/config*", loadTenant);
+router.use("/files*", loadTenant); // ✅ AGREGADO
 ```
 
 **Explicación:**  
@@ -70,11 +76,14 @@ Sin este middleware, `req.getTable()` no está disponible, causando que todos lo
 ```javascript
 // ✅ DESPUÉS
 const { data: appointments } = await supabaseFetch(
-  `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
+  `${req.getTable(
+    "appointments"
+  )}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,patients(*),credit_redemptions(*,credit_packs(*))`
 );
 ```
 
-**Explicación:**  
+**Explicación:**
+
 - ✅ **Tabla base usa `req.getTable()`**: `appointments_masajecorporaldeportivo`
 - ✅ **Select usa nombres SIN sufijo**: `patients`, `credit_redemptions`, `credit_packs`
 - 📚 Supabase REST API espera **nombres de relación** en el select, NO nombres de tabla físicos
@@ -91,6 +100,7 @@ vercel --prod
 ```
 
 **Resultado:**
+
 - ✅ URL: https://clinic-backend-mweaxa2qv-davids-projects-8fa96e54.vercel.app
 - ✅ Duración: 4 segundos
 - ✅ Inspect: https://vercel.com/davids-projects-8fa96e54/clinic-backend/3gc8wwWtXghDbDDCYSmUNe2U2BYk
@@ -98,9 +108,10 @@ vercel --prod
 ### Frontend Actualizado
 
 **Cambio en config:**
+
 ```typescript
 // frontend/src/app/config/client.config.ts línea 47
-apiUrl: 'https://clinic-backend-mweaxa2qv-davids-projects-8fa96e54.vercel.app/api'
+apiUrl: "https://clinic-backend-mweaxa2qv-davids-projects-8fa96e54.vercel.app/api";
 ```
 
 ```bash
@@ -110,6 +121,7 @@ vercel --prod --yes
 ```
 
 **Resultado:**
+
 - ✅ URL: https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app
 - ✅ Duración: 9 segundos
 - ✅ Inspect: https://vercel.com/davids-projects-8fa96e54/clinic-frontend/225SZYkcQRfdX9jXJrdNHwvTYxh4
@@ -118,16 +130,16 @@ vercel --prod --yes
 
 ## ✅ ESTADO FUNCIONALIDADES
 
-| Funcionalidad | Estado ANTES | Estado AHORA |
-|---------------|--------------|--------------|
-| Listar pacientes | ✅ 200 | ✅ 200 |
-| Calendario/Citas | ✅ 200 | ✅ 200 |
-| **Listar archivos** | ❌ 500 | ✅ 200 |
-| **Subir archivos** | ❌ 500 | ✅ 200 |
-| Precios config | ✅ 200 | ✅ 200 |
-| **CSV exportación** | ❌ 400 | ✅ 200 |
-| Backups | ✅ 200 | ✅ 200 |
-| Créditos/Bonos | ✅ 200 | ✅ 200 |
+| Funcionalidad       | Estado ANTES | Estado AHORA |
+| ------------------- | ------------ | ------------ |
+| Listar pacientes    | ✅ 200       | ✅ 200       |
+| Calendario/Citas    | ✅ 200       | ✅ 200       |
+| **Listar archivos** | ❌ 500       | ✅ 200       |
+| **Subir archivos**  | ❌ 500       | ✅ 200       |
+| Precios config      | ✅ 200       | ✅ 200       |
+| **CSV exportación** | ❌ 400       | ✅ 200       |
+| Backups             | ✅ 200       | ✅ 200       |
+| Créditos/Bonos      | ✅ 200       | ✅ 200       |
 
 ---
 
@@ -136,6 +148,7 @@ vercel --prod --yes
 El usuario debe verificar en producción:
 
 ### 1. ✅ Test Archivos - GET
+
 ```
 URL: https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app/pacientes
 1. Abrir paciente "pruebas pruebas"
@@ -144,6 +157,7 @@ URL: https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app/pacie
 ```
 
 ### 2. ✅ Test Archivos - POST
+
 ```
 1. En pestaña Archivos del paciente
 2. Click "Subir archivo"
@@ -152,6 +166,7 @@ URL: https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app/pacie
 ```
 
 ### 3. ✅ Test CSV Exportación
+
 ```
 URL: /agenda
 1. Click "Exportar CSV" en calendario
@@ -165,12 +180,14 @@ URL: /agenda
 ### Si archivos siguen fallando con 500:
 
 1. **Verificar logs backend en Vercel:**
+
    ```
    https://vercel.com/davids-projects-8fa96e54/clinic-backend
    → Functions → Logs
    ```
 
 2. **Buscar en logs:**
+
    - ❌ "Error in loadTenant middleware" → Middleware no funciona
    - ❌ "req.getTable is not a function" → Middleware no aplicado
    - ❌ "Debe pasar por el middleware loadTenant primero" → Orden incorrecto
@@ -184,6 +201,7 @@ URL: /agenda
 ### Si CSV falla con 400:
 
 1. **Verificar query en Network tab:**
+
    ```
    GET /api/reports/billing?year=2025&month=10&groupBy=appointment
    ```
@@ -214,20 +232,24 @@ frontend/src/app/config/client.config.ts
 **Problema Original:**  
 Después de la migración multi-tenant y despliegue v2.4.0, los endpoints de archivos y CSV exportación fallaban con 500/400.
 
-**Causa:**  
+**Causa:**
+
 1. Middleware `loadTenant` no aplicado a rutas `/files*`
 2. Select en billing usando nombres de tabla con sufijo en lugar de nombres de relación
 
-**Solución:**  
+**Solución:**
+
 1. ✅ Agregado `router.use('/files*', loadTenant)` en bridge.js
 2. ✅ Corregido select para usar nombres sin sufijo: `patients(*)`, `credit_redemptions(*)`, `credit_packs(*)`
 
-**Resultado:**  
+**Resultado:**
+
 - ✅ Backend v2.4.1 desplegado exitosamente
 - ✅ Frontend actualizado y desplegado
 - ✅ Todas las funcionalidades deberían estar operativas
 
 **URLs Finales:**
+
 - Backend: https://clinic-backend-mweaxa2qv-davids-projects-8fa96e54.vercel.app
 - Frontend: https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app
 

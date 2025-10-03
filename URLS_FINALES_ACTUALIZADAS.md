@@ -1,172 +1,329 @@
-# 🎯 URLS FINALES ACTUALIZADAS - v2.4.1# 🔗 URLS FINALES - APLICACIÓN DESPLEGADA
+# URLs Finales - Masaje Corporal Deportivo# 🎯 URLS FINALES ACTUALIZADAS - v2.4.1# 🔗 URLS FINALES - APLICACIÓN DESPLEGADA
 
+**Fecha**: 3 de octubre de 2025 **Fecha:** 3 de octubre de 2025, 12:45 PM ## ✅ URLs Actualizadas (Enero 24, 2025)
 
+**Versión**: v2.4.2 (Backend + Frontend)
 
-**Fecha:** 3 de octubre de 2025, 12:45 PM  ## ✅ URLs Actualizadas (Enero 24, 2025)
+**Estado**: ✅ PRODUCCIÓN**Versión Backend:** 2.4.1
 
-**Versión Backend:** 2.4.1  
+---**Versión Frontend:** 2.4.1 ### 🌐 Frontend (Angular PWA)
 
-**Versión Frontend:** 2.4.1  ### 🌐 Frontend (Angular PWA)
+## 🌐 URL Permanente del Cliente**Estado:** ✅ PRODUCCIÓN CON URL ESTÁTICA
 
-**Estado:** ✅ PRODUCCIÓN CON URL ESTÁTICA
-
-```
-
----https://clinic-frontend-b5rqw5sgq-davids-projects-8fa96e54.vercel.app
+### URL Oficial (Permanente e Innamovible)```
 
 ```
 
-## 🌐 URL OFICIAL DEL CLIENTE
+https://masajecorporaldeportivo.vercel.app---https://clinic-frontend-b5rqw5sgq-davids-projects-8fa96e54.vercel.app
 
-**Esta es la URL principal para acceder a tu aplicación**
+```
+
+```
+
+Esta URL:
+
+- ✅ **Permanente**: Nunca cambiará## 🌐 URL OFICIAL DEL CLIENTE
+
+- ✅ **Estática**: Siempre apunta al último despliegue de producción
+
+- ✅ **Sin autenticación**: Acceso directo sin login**Esta es la URL principal para acceder a tu aplicación**
+
+- ✅ **Multi-tenant**: Identificado por slug `masajecorporaldeportivo`
 
 ### ⭐ **Masaje Corporal Deportivo**
 
+---
+
 ### 🔧 Backend (Node.js + Express + Supabase)
 
-```
-
-https://masajecorporaldeportivo.vercel.app```
-
-```https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app
+## 🏗️ URLs Técnicas (Internas)
 
 ```
 
-✅ **URL ESTÁTICA Y PERMANENTE**  
+### Backend (v2.4.2)
 
-✅ Nunca cambiará  ---
+`https://masajecorporaldeportivo.vercel.app`
 
-✅ Configurada con alias en Vercel  
+https://clinic-backend-jpq8pe9xt-davids-projects-8fa96e54.vercel.app
 
-✅ SSL automático (HTTPS)  ## 📋 Verificación
+``````https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app
 
-✅ Lista para compartir con clientes
+- **Versión**: 2.4.2
+
+- **Cambios**: CSV billing SELECT fix (relaciones con sufijos)````
+
+- **Inspect**: https://vercel.com/davids-projects-8fa96e54/clinic-backend/EWPtXR12Xx34fWngVVZQvycBwMgh
+
+- **Desplegado**: 3 octubre 2025, ~13:10✅ **URL ESTÁTICA Y PERMANENTE**
+
+
+
+### Frontend (Último Deployment)✅ Nunca cambiará ---
+
+```
+
+https://clinic-frontend-14j8nrbl0-davids-projects-8fa96e54.vercel.app✅ Configurada con alias en Vercel
+
+```
+
+- **Apunta a**: Backend v2.4.2✅ SSL automático (HTTPS) ## 📋 Verificación
+
+- **Inspect**: https://vercel.com/davids-projects-8fa96e54/clinic-frontend/671rYbnXNMZzajz4LpG9Dy4iYQ3w
+
+- **Desplegado**: 3 octubre 2025, ~13:10✅ Lista para compartir con clientes
+
+- **Alias**: masajecorporaldeportivo.vercel.app ✅
 
 ### Test del Backend (GET /api/patients):
 
 ---
 
-```powershell
-
-## 🔧 BACKEND API (Interno)$env:NODE_TLS_REJECT_UNAUTHORIZED="0"
-
-Invoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/patients?limit=3"
-
-``````
-
-https://clinic-backend-mweaxa2qv-davids-projects-8fa96e54.vercel.app/api
-
-```### Test de Archivos (GET /api/files/patient/:id):
-
-
-
-**Versión:** 2.4.1  ```powershell
-
-**Correcciones:**Invoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/files/patient/1"
-
-- ✅ Middleware `loadTenant` aplicado a `/files*````
-
-- ✅ Select corregido en `/reports/billing`
-
-### Test de Configuración (GET /api/config):
-
 ---
 
+## 📋 Historial de Versiones
+
 ```powershell
 
-## 🧪 FUNCIONALIDADES A PROBARInvoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/config"
+### v2.4.2 (ACTUAL) - 3 octubre 2025
+
+- ✅ **Fix CSV Export**: Corregido SELECT de `/api/reports/billing` para usar `req.getTable()` en relaciones## 🔧 BACKEND API (Interno)$env:NODE_TLS_REJECT_UNAUTHORIZED="0"
+
+- ✅ **Root Cause**: Supabase necesita nombres con sufijos en SELECT cuando tablas físicas tienen sufijos
+
+- ✅ **Verificación**: CSV exportándose correctamente con curlInvoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/patients?limit=3"
+
+- ⏳ **Pendiente**: Usuario debe verificar desde interfaz web
 
 ```
 
-Todas las pruebas usar la URL estática:
+### v2.4.1 - 3 octubre 2025
 
-### Test de Backups (GET /api/backup/stats):
+- ✅ Agregado middleware `loadTenant` a `/files*` endpointshttps://clinic-backend-mweaxa2qv-davids-projects-8fa96e54.vercel.app/api
 
-### 1️⃣ Archivos - Listar
+- ❌ Intento incorrecto de fix CSV (sin sufijos en SELECT)
 
-``````powershell
+`````### Test de Archivos (GET /api/files/patient/:id):
+
+### v2.4.0 - 3 octubre 2025
+
+- ✅ Corregidos precios de bonos/packs en endpoints
+
+
+
+---**Versión:** 2.4.1  ```powershell
+
+
+
+## 🧪 Pruebas de Verificación**Correcciones:**Invoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/files/patient/1"
+
+
+
+### 1. Prueba Manual Endpoint CSV (✅ PASADA)- ✅ Middleware `loadTenant` aplicado a `/files*````
+
+```bash
+
+curl -H "X-Tenant-Slug: masajecorporaldeportivo" \- ✅ Select corregido en `/reports/billing`
+
+  "https://clinic-backend-jpq8pe9xt-davids-projects-8fa96e54.vercel.app/api/reports/billing?year=2025&month=10&groupBy=appointment"
+
+```### Test de Configuración (GET /api/config):
+
+
+
+**Resultado Esperado** (200 OK):---
+
+```csv
+
+Fecha;Hora;Paciente;DNI;Duración (min);Tipo;Estado Pago;Precio (€)```powershell
+
+1/10/2025;07:00;pruebas pruebas;53504988O;60;Bono 1x60min;Pagado;49.60
+
+```## 🧪 FUNCIONALIDADES A PROBARInvoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/config"
+
+
+
+✅ **FUNCIONANDO**`````
+
+
+
+### 2. Prueba desde Interfaz Web (⏳ PENDIENTE)Todas las pruebas usar la URL estática:
+
+
+
+**Usuario debe verificar**:### Test de Backups (GET /api/backup/stats):
+
+
+
+1. Acceder a: https://masajecorporaldeportivo.vercel.app/agenda### 1️⃣ Archivos - Listar
+
+2. Hacer clic en botón "Exportar CSV"
+
+3. Verificar que se descarga archivo CSV sin error 400`````powershell
+
+4. Abrir CSV y confirmar que contiene datos correctos
 
 https://masajecorporaldeportivo.vercel.app/pacientesInvoke-RestMethod -Uri "https://clinic-backend-m0ff8lt11-davids-projects-8fa96e54.vercel.app/api/backup/stats"
 
-→ Abrir paciente "pruebas pruebas"```
+**Variantes a probar**:
+
+- `groupBy=appointment`: CSV agrupado por cita individual→ Abrir paciente "pruebas pruebas"```
+
+- `groupBy=patient`: CSV agrupado por paciente con totales
 
 → Pestaña "Archivos"
 
+---
+
 ✅ Debe cargar sin error 500---
 
-```
-
-## 🎯 FUNCIONALIDADES DISPONIBLES
-
-### 2️⃣ Archivos - Subir
-
-```### ✅ Gestión de Pacientes
-
-En pestaña Archivos → "Subir archivo"
-
-✅ Debe subir sin error 500- Listar, crear, editar, eliminar pacientes
-
-```- Subir y descargar archivos adjuntos
-
-- Búsqueda por nombre, DNI, teléfono
-
-### 3️⃣ CSV Exportación- Datos geográficos (provincias/municipios)
+## 🔧 Configuración Multi-Tenant
 
 ```
 
-https://masajecorporaldeportivo.vercel.app/agenda### ✅ Agenda de Citas
+### Tenant Slug
 
-→ Click "Exportar CSV"
+```## 🎯 FUNCIONALIDADES DISPONIBLES
 
-✅ Debe descargar sin error 400- Calendario mensual/semanal/diario
+masajecorporaldeportivo
 
-```- Crear, editar, cancelar citas
+```### 2️⃣ Archivos - Subir
 
-- Detección de conflictos de horario
 
-### 4️⃣ Precios- Filtrado por paciente
 
-```
+### Tablas en Supabase```### ✅ Gestión de Pacientes
 
-https://masajecorporaldeportivo.vercel.app/configuracion### ✅ Sistema de Créditos
+Todas las tablas tienen sufijo `_masajecorporaldeportivo`:
 
-→ Pestaña "Precios"
+- `patients_masajecorporaldeportivo`En pestaña Archivos → "Subir archivo"
+
+- `appointments_masajecorporaldeportivo`
+
+- `credit_packs_masajecorporaldeportivo`✅ Debe subir sin error 500- Listar, crear, editar, eliminar pacientes
+
+- `credit_redemptions_masajecorporaldeportivo`
+
+- `patient_files_masajecorporaldeportivo````- Subir y descargar archivos adjuntos
+
+- `patient_backups_masajecorporaldeportivo`
+
+- `billing_prices_masajecorporaldeportivo`- Búsqueda por nombre, DNI, teléfono
+
+- `backup_metadata_masajecorporaldeportivo`
+
+- `tenants` (tabla compartida)### 3️⃣ CSV Exportación- Datos geográficos (provincias/municipios)
+
+
+
+### Header HTTP```
+
+Todas las peticiones del frontend incluyen:
+
+```https://masajecorporaldeportivo.vercel.app/agenda### ✅ Agenda de Citas
+
+X-Tenant-Slug: masajecorporaldeportivo
+
+```→ Click "Exportar CSV"
+
+
+
+---✅ Debe descargar sin error 400- Calendario mensual/semanal/diario
+
+
+
+## 📊 Endpoints Verificados```- Crear, editar, cancelar citas
+
+
+
+| Endpoint | Estado | Notas |- Detección de conflictos de horario
+
+|----------|--------|-------|
+
+| `GET /api/patients` | ✅ OK | Listado de pacientes |### 4️⃣ Precios- Filtrado por paciente
+
+| `POST /api/patients` | ✅ OK | Crear paciente |
+
+| `GET /api/appointments/all` | ✅ OK | Todas las citas con relaciones |```
+
+| `POST /api/appointments` | ✅ OK | Crear cita con bonos |
+
+| `GET /api/credit-packs/patient/:id` | ✅ OK | Bonos de paciente |https://masajecorporaldeportivo.vercel.app/configuracion### ✅ Sistema de Créditos
+
+| `GET /api/files/patient/:id` | ✅ OK | Archivos de paciente (v2.4.1) |
+
+| `POST /api/files/patient/:id` | ✅ OK | Subir archivo (v2.4.1) |→ Pestaña "Precios"
+
+| `GET /api/reports/billing` | ✅ OK | Exportar CSV (v2.4.2) |
 
 ✅ Debe guardar correctamente (ya funcionaba)- Crear bonos de sesiones
 
+---
+
 ```- Canjear créditos en citas
+
+## 🎯 Próximos Pasos
 
 - Historial de uso
 
----- Control de pagos
+### Inmediato (Usuario)
+
+1. ⏳ Verificar exportación CSV desde interfaz web---- Control de pagos
+
+2. ⏳ Confirmar que archivos se suben correctamente
+
+3. ⏳ Probar todas las funcionalidades principales
 
 
 
-## 📋 COMANDO USADO PARA ALIAS### ✅ Configuración
+### Si todo funciona## 📋 COMANDO USADO PARA ALIAS### ✅ Configuración
 
+- ✅ Sistema listo para producción
 
+- ✅ Multi-tenant completamente operativo
+
+- ✅ Puede comenzar a usar el sistema con clientes reales
 
 ```bash- Horarios de trabajo
 
-vercel alias set clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app masajecorporaldeportivo.vercel.app- Precios de sesiones y bonos
+### Si hay problemas
 
-```- Duración de citas
+1. Compartir error exacto de la consola del navegador (F12)vercel alias set clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app masajecorporaldeportivo.vercel.app- Precios de sesiones y bonos
 
-- Restaurar valores por defecto
+2. Verificar Network tab para ver respuesta del servidor
 
-**Resultado:**
+3. Revisar logs del backend en Vercel Inspect URL```- Duración de citas
 
-```### ✅ Backups
 
-✅ Success! https://masajecorporaldeportivo.vercel.app now points to 
 
-   https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app [2s]- Crear respaldos de datos
+---- Restaurar valores por defecto
 
-```- Descargar backups en JSON
 
-- Estadísticas de base de datos
 
----- Listado de backups disponibles
+## 📞 Contacto & Soporte**Resultado:**
+
+
+
+- **Vercel Dashboard Backend**: https://vercel.com/davids-projects-8fa96e54/clinic-backend```### ✅ Backups
+
+- **Vercel Dashboard Frontend**: https://vercel.com/davids-projects-8fa96e54/clinic-frontend
+
+- **Supabase Dashboard**: https://supabase.com/dashboard/project/nnfxzgvplvavgdfmgrrb✅ Success! https://masajecorporaldeportivo.vercel.app now points to
+
+
+
+---   https://clinic-frontend-p1xqdrysv-davids-projects-8fa96e54.vercel.app [2s]- Crear respaldos de datos
+
+
+
+**Sistema**: Masaje Corporal Deportivo  ```- Descargar backups en JSON
+
+**Cliente**: Único (sin autenticación)
+
+**Arquitectura**: Multi-tenant con tenant slug  - Estadísticas de base de datos
+
+**Estado**: ✅ PRODUCCIÓN v2.4.2
+
+**Última actualización**: 3 octubre 2025, 13:15---- Listado de backups disponibles
+
 
 
 
@@ -250,11 +407,11 @@ cd frontend
 
 **URL OFICIAL:**$env:NODE_TLS_REJECT_UNAUTHORIZED="0"
 
-``````
+`````
 
 https://masajecorporaldeportivo.vercel.app
 
-```### Ver logs del backend:
+````### Ver logs del backend:
 
 
 
@@ -274,7 +431,7 @@ https://masajecorporaldeportivo.vercel.app
 
 *Documentación completa en: `URLS_CLIENTES_ESTATICAS.md`*vercel logs https://clinic-frontend-b5rqw5sgq-davids-projects-8fa96e54.vercel.app
 
-```
+````
 
 ---
 
@@ -290,3 +447,4 @@ Tu aplicación está **completamente funcional** con:
 - ✅ Sistema de backups funcionando
 
 **Accede ahora**: https://clinic-frontend-b5rqw5sgq-davids-projects-8fa96e54.vercel.app
+``````

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "name": "clinic-backend",
-  "alias": ["clinic-backend-api.vercel.app"],
+  "alias": ["masajecorporaldeportivo-api.vercel.app"],
   "builds": [
     {
       "src": "api/index.js",
