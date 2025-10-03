@@ -1,100 +1,79 @@
-const { getDbManager } = require('../database/database-manager');
+const { DatabaseManager } = require('../database/database-manager');
 
-// Inicializar el manager al cargar el módulo
-let dbManager = null;
-(async () => {
-  try {
-    dbManager = await getDbManager();
-  } catch (error) {
-    console.warn('⚠️ Error inicializando DB Manager en middleware:', error.message);
-  }
-})();
+// 🆕 Caché de instancias de DatabaseManager por tenant
+const tenantManagers = new Map();
 
 /**
- * Middleware que inyecta el cliente Supabase compatible con Prisma en el objeto request
- * Permite una transición suave de las rutas existentes sin reescribir todo
+ * 🆕 Obtiene o crea un DatabaseManager para el tenant especificado
+ */
+async function getManagerForTenant(tenantSlug) {
+  const cacheKey = tenantSlug || 'legacy';
+  
+  if (!tenantManagers.has(cacheKey)) {
+    console.log(`🔄 Creando nueva instancia de DatabaseManager para tenant: ${cacheKey}`);
+    const manager = new DatabaseManager(tenantSlug);
+    await manager.initialize();
+    tenantManagers.set(cacheKey, manager);
+  }
+  
+  return tenantManagers.get(cacheKey);
+}
+
+/**
+ * 🆕 Middleware que inyecta el cliente Supabase compatible con Prisma en el objeto request
+ * MULTI-TENANT: Crea una instancia de DatabaseManager con el tenantSlug del request
  */
 function injectDatabaseMiddleware(req, res, next) {
-  try {
-    console.log('🛠️ Middleware DB ejecutándose para:', req.method, req.originalUrl);
-    
-    // Si la base de datos está conectada, inyectar el cliente normalmente
-    if (dbManager && dbManager.isConnected) {
-      req.prisma = dbManager.createPrismaCompatibleInterface();
-      req.dbManager = dbManager;
-      req.dbStatus = {
-        connected: true,
-        database: 'supabase-postgresql',
-        preferred: true
-      };
-
-      console.log('✅ Cliente Supabase inyectado para:', req.method, req.originalUrl);
-      
-      // Agregar header con información de la base de datos actual
-      res.set('X-Database', 'supabase-postgresql');
-      res.set('X-Database-Preferred', 'true');
-
-      return next();
-    }
-
-    // Modo degradado: permitir operaciones de solo lectura (GET) para que la
-    // aplicación siga funcionando en desarrollo sin Supabase.
-    console.warn('⚠️ DB Manager no disponible, entrando en modo degradado para:', req.method, req.originalUrl);
-    res.set('X-Database', 'degraded');
-    res.set('X-Database-Preferred', 'false');
-
-    // Inyectar metadata mínima para que handlers puedan detectar el estado
-    req.prisma = null; // no hay cliente disponible
-    req.dbManager = dbManager;
-    req.dbStatus = {
-      connected: false,
-      database: 'supabase-postgresql',
-      preferred: true
-    };
-
-    // Verificar si hay conexión a la base de datos
-  console.log('🔍 Verificando conexión DB:', {
-    isConnected: dbManager.isConnected,
-    hasSupabase: !!dbManager.supabase,
-    method: req.method,
-    url: req.originalUrl
-  });
-
-  if (!dbManager.isConnected) {
-    // Para GETs permitimos continuar; para métodos que modifican datos, intentar conectar directamente
-    if (req.method === 'GET' || req.method === 'HEAD') {
-      console.warn('⚠️ Petición en modo degradado (lectura):', req.method, req.originalUrl);
-      return next();
-    }
-
-    // Para peticiones POST/PUT/DELETE, intentar usar el cliente directo
-    console.warn('⚠️ Intentando operación de escritura en modo degradado:', req.method, req.originalUrl);
-    try {
-      if (dbManager.supabase) {
+  console.log('🛠️ Middleware DB ejecutándose para:', req.method, req.originalUrl);
+  
+  // 🆕 Obtener tenant slug del header
+  const tenantSlug = req.headers['x-tenant-slug'];
+  
+  if (tenantSlug) {
+    console.log(`📋 [Multi-Tenant] Tenant detectado: ${tenantSlug}`);
+  } else {
+    console.log('📋 [Legacy] Sin tenant slug - modo compatibilidad');
+  }
+  
+  // Inicializar de forma asíncrona pero NO bloquear el servidor
+  getManagerForTenant(tenantSlug)
+    .then(dbManager => {
+      // Si la base de datos está conectada, inyectar el cliente normalmente
+      if (dbManager && dbManager.isConnected) {
         req.prisma = dbManager.createPrismaCompatibleInterface();
-        console.log('🔧 Cliente Supabase directo asignado para escritura');
-        return next();
-      } else {
-        throw new Error('No hay cliente Supabase disponible');
-      }
-    } catch (e) {
-      console.error('❌ Error al obtener cliente Supabase directo:', e.message);
-      return res.status(503).json({
-        error: 'Servicio degradado',
-        message: 'No se puede conectar a la base de datos. Intente de nuevo más tarde.',
-        method: req.method
-      });
-    }
-  }
+        req.dbManager = dbManager;
+        req.dbStatus = {
+          connected: true,
+          database: 'supabase-postgresql',
+          preferred: true,
+          tenant: tenantSlug || 'legacy'
+        };
 
-  } catch (error) {
-    console.error('❌ Error en middleware de base de datos:', error);
-    res.status(500).json({
-      error: 'Error de conexión a base de datos',
-      message: 'No se pudo establecer conexión con la base de datos',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        console.log(`✅ Cliente Supabase inyectado para: ${req.method} ${req.originalUrl} [Tenant: ${tenantSlug || 'legacy'}]`);
+        
+        // Agregar header con información de la base de datos actual
+        res.set('X-Database', 'supabase-postgresql');
+        res.set('X-Database-Preferred', 'true');
+        if (tenantSlug) {
+          res.set('X-Tenant-Active', tenantSlug);
+        }
+
+        next();
+      } else {
+        // Modo degradado
+        console.warn('⚠️ DB Manager no disponible, entrando en modo degradado');
+        req.prisma = null;
+        req.dbManager = null;
+        req.dbStatus = { connected: false };
+        next();
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error en middleware de base de datos:', error);
+      req.prisma = null;
+      req.dbManager = null;
+      next();
     });
-  }
 }
 
 /**

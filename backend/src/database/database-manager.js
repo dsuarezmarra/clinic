@@ -2,26 +2,20 @@ const { createClient } = require('@supabase/supabase-js');
 const { v4: uuidv4 } = require('uuid');
 
 class DatabaseManager {
-    constructor() {
+    constructor(tenantSlug = null) {
         this.supabase = null;
         this.isConnected = false;
+        this.tenantSlug = tenantSlug; // 🆕 Almacenar el tenant slug
         
         this.supabaseUrl = process.env.SUPABASE_URL;
         this.supabaseKey = process.env.SUPABASE_SERVICE_KEY;
 
-        const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config();
-
-// ✨ BYPASS CORPORATIVO
-const { setupGlobalAgents, patchFetchForSupabase } = require('../corporate-bypass');
-
-// Configurar bypass antes de cualquier operación de red
-patchFetchForSupabase();
-setupGlobalAgents();
-
-console.log('🔄 Inicializando DatabaseManager...');
+        console.log('🔄 Inicializando DatabaseManager...');
         console.log(`   📋 URL: ${this.supabaseUrl ? 'configurada' : '❌ falta'}`);
         console.log(`   🔑 Service Key: ${this.supabaseKey ? 'configurada' : '❌ falta'}`);
+        if (tenantSlug) {
+            console.log(`   🏢 Tenant: ${tenantSlug}`);
+        }
         // In-memory fallback for configuration table when DB table is missing
         // This allows the app to continue operating until the DB schema is fixed.
         this._inMemoryConfiguration = new Map();
@@ -68,7 +62,7 @@ console.log('🔄 Inicializando DatabaseManager...');
     async testConnection() {
         try {
             const { data, error, count } = await this.supabase
-                .from('patients')
+                .from(this.getTableName('patients'))
                 .select('*', { count: 'exact', head: true });
             
             if (error) {
@@ -90,6 +84,22 @@ console.log('🔄 Inicializando DatabaseManager...');
 
     getStatus() {
         return 'supabase-postgresql';
+    }
+
+    /**
+     * 🆕 Helper para obtener el nombre de tabla con el sufijo del tenant
+     * Si tenantSlug está configurado, agrega el sufijo (_tenantSlug)
+     * Si no, devuelve el nombre base (compatibilidad hacia atrás)
+     */
+    getTableName(baseTableName) {
+        if (this.tenantSlug) {
+            const tableName = `${baseTableName}_${this.tenantSlug}`;
+            console.log(`📋 [Multi-Tenant] Usando tabla: ${tableName} (base: ${baseTableName}, tenant: ${this.tenantSlug})`);
+            return tableName;
+        }
+        // Fallback: sin tenant slug, usar nombre base (para compatibilidad)
+        console.log(`📋 [Legacy] Usando tabla base: ${baseTableName} (sin tenant)`);
+        return baseTableName;
     }
 
     createPrismaCompatibleInterface() {
@@ -126,7 +136,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                         asc = cpInclude.orderBy[k] === 'asc';
                     }
                     const { data: packs, error: packsErr } = await this.supabase
-                        .from('credit_packs')
+                        .from(this.getTableName('credit_packs'))
                         .select('*')
                         .eq('patientId', patientData.id)
                         .order(orderField, { ascending: asc });
@@ -148,7 +158,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 if (options.include && options.include.files) {
                     const filesInclude = options.include.files || {};
                     const { data: files, error: filesErr } = await this.supabase
-                        .from('patient_files')
+                        .from(this.getTableName('patient_files'))
                         .select('*')
                         .eq('patientId', patientData.id)
                         .order('createdAt', { ascending: false });
@@ -165,7 +175,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                     const apInclude = options.include.appointments || {};
                     const limit = apInclude.take || 10;
                     const { data: apps, error: appsErr } = await this.supabase
-                        .from('appointments')
+                        .from(this.getTableName('appointments'))
                         .select('*')
                         .eq('patientId', patientData.id)
                         .order('start', { ascending: false })
@@ -182,13 +192,13 @@ console.log('🔄 Inicializando DatabaseManager...');
                 if (options.include && options.include._count) {
                     const counts = {};
                     try {
-                        const { data: filesCount } = await this.supabase.from('patient_files').select('id', { count: 'exact', head: true }).eq('patientId', patientData.id);
+                        const { data: filesCount } = await this.supabase.from(this.getTableName('patient_files')).select('id', { count: 'exact', head: true }).eq('patientId', patientData.id);
                         counts.files = filesCount || 0;
                     } catch (e) {
                         counts.files = (patientData.files || []).length;
                     }
                     try {
-                        const { data: appsCount } = await this.supabase.from('appointments').select('id', { count: 'exact', head: true }).eq('patientId', patientData.id);
+                        const { data: appsCount } = await this.supabase.from(this.getTableName('appointments')).select('id', { count: 'exact', head: true }).eq('patientId', patientData.id);
                         counts.appointments = appsCount || 0;
                     } catch (e) {
                         counts.appointments = (patientData.appointments || []).length;
@@ -206,7 +216,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             patients: {
                 findMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('patients').select('*');
+                        let query = this.supabase.from(this.getTableName('patients')).select('*');
                         
                         if (options.where) {
                             if (options.where.OR) {
@@ -218,7 +228,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                     for (const [field, value] of Object.entries(condition)) {
                                         if (typeof value === 'object' && value.contains) {
                                             const { data } = await this.supabase
-                                                .from('patients')
+                                                .from(this.getTableName('patients'))
                                                 .select('*')
                                                 .ilike(field, `%${value.contains}%`);
                                             
@@ -253,7 +263,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                                 asc = cpInclude.orderBy[k] === 'asc';
                                             }
                                             const { data: packs, error: packsErr } = await this.supabase
-                                                .from('credit_packs')
+                                                .from(this.getTableName('credit_packs'))
                                                 .select('*')
                                                 .in('patientId', ids)
                                                 .order(orderField, { ascending: asc });
@@ -289,9 +299,9 @@ console.log('🔄 Inicializando DatabaseManager...');
                                         if (ids.length > 0) {
                                             // Fetch counts for appointments, files, and creditPacks for all patients
                                             const [appointmentCounts, fileCounts, creditPackCounts] = await Promise.all([
-                                                this.supabase.from('appointments').select('patientId').in('patientId', ids),
-                                                this.supabase.from('patient_files').select('patientId').in('patientId', ids),
-                                                this.supabase.from('credit_packs').select('patientId').in('patientId', ids)
+                                                this.supabase.from(this.getTableName('appointments')).select('patientId').in('patientId', ids),
+                                                this.supabase.from(this.getTableName('patient_files')).select('patientId').in('patientId', ids),
+                                                this.supabase.from(this.getTableName('credit_packs')).select('patientId').in('patientId', ids)
                                             ]);
 
                                             console.log('[DB-SHIM] Search: Count results:', {
@@ -387,7 +397,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                         asc = cpInclude.orderBy[k] === 'asc';
                                     }
                                     const { data: packs, error: packsErr } = await this.supabase
-                                        .from('credit_packs')
+                                        .from(this.getTableName('credit_packs'))
                                         .select('*')
                                         .in('patientId', ids)
                                         .order(orderField, { ascending: asc });
@@ -423,9 +433,9 @@ console.log('🔄 Inicializando DatabaseManager...');
                                 if (ids.length > 0) {
                                     // Fetch counts for appointments, files, and creditPacks for all patients
                                     const [appointmentCounts, fileCounts, creditPackCounts] = await Promise.all([
-                                        this.supabase.from('appointments').select('patientId').in('patientId', ids),
-                                        this.supabase.from('patient_files').select('patientId').in('patientId', ids),
-                                        this.supabase.from('credit_packs').select('patientId').in('patientId', ids)
+                                        this.supabase.from(this.getTableName('appointments')).select('patientId').in('patientId', ids),
+                                        this.supabase.from(this.getTableName('patient_files')).select('patientId').in('patientId', ids),
+                                        this.supabase.from(this.getTableName('credit_packs')).select('patientId').in('patientId', ids)
                                     ]);
 
                                     console.log('[DB-SHIM] Count results:', {
@@ -484,13 +494,13 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                 count: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('patients').select('*', { count: 'exact', head: true });
+                        let query = this.supabase.from(this.getTableName('patients')).select('*', { count: 'exact', head: true });
                         
                         if (options.where) {
                             // Manejar búsquedas complejas como las de OR
                             if (options.where.OR) {
                                 // Para OR complicados, usar findMany y contar los resultados
-                                const results = await this.supabase.from('patients').select('id');
+                                const results = await this.supabase.from(this.getTableName('patients')).select('id');
                                 
                                 const orConditions = options.where.OR;
                                 const matchingIds = new Set();
@@ -499,7 +509,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                     for (const [field, value] of Object.entries(condition)) {
                                         if (typeof value === 'object' && value.contains) {
                                             const { data } = await this.supabase
-                                                .from('patients')
+                                                .from(this.getTableName('patients'))
                                                 .select('id')
                                                 .ilike(field, `%${value.contains}%`);
                                             
@@ -527,7 +537,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                         if (error) {
                             console.log('⚠️ Error en count, intentando fallback:', error.message);
                             // Fallback: hacer un findMany y contar manualmente
-                            const { data: fallbackData } = await this.supabase.from('patients').select('id');
+                            const { data: fallbackData } = await this.supabase.from(this.getTableName('patients')).select('id');
                             return fallbackData ? fallbackData.length : 0;
                         }
                         
@@ -570,7 +580,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                         console.log('🔍 Insertando cleanData (preview):', Object.assign({}, cleanData));
                         
                         const { data, error } = await this.supabase
-                            .from('patients')
+                            .from(this.getTableName('patients'))
                             .insert([cleanData])
                             .select()
                             .single();
@@ -591,7 +601,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 findUnique: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                                .from('patients')
+                                .from(this.getTableName('patients'))
                                 .select('*')
                                 .eq('id', options.where.id);
 
@@ -619,7 +629,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 update: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                                .from('patients')
+                                .from(this.getTableName('patients'))
                                 .update(options.data)
                                 .eq('id', options.where.id)
                                 .select();
@@ -639,7 +649,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 delete: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('patients')
+                            .from(this.getTableName('patients'))
                             .delete()
                             .eq('id', options.where.id)
                             .select();
@@ -658,7 +668,7 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                 deleteMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('patients').delete();
+                        let query = this.supabase.from(this.getTableName('patients')).delete();
                         
                         if (options.where) {
                             for (const [field, value] of Object.entries(options.where)) {
@@ -688,7 +698,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                         // Si vienen condiciones OR, iteramos cada sub-condición y devolvemos el primer match
                         if (options.where && options.where.OR && Array.isArray(options.where.OR)) {
                             for (const cond of options.where.OR) {
-                                let q = this.supabase.from('appointments').select('*');
+                                let q = this.supabase.from(this.getTableName('appointments')).select('*');
                                 for (const [k, v] of Object.entries(cond)) {
                                     if (v && typeof v === 'object') {
                                         if (v.gte !== undefined) q = q.gte(k, v.gte instanceof Date ? v.gte.toISOString() : v.gte);
@@ -710,7 +720,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                             return null;
                         }
 
-                        let query = this.supabase.from('appointments').select('*');
+                        let query = this.supabase.from(this.getTableName('appointments')).select('*');
                         if (options.where) {
                             for (const [key, value] of Object.entries(options.where)) {
                                 if (value && typeof value === 'object') {
@@ -741,7 +751,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 },
                 findMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('appointments').select('*');
+                        let query = this.supabase.from(this.getTableName('appointments')).select('*');
 
                         // Helper to normalize Date objects to ISO strings accepted by Postgres
                         const normalize = (v) => {
@@ -808,7 +818,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                     const pids = Array.from(new Set(rows.map(r => r.patientId).filter(Boolean)));
                                     if (pids.length > 0) {
                                         const { data: patients, error: pErr } = await this.supabase
-                                            .from('patients')
+                                            .from(this.getTableName('patients'))
                                             .select('*')
                                             .in('id', pids);
                                         const patientsById = (patients || []).reduce((acc, p) => { acc[p.id] = p; return acc; }, {});
@@ -828,7 +838,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                     const apIds = Array.from(new Set(rows.map(r => r.id).filter(Boolean)));
                                     if (apIds.length > 0) {
                                         const { data: reds, error: redsErr } = await this.supabase
-                                            .from('credit_redemptions')
+                                            .from(this.getTableName('credit_redemptions'))
                                             .select('*')
                                             .in('appointmentId', apIds);
 
@@ -838,7 +848,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                             let packs = [];
                                             if (packIds.length > 0) {
                                                 const { data: packsData } = await this.supabase
-                                                    .from('credit_packs')
+                                                    .from(this.getTableName('credit_packs'))
                                                     .select('*')
                                                     .in('id', packIds);
                                                 packs = packsData || [];
@@ -881,7 +891,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 findUnique: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('appointments')
+                            .from(this.getTableName('appointments'))
                             .select('*')
                             .eq('id', options.where.id);
 
@@ -900,7 +910,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 create: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('appointments')
+                            .from(this.getTableName('appointments'))
                             .insert(options.data)
                             .select();
 
@@ -919,7 +929,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 update: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('appointments')
+                            .from(this.getTableName('appointments'))
                             .update(options.data)
                             .eq('id', options.where.id)
                             .select();
@@ -939,7 +949,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 delete: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('appointments')
+                            .from(this.getTableName('appointments'))
                             .delete()
                             .eq('id', options.where.id)
                             .select();
@@ -958,7 +968,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 ,
                 deleteMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('appointments').delete();
+                        let query = this.supabase.from(this.getTableName('appointments')).delete();
 
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -988,7 +998,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             credit_packs: {
                 findFirst: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('credit_packs').select('*');
+                        let query = this.supabase.from(this.getTableName('credit_packs')).select('*');
                         if (options.where) {
                             for (const [key, value] of Object.entries(options.where)) {
                                 if (value && typeof value === 'object') {
@@ -1016,7 +1026,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 },
                 findMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('credit_packs').select('*');
+                        let query = this.supabase.from(this.getTableName('credit_packs')).select('*');
 
                         if (options.where) {
                             for (const [key, value] of Object.entries(options.where)) {
@@ -1057,7 +1067,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 create: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('credit_packs')
+                            .from(this.getTableName('credit_packs'))
                             .insert(options.data)
                             .select();
 
@@ -1076,7 +1086,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 update: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('credit_packs')
+                            .from(this.getTableName('credit_packs'))
                             .update(options.data)
                             .eq('id', options.where.id)
                             .select();
@@ -1096,7 +1106,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 findUnique: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('credit_packs')
+                            .from(this.getTableName('credit_packs'))
                             .select('*')
                             .eq('id', options.where.id);
 
@@ -1115,7 +1125,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 delete: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('credit_packs')
+                            .from(this.getTableName('credit_packs'))
                             .delete()
                             .eq('id', options.where.id)
                             .select();
@@ -1134,7 +1144,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 ,
                 deleteMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('credit_packs').delete();
+                        let query = this.supabase.from(this.getTableName('credit_packs')).delete();
 
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -1164,7 +1174,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             credit_redemptions: {
                 findFirst: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('credit_redemptions').select('*');
+                        let query = this.supabase.from(this.getTableName('credit_redemptions')).select('*');
                         if (options.where) {
                             for (const [key, value] of Object.entries(options.where)) {
                                 if (value && typeof value === 'object') {
@@ -1190,7 +1200,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                 const fk = row.creditPackId || row.credit_pack_id || row.credit_packid || row.creditPack_id || row.creditpackid || row.creditPackId;
                                 if (fk) {
                                     const { data: pack, error: packErr } = await this.supabase
-                                        .from('credit_packs')
+                                        .from(this.getTableName('credit_packs'))
                                         .select('*')
                                         .eq('id', fk)
                                         .single();
@@ -1211,7 +1221,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 },
                 findMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('credit_redemptions').select('*');
+                        let query = this.supabase.from(this.getTableName('credit_redemptions')).select('*');
 
                         if (options.where) {
                             for (const [key, value] of Object.entries(options.where)) {
@@ -1243,7 +1253,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                                 const ids = Array.from(new Set(rows.map(r => r.creditPackId || r.credit_pack_id || r.credit_packid || r.creditPack_id || r.creditpackid || r.creditPackId).filter(Boolean)));
                                 if (ids.length > 0) {
                                     const { data: packs, error: packsErr } = await this.supabase
-                                        .from('credit_packs')
+                                        .from(this.getTableName('credit_packs'))
                                         .select('*')
                                         .in('id', ids);
 
@@ -1272,7 +1282,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 create: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('credit_redemptions')
+                            .from(this.getTableName('credit_redemptions'))
                             .insert(options.data)
                             .select();
 
@@ -1290,7 +1300,7 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                 deleteMany: async (options) => {
                     try {
-                        let query = this.supabase.from('credit_redemptions').delete();
+                        let query = this.supabase.from(this.getTableName('credit_redemptions')).delete();
                         
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -1314,7 +1324,7 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                 count: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('credit_redemptions').select('*', { count: 'exact', head: true });
+                        let query = this.supabase.from(this.getTableName('credit_redemptions')).select('*', { count: 'exact', head: true });
                         
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -1344,7 +1354,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             patient_files: {
                 findMany: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('patient_files').select('*');
+                        let query = this.supabase.from(this.getTableName('patient_files')).select('*');
                         
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -1374,7 +1384,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 findUnique: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('patient_files')
+                            .from(this.getTableName('patient_files'))
                             .select('*')
                             .eq('id', options.where.id);
 
@@ -1392,7 +1402,7 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                 findFirst: async (options) => {
                     try {
-                        let query = this.supabase.from('patient_files').select('*');
+                        let query = this.supabase.from(this.getTableName('patient_files')).select('*');
                         
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -1416,7 +1426,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 create: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('patient_files')
+                            .from(this.getTableName('patient_files'))
                             .insert(options.data)
                             .select();
                         
@@ -1435,7 +1445,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 update: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('patient_files')
+                            .from(this.getTableName('patient_files'))
                             .update(options.data)
                             .eq('id', options.where.id)
                             .select();
@@ -1455,7 +1465,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 delete: async (options) => {
                     try {
                         const { data, error } = await this.supabase
-                            .from('patient_files')
+                            .from(this.getTableName('patient_files'))
                             .delete()
                             .eq('id', options.where.id)
                             .select();
@@ -1474,7 +1484,7 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                 count: async (options = {}) => {
                     try {
-                        let query = this.supabase.from('patient_files').select('*', { count: 'exact', head: true });
+                        let query = this.supabase.from(this.getTableName('patient_files')).select('*', { count: 'exact', head: true });
                         
                         if (options.where) {
                             Object.entries(options.where).forEach(([key, value]) => {
@@ -1504,7 +1514,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             findMany: async (options = {}) => {
                 try {
                     // Preferimos la tabla real en Supabase: 'configurations'
-                    let query = this.supabase.from('configurations').select('*');
+                    let query = this.supabase.from(this.getTableName('configurations')).select('*');
                     if (options.where && options.where.key && options.where.key.in) {
                         query = query.in('key', options.where.key.in);
                     }
@@ -1539,7 +1549,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                 try {
                     if (options && options.where && options.where.key) {
                         // use select() to avoid .single() throwing when no rows found
-                        const { data, error } = await this.supabase.from('configurations').select('*').eq('key', options.where.key);
+                        const { data, error } = await this.supabase.from(this.getTableName('configurations')).select('*').eq('key', options.where.key);
                         if (error) {
                             const msg = error.message || '';
                             if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
@@ -1553,7 +1563,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                     }
 
                     if (options && options.where && options.where.id) {
-                        const { data, error } = await this.supabase.from('configurations').select('*').eq('id', options.where.id);
+                        const { data, error } = await this.supabase.from(this.getTableName('configurations')).select('*').eq('id', options.where.id);
                         if (error) {
                             const msg = error.message || '';
                             if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
@@ -1575,7 +1585,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             // create con fallback in-memory
             create: async (options) => {
                 try {
-                    const { data, error } = await this.supabase.from('configurations').insert(options.data).select();
+                    const { data, error } = await this.supabase.from(this.getTableName('configurations')).insert(options.data).select();
                     if (error) {
                         const msg = error.message || '';
                         if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
@@ -1598,7 +1608,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             update: async (options) => {
                 try {
                     if (options.where && options.where.key) {
-                        const { data, error } = await this.supabase.from('configuration').update(options.data).eq('key', options.where.key).select();
+                        const { data, error } = await this.supabase.from(this.getTableName('configuration')).update(options.data).eq('key', options.where.key).select();
                         if (error) {
                             const msg = error.message || '';
                             if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
@@ -1612,7 +1622,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                     }
 
                     if (options.where && options.where.id) {
-                        const { data, error } = await this.supabase.from('configuration').update(options.data).eq('id', options.where.id).select();
+                        const { data, error } = await this.supabase.from(this.getTableName('configuration')).update(options.data).eq('id', options.where.id).select();
                         if (error) throw new Error(error.message || JSON.stringify(error));
                         return (data && data.length > 0) ? data[0] : null;
                     }
@@ -1630,7 +1640,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                     if (options.where && options.where.key) {
                         // Try DB first
                         // check existing without .single() to avoid throwing when there's no row
-                        const { data: selData, error: selError } = await this.supabase.from('configurations').select('*').eq('key', options.where.key);
+                        const { data: selData, error: selError } = await this.supabase.from(this.getTableName('configurations')).select('*').eq('key', options.where.key);
                         if (selError) {
                             const msg = selError.message || '';
                             if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
@@ -1647,7 +1657,7 @@ console.log('🔄 Inicializando DatabaseManager...');
                         const existing = (selData && selData.length > 0) ? selData[0] : null;
 
                         if (existing && existing.id) {
-                            const { data, error } = await this.supabase.from('configurations').update(options.update || options.data || options.create).eq('key', options.where.key).select();
+                            const { data, error } = await this.supabase.from(this.getTableName('configurations')).update(options.update || options.data || options.create).eq('key', options.where.key).select();
                             if (error) throw new Error(error.message || JSON.stringify(error));
                             return (data && data.length > 0) ? data[0] : null;
                         }
@@ -1657,11 +1667,11 @@ console.log('🔄 Inicializando DatabaseManager...');
                             const payload = options.create || options.data;
                             let res;
                             if (payload && payload.key) {
-                                res = await this.supabase.from('configurations').upsert(payload, { onConflict: 'key' }).select();
+                                res = await this.supabase.from(this.getTableName('configurations')).upsert(payload, { onConflict: 'key' }).select();
                             } else if (payload && payload.id) {
-                                res = await this.supabase.from('configurations').upsert(payload, { onConflict: 'id' }).select();
+                                res = await this.supabase.from(this.getTableName('configurations')).upsert(payload, { onConflict: 'id' }).select();
                             } else {
-                                res = await this.supabase.from('configurations').insert(payload).select();
+                                res = await this.supabase.from(this.getTableName('configurations')).insert(payload).select();
                             }
                             if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
                             const data = res.data || res;
@@ -1671,11 +1681,11 @@ console.log('🔄 Inicializando DatabaseManager...');
 
                     // Fallback to previous behavior for where.id
                     if (options.where && options.where.id) {
-                        const { data: selData, error: selError } = await this.supabase.from('configurations').select('*').eq('id', options.where.id);
+                        const { data: selData, error: selError } = await this.supabase.from(this.getTableName('configurations')).select('*').eq('id', options.where.id);
                         if (selError) throw new Error(selError.message || JSON.stringify(selError));
                         const existing = (selData && selData.length > 0) ? selData[0] : null;
                         if (existing) {
-                            const { data, error } = await this.supabase.from('configurations').update(options.create || options.update || options.data).eq('id', options.where.id).select();
+                            const { data, error } = await this.supabase.from(this.getTableName('configurations')).update(options.create || options.update || options.data).eq('id', options.where.id).select();
                             if (error) throw new Error(error.message || JSON.stringify(error));
                             return (data && data.length > 0) ? data[0] : null;
                         }
@@ -1684,11 +1694,11 @@ console.log('🔄 Inicializando DatabaseManager...');
                             const payload = options.create || options.data;
                             let res;
                             if (payload && payload.id) {
-                                res = await this.supabase.from('configurations').upsert(payload, { onConflict: 'id' }).select();
+                                res = await this.supabase.from(this.getTableName('configurations')).upsert(payload, { onConflict: 'id' }).select();
                             } else if (payload && payload.key) {
-                                res = await this.supabase.from('configurations').upsert(payload, { onConflict: 'key' }).select();
+                                res = await this.supabase.from(this.getTableName('configurations')).upsert(payload, { onConflict: 'key' }).select();
                             } else {
-                                res = await this.supabase.from('configurations').insert(payload).select();
+                                res = await this.supabase.from(this.getTableName('configurations')).insert(payload).select();
                             }
                             if (res.error) throw new Error(res.error.message || JSON.stringify(res.error));
                             const data = res.data || res;
@@ -1702,11 +1712,11 @@ console.log('🔄 Inicializando DatabaseManager...');
                         const payload = options.create || options.data;
                         let res;
                         if (payload && payload.id) {
-                            res = await this.supabase.from('configurations').upsert(payload, { onConflict: 'id' }).select();
+                            res = await this.supabase.from(this.getTableName('configurations')).upsert(payload, { onConflict: 'id' }).select();
                         } else if (payload && payload.key) {
-                            res = await this.supabase.from('configurations').upsert(payload, { onConflict: 'key' }).select();
+                            res = await this.supabase.from(this.getTableName('configurations')).upsert(payload, { onConflict: 'key' }).select();
                         } else {
-                            res = await this.supabase.from('configurations').insert(payload).select();
+                            res = await this.supabase.from(this.getTableName('configurations')).insert(payload).select();
                         }
                         if (res.error) {
                             const msg = res.error.message || JSON.stringify(res.error);
@@ -1735,7 +1745,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             deleteMany: async (options = {}) => {
                 try {
                     // If DB exists, try DB delete
-                        const { data, error } = await this.supabase.from('configurations').delete().match(options.where || {}).select();
+                        const { data, error } = await this.supabase.from(this.getTableName('configurations')).delete().match(options.where || {}).select();
                     if (error) {
                         const msg = error.message || '';
                         if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
@@ -1762,7 +1772,7 @@ console.log('🔄 Inicializando DatabaseManager...');
             // createMany con fallback
             createMany: async (options = {}) => {
                 try {
-                    const { data, error } = await this.supabase.from('configurations').insert(options.data).select();
+                    const { data, error } = await this.supabase.from(this.getTableName('configurations')).insert(options.data).select();
                     if (error) {
                         const msg = error.message || '';
                         if (msg.includes("Could not find the table") || msg.includes('does not exist')) {
