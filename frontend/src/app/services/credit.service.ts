@@ -1,30 +1,45 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { APP_CONFIG } from '../config/app.config';
 import {
     CreateCreditPackRequest,
     CreditHistoryResponse,
     CreditSummary
 } from '../models/credit.model';
+import { ClientConfigService } from './client-config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CreditService {
-  private apiUrl = `${APP_CONFIG.apiUrl}/credits`;
+  private apiUrl: string;
+  private httpOptions: { headers: HttpHeaders };
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private clientConfig: ClientConfigService
+  ) {
+    // Obtener URL del backend desde la configuración del cliente
+    this.apiUrl = `${this.clientConfig.getApiUrl()}/credits`;
+    
+    // Configurar headers incluyendo X-Tenant-Slug para multi-tenant
+    this.httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        ...this.clientConfig.getTenantHeader()
+      })
+    };
+  }
 
   // Obtener resumen de Sesiones de un paciente
   getPatientCredits(patientId: string): Observable<CreditSummary> {
     const params = new HttpParams().set('patientId', patientId);
-    return this.http.get<CreditSummary>(this.apiUrl, { params });
+    return this.http.get<CreditSummary>(this.apiUrl, { params, ...this.httpOptions });
   }
 
   // Crear nuevo pack de créditos (sesión o bono)
   createCreditPack(creditPack: CreateCreditPackRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/packs`, creditPack);
+    return this.http.post(`${this.apiUrl}/packs`, creditPack, this.httpOptions);
   }
 
   // Consumir Sesiones manualmente
@@ -33,7 +48,7 @@ export class CreditService {
       patientId,
       appointmentId,
       units
-    });
+    }, this.httpOptions);
   }
 
   // Obtener historial de consumos
@@ -43,22 +58,22 @@ export class CreditService {
       .set('page', page.toString())
       .set('limit', limit.toString());
 
-    return this.http.get<CreditHistoryResponse>(`${this.apiUrl}/history`, { params });
+    return this.http.get<CreditHistoryResponse>(`${this.apiUrl}/history`, { params, ...this.httpOptions });
   }
 
   // Eliminar pack de Sesiones
   deleteCreditPack(packId: string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/packs/${packId}`);
+    return this.http.delete<void>(`${this.apiUrl}/packs/${packId}`, this.httpOptions);
   }
 
   // Actualizar estado de pago de un pack
   updatePackPaymentStatus(packId: string, paid: boolean): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/packs/${packId}/payment`, { paid });
+    return this.http.patch(`${this.apiUrl}/packs/${packId}/payment`, { paid }, this.httpOptions);
   }
 
   // Actualizar unidades restantes de un pack
   updatePackUnits(packId: string, unitsRemaining: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/packs/${packId}/units`, { unitsRemaining });
+    return this.http.patch(`${this.apiUrl}/packs/${packId}/units`, { unitsRemaining }, this.httpOptions);
   }
 
   // Convertir unidades a tiempo legible

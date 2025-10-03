@@ -1,20 +1,35 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { APP_CONFIG } from '../config/app.config';
 import { Configuration, WorkingDayInfo } from '../models/config.model';
+import { ClientConfigService } from './client-config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ConfigService {
-  private apiUrl = `${APP_CONFIG.apiUrl}/meta/config`;
+  private readonly apiUrl: string;
+  private httpOptions: { headers: HttpHeaders };
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private clientConfig: ClientConfigService
+  ) {
+    // Obtener URL del backend desde la configuración del cliente
+    this.apiUrl = `${this.clientConfig.getApiUrl()}/meta/config`;
+    
+    // Configurar headers incluyendo X-Tenant-Slug para multi-tenant
+    this.httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+        ...this.clientConfig.getTenantHeader()
+      })
+    };
+  }
 
   // Obtener configuración
   getConfiguration(): Observable<Configuration> {
-    return this.http.get<Configuration>(this.apiUrl);
+    return this.http.get<Configuration>(this.apiUrl, this.httpOptions);
   }
 
   // Alias para getConfiguration (para compatibilidad)
@@ -24,17 +39,17 @@ export class ConfigService {
 
   // Actualizar configuración
   updateConfiguration(config: Partial<Configuration>): Observable<Configuration> {
-    return this.http.put<Configuration>(this.apiUrl, config);
+    return this.http.put<Configuration>(this.apiUrl, config, this.httpOptions);
   }
 
   // Restablecer configuración por defecto
   resetConfiguration(): Observable<{ message: string; config: Configuration }> {
-    return this.http.post<{ message: string; config: Configuration }>(`${this.apiUrl}/reset`, {});
+    return this.http.post<{ message: string; config: Configuration }>(`${this.apiUrl}/reset`, {}, this.httpOptions);
   }
 
   // Verificar si una fecha es laborable
   checkWorkingDay(date: string): Observable<WorkingDayInfo> {
-    return this.http.get<WorkingDayInfo>(`${this.apiUrl}/working-hours/${date}`);
+    return this.http.get<WorkingDayInfo>(`${this.apiUrl}/working-hours/${date}`, this.httpOptions);
   }
 
   // Generar slots de tiempo para un día
@@ -89,11 +104,11 @@ export class ConfigService {
 
   // Obtener precios actuales
   getPrices(): Observable<any> {
-    return this.http.get<any>(`${APP_CONFIG.apiUrl}/meta/config/prices`);
+    return this.http.get<any>(`${this.clientConfig.getApiUrl()}/meta/config/prices`, this.httpOptions);
   }
 
   // Actualizar precios
   updatePrices(prices: any): Observable<any> {
-    return this.http.put<any>(`${APP_CONFIG.apiUrl}/meta/config/prices`, prices);
+    return this.http.put<any>(`${this.clientConfig.getApiUrl()}/meta/config/prices`, prices, this.httpOptions);
   }
 }

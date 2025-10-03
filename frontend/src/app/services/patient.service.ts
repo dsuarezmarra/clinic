@@ -3,20 +3,31 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { APP_CONFIG } from '../config/app.config';
 import { CreatePatientRequest, Patient, PatientFile, PatientListResponse, PatientSearchParams } from '../models/patient.model';
+import { ClientConfigService } from './client-config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PatientService {
-  private apiUrl = `${APP_CONFIG.apiUrl}/patients`;
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json; charset=utf-8',
-      'Accept': 'application/json; charset=utf-8'
-    })
-  };
+  private apiUrl: string;
+  private httpOptions: { headers: HttpHeaders };
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private clientConfig: ClientConfigService
+  ) {
+    // Obtener URL del backend desde la configuración del cliente
+    this.apiUrl = `${this.clientConfig.getApiUrl()}/patients`;
+    
+    // Configurar headers incluyendo X-Tenant-Slug para multi-tenant
+    this.httpOptions = {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json; charset=utf-8',
+        'Accept': 'application/json; charset=utf-8',
+        ...this.clientConfig.getTenantHeader()
+      })
+    };
+  }
 
   // Obtener lista de pacientes
   getPatients(params?: PatientSearchParams): Observable<PatientListResponse> {

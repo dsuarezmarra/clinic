@@ -2,6 +2,28 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
 
+/* ========================================
+   CSS VARIABLES - MULTI-CLIENTE
+   Estos valores se inyectan dinámicamente
+   desde ClientConfigService.applyTheme()
+   ======================================== */
+:root {
+  /* Colores principales del tema */
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --accent-color: #48c774;
+  
+  /* Gradientes */
+  --header-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  
+  /* Botones */
+  --button-color: #667eea;
+  --button-hover: #5a6fd8;
+  
+  /* Estados de foco (calculados a partir del primary) */
+  --focus-shadow: rgba(102, 126, 234, 0.25);
+}
+
 /* Reset global styles and eliminate pseudo-elements */
 *,
 *::before,
@@ -20,7 +42,7 @@ body {
 
 /* Clinic custom styles */
 .clinic-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--header-gradient);
     color: white;
     padding: 1rem 0;
     margin-bottom: 2rem;
@@ -45,13 +67,13 @@ body {
 }
 
 .btn-primary {
-    background-color: #667eea;
-    border-color: #667eea;
+    background-color: var(--button-color);
+    border-color: var(--button-color);
 }
 
 .btn-primary:hover {
-    background-color: #5a6fd8;
-    border-color: #5a6fd8;
+    background-color: var(--button-hover);
+    border-color: var(--button-hover);
 }
 
 .btn-outline-light:hover {
@@ -73,7 +95,7 @@ body {
 }
 
 .card-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--header-gradient);
     color: white;
     border-radius: 0.75rem 0.75rem 0 0 !important;
     border: none;
@@ -100,8 +122,8 @@ body {
 
 /* Form styles */
 .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem var(--focus-shadow);
 }
 
 /* Responsive adjustments */

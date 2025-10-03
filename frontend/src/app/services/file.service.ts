@@ -1,20 +1,34 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { APP_CONFIG } from '../config/app.config';
 import { FileUploadData, PatientFile } from '../models/file.model';
+import { ClientConfigService } from './client-config.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class FileService {
-    private apiUrl = `${APP_CONFIG.apiUrl}/files`;
+    private apiUrl: string;
+    private httpOptions: { headers: HttpHeaders };
 
-    constructor(private http: HttpClient) { }
+    constructor(
+        private http: HttpClient,
+        private clientConfig: ClientConfigService
+    ) {
+        // Obtener URL del backend desde la configuración del cliente
+        this.apiUrl = `${this.clientConfig.getApiUrl()}/files`;
+        
+        // Configurar headers incluyendo X-Tenant-Slug para multi-tenant
+        this.httpOptions = {
+            headers: new HttpHeaders({
+                ...this.clientConfig.getTenantHeader()
+            })
+        };
+    }
 
     // Obtener archivos de un paciente
     getPatientFiles(patientId: string): Observable<PatientFile[]> {
-        return this.http.get<PatientFile[]>(`${this.apiUrl}/patient/${patientId}`);
+        return this.http.get<PatientFile[]>(`${this.apiUrl}/patient/${patientId}`, this.httpOptions);
     }
 
     // Subir archivo
@@ -26,19 +40,22 @@ export class FileService {
             formData.append('description', fileData.description);
         }
 
-        return this.http.post<PatientFile>(`${this.apiUrl}/patient/${patientId}`, formData);
+        // Para FormData, crear headers sin Content-Type (el navegador lo asigna automáticamente)
+        const uploadHeaders = new HttpHeaders(this.clientConfig.getTenantHeader());
+        return this.http.post<PatientFile>(`${this.apiUrl}/patient/${patientId}`, formData, { headers: uploadHeaders });
     }
 
     // Descargar archivo
     downloadFile(fileId: string): Observable<Blob> {
         return this.http.get(`${this.apiUrl}/${fileId}/download`, {
-            responseType: 'blob'
+            responseType: 'blob',
+            headers: this.httpOptions.headers
         });
     }
 
     // Eliminar archivo
     deleteFile(fileId: string): Observable<void> {
-        return this.http.delete<void>(`${this.apiUrl}/${fileId}`);
+        return this.http.delete<void>(`${this.apiUrl}/${fileId}`, this.httpOptions);
     }
 
     // Obtener URL de vista previa

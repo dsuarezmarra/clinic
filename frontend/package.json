@@ -7,7 +7,11 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:clinic-frontend": "node dist/clinic-frontend/server/server.mjs"
+    "serve:ssr:clinic-frontend": "node dist/clinic-frontend/server/server.mjs",
+    "generate:manifest": "node scripts/generate-manifest.js",
+    "prebuild": "npm run generate:manifest",
+    "build:masajecorporal": "cross-env VITE_CLIENT_ID=masajecorporaldeportivo npm run build",
+    "build:actifisio": "cross-env VITE_CLIENT_ID=actifisio npm run build"
   },
   "private": true,
   "dependencies": {

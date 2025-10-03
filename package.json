@@ -6,9 +6,13 @@
   "scripts": {
     "build:frontend": "cd frontend && npm install --legacy-peer-deps --no-audit --no-fund && npm run build",
     "start:desktop": "electron .",
-  "pack:desktop": "npm run build:frontend && electron-builder --win dir --x64",
-  "pack:desktop:ep": "npm run build:frontend && electron-packager . Clinic --platform=win32 --arch=x64 --out=dist --overwrite",
-  "pack:desktop:nsis": "npm run build:frontend && electron-builder --win nsis --x64"
+    "pack:desktop": "npm run build:frontend && electron-builder --win dir --x64",
+    "pack:desktop:ep": "npm run build:frontend && electron-packager . Clinic --platform=win32 --arch=x64 --out=dist --overwrite",
+    "pack:desktop:nsis": "npm run build:frontend && electron-builder --win nsis --x64",
+    "generate:manifest": "node scripts/generate-manifest.js",
+    "build:client": "npm run generate:manifest && npm run build:frontend",
+    "build:masajecorporal": "cross-env VITE_CLIENT_ID=masajecorporaldeportivo npm run build:client",
+    "build:actifisio": "cross-env VITE_CLIENT_ID=actifisio npm run build:client"
   },
   "devDependencies": {
     "electron": "^26.0.0",

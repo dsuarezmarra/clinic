@@ -43,8 +43,8 @@ export const actifisioConfig: ClientConfig = {
   
   // Configuración de backend (API compartida)
   backend: {
-    apiUrl: 'http://localhost:3000/api'  // Desarrollo local
-    // apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'  // Producción
+    apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'  // Producción (compartido)
+    // apiUrl: 'http://localhost:3000/api'  // Desarrollo local
   },
   
   // Configuración de PWA

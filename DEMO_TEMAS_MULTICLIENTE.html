@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo Multi-Cliente - Comparación de Temas</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .client-demo {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .client-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .demo-header {
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .demo-header h2 {
+            margin: 0;
+            font-size: 28px;
+        }
+        
+        .demo-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .demo-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .demo-card {
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            color: white;
+        }
+        
+        .info-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .info-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        
+        .info-value {
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Cliente 1: Masaje Corporal Deportivo (Azul/Morado) */
+        .client1 .demo-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .client1 .demo-btn {
+            background-color: #667eea;
+        }
+        
+        .client1 .demo-btn:hover {
+            background-color: #5a6fd8;
+        }
+        
+        .client1 .demo-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        /* Cliente 2: Actifisio (Naranja/Amarillo) */
+        .client2 .demo-header {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
+        }
+        
+        .client2 .demo-btn {
+            background-color: #ff6b35;
+        }
+        
+        .client2 .demo-btn:hover {
+            background-color: #e55a2b;
+        }
+        
+        .client2 .demo-card {
+            background: linear-gradient(135deg, #ff6b35 0%, #f7b731 100%);
+        }
+        
+        .instructions {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .instructions h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        
+        .instructions code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .instructions pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        @media (max-width: 1024px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Demostración Multi-Cliente - Sistema de Temas</h1>
+        
+        <div class="comparison">
+            <!-- Cliente 1: Masaje Corporal Deportivo -->
+            <div class="client-demo client1">
+                <div class="client-name">Cliente 1: Masaje Corporal Deportivo</div>
+                
+                <div class="demo-header">
+                    <h2>MCD</h2>
+                    <p>Tema: Azul + Morado</p>
+                </div>
+                
+                <div class="demo-buttons">
+                    <button class="demo-btn">Agendar Cita</button>
+                    <button class="demo-btn">Ver Pacientes</button>
+                    <button class="demo-btn">Configuración</button>
+                </div>
+                
+                <div class="demo-card">
+                    <h3 style="margin-top: 0;">Tarjeta de Ejemplo</h3>
+                    <p>Este es el aspecto de las tarjetas con el gradiente azul/morado.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Configuración del Cliente</h3>
+                    <div class="info-item">
+                        <span class="info-label">Tenant Slug:</span>
+                        <span class="info-value">masajecorporaldeportivo</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Color Primario:</span>
+                        <span class="info-value">#667eea</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Color Secundario:</span>
+                        <span class="info-value">#764ba2</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Gradiente:</span>
+                        <span class="info-value">linear-gradient(135deg, #667eea 0%, #764ba2 100%)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Cliente 2: Actifisio -->
+            <div class="client-demo client2">
+                <div class="client-name">Cliente 2: Actifisio</div>
+                
+                <div class="demo-header">
+                    <h2>FisioCentro</h2>
+                    <p>Tema: Naranja + Amarillo</p>
+                </div>
+                
+                <div class="demo-buttons">
+                    <button class="demo-btn">Agendar Cita</button>
+                    <button class="demo-btn">Ver Pacientes</button>
+                    <button class="demo-btn">Configuración</button>
+                </div>
+                
+                <div class="demo-card">
+                    <h3 style="margin-top: 0;">Tarjeta de Ejemplo</h3>
+                    <p>Este es el aspecto de las tarjetas con el gradiente naranja/amarillo.</p>
+                </div>
+                
+                <div class="info-section">
+                    <h3>Configuración del Cliente</h3>
+                    <div class="info-item">
+                        <span class="info-label">Tenant Slug:</span>
+                        <span class="info-value">actifisio</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Color Primario:</span>
+                        <span class="info-value">#ff6b35</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Color Secundario:</span>
+                        <span class="info-value">#f7b731</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Gradiente:</span>
+                        <span class="info-value">linear-gradient(135deg, #ff6b35 0%, #f7b731 100%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h2>📝 Instrucciones de Uso</h2>
+            
+            <h3>1. Build con Cliente Específico</h3>
+            <pre>
+# Cliente 1 (Masaje Corporal Deportivo - Azul/Morado)
+$env:VITE_CLIENT_ID = "masajecorporaldeportivo"
+ng build --configuration production
+
+# Cliente 2 (Actifisio - Naranja/Amarillo)
+$env:VITE_CLIENT_ID = "actifisio"
+ng build --configuration production
+            </pre>
+            
+            <h3>2. Usar Script Automatizado</h3>
+            <pre>
+# Build para Cliente 1
+.\scripts\build-client.ps1 -ClientId masajecorporaldeportivo
+
+# Build para Cliente 2
+.\scripts\build-client.ps1 -ClientId actifisio
+
+# Build por defecto (sin variable)
+.\scripts\build-client.ps1 -ClientId default
+            </pre>
+            
+            <h3>3. Configurar en Vercel</h3>
+            <p>En la configuración del proyecto en Vercel, agregar:</p>
+            <pre>
+Environment Variables:
+  VITE_CLIENT_ID = masajecorporaldeportivo  (o actifisio)
+            </pre>
+            
+            <h3>4. Verificar Configuración Cargada</h3>
+            <p>Abre la consola del navegador después de cargar la app y verás:</p>
+            <pre>
+🏢 Cliente cargado: Masaje Corporal Deportivo
+🎨 Tema aplicado: #667eea
+🔑 Tenant Slug: masajecorporaldeportivo
+            </pre>
+            
+            <h3>5. Agregar Nuevo Cliente</h3>
+            <ol>
+                <li>Crear archivo <code>src/config/clients/nuevocliente.config.ts</code></li>
+                <li>Registrar en <code>src/config/config.loader.ts</code></li>
+                <li>Crear carpeta <code>src/assets/clients/nuevocliente/</code></li>
+                <li>Copiar logo del cliente</li>
+                <li>Build: <code>$env:VITE_CLIENT_ID = "nuevocliente"; ng build</code></li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
+

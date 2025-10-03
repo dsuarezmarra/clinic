@@ -2,7 +2,7 @@
     "name": "Masaje Corporal Deportivo",
     "short_name": "Clínica MCD",
     "description": "Sistema de gestión para clínica de masaje corporal deportivo",
-    "theme_color": "#007bff",
+    "theme_color": "#667eea",
     "background_color": "#ffffff",
     "display": "standalone",
     "orientation": "portrait",
@@ -10,37 +10,37 @@
     "start_url": "/",
     "icons": [
         {
-            "src": "assets/logo-clinica.png",
+            "src": "assets/clients/masajecorporaldeportivo/logo.png",
             "sizes": "192x192",
             "type": "image/png",
             "purpose": "maskable any"
         },
         {
-            "src": "assets/logo-clinica.png",
+            "src": "assets/clients/masajecorporaldeportivo/logo.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable any"
         },
         {
-            "src": "assets/logo-clinica.png",
+            "src": "assets/clients/masajecorporaldeportivo/logo.png",
             "sizes": "144x144",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "assets/logo-clinica.png",
+            "src": "assets/clients/masajecorporaldeportivo/logo.png",
             "sizes": "96x96",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "assets/logo-clinica.png",
+            "src": "assets/clients/masajecorporaldeportivo/logo.png",
             "sizes": "72x72",
             "type": "image/png",
             "purpose": "any"
         },
         {
-            "src": "assets/logo-clinica.png",
+            "src": "assets/clients/masajecorporaldeportivo/logo.png",
             "sizes": "48x48",
             "type": "image/png",
             "purpose": "any"
@@ -49,8 +49,9 @@
     "categories": [
         "health",
         "medical",
-        "business"
+        "productivity"
     ],
+    "dir": "ltr",
     "lang": "es",
-    "dir": "ltr"
+    "screenshots": []
 }
