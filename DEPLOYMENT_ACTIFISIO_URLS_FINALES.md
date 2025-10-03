@@ -10,21 +10,25 @@
 ### 🟠 ACTIFISIO (Nuevo Cliente)
 
 **Frontend Principal:**
+
 ```
 https://actifisio.vercel.app
 ```
 
 **Deployment URL (alternativa):**
+
 ```
 https://clinic-frontend-a3s933jtk-davids-projects-8fa96e54.vercel.app
 ```
 
 **Backend (compartido):**
+
 ```
 https://masajecorporaldeportivo-api.vercel.app/api
 ```
 
 **Tablas en Supabase:**
+
 - `patients_actifisio`
 - `appointments_actifisio`
 - `credit_packs_actifisio`
@@ -40,16 +44,19 @@ https://masajecorporaldeportivo-api.vercel.app/api
 ### 🔵 MASAJE CORPORAL DEPORTIVO (Cliente Original)
 
 **Frontend Principal:**
+
 ```
 https://masajecorporaldeportivo.vercel.app
 ```
 
 **Backend (compartido):**
+
 ```
 https://masajecorporaldeportivo-api.vercel.app/api
 ```
 
 **Tablas en Supabase:**
+
 - `patients_masajecorporaldeportivo`
 - `appointments_masajecorporaldeportivo`
 - `credit_packs_masajecorporaldeportivo`
@@ -69,6 +76,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 **Abrir:** https://actifisio.vercel.app
 
 **Verificar:**
+
 - ✅ Logo naranja/amarillo
 - ✅ Tema naranja (#ff6b35)
 - ✅ Título: "Actifisio"
@@ -92,6 +100,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 4. Guardar
 
 **Resultado esperado:**
+
 - ✅ Paciente creado
 - ✅ Guardado en `patients_actifisio`
 
@@ -105,6 +114,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 2. Buscar: "Juan Prueba Actifisio"
 
 **Resultado esperado:**
+
 - ✅ NO aparece en Masaje Corporal
 - ✅ Datos completamente aislados
 
@@ -121,6 +131,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 5. Ver "Request Headers"
 
 **Buscar:**
+
 ```
 X-Tenant-Slug: actifisio  ✅
 ```
@@ -187,7 +198,7 @@ X-Tenant-Slug: actifisio  ✅
 - [x] Manifest PWA generado (naranja/amarillo)
 - [x] Frontend accesible
 - [x] Backend compartido funcionando
-- [x] Tablas Supabase con sufijo _actifisio
+- [x] Tablas Supabase con sufijo \_actifisio
 - [x] Foreign Keys creadas (8 total)
 - [x] Índices creados (8 total)
 - [x] Multi-tenant funcionando
@@ -207,12 +218,13 @@ SELECT * FROM patients_actifisio;
 SELECT * FROM appointments_actifisio;
 
 -- Contar registros
-SELECT 
+SELECT
   (SELECT COUNT(*) FROM patients_actifisio) as actifisio_patients,
   (SELECT COUNT(*) FROM patients_masajecorporaldeportivo) as mcd_patients;
 ```
 
 **Resultado esperado:**
+
 - Diferentes números de pacientes por cliente
 - Datos completamente separados
 
@@ -221,11 +233,13 @@ SELECT
 ## 📱 MANIFEST PWA
 
 **Verificar:**
+
 ```
 https://actifisio.vercel.app/manifest.json
 ```
 
 **Contenido esperado:**
+
 ```json
 {
   "name": "Actifisio",
@@ -251,6 +265,7 @@ https://actifisio.vercel.app/manifest.json
 Seguir la guía: **GUIA_PRUEBAS_ACTIFISIO.md**
 
 Pruebas mínimas:
+
 1. ✅ Crear paciente en Actifisio
 2. ✅ Crear cita
 3. ✅ Verificar aislamiento
@@ -261,7 +276,7 @@ Pruebas mínimas:
 
 1. **URL Frontend:** https://actifisio.vercel.app
 2. **Credenciales:** (si es necesario)
-3. **Documentación:** 
+3. **Documentación:**
    - Manual de usuario
    - Guía de funcionalidades
 4. **Soporte:** Contacto para dudas
@@ -273,6 +288,7 @@ Pruebas mínimas:
 ### Problema: Logo no se ve
 
 **Solución:**
+
 1. Verificar archivo: `frontend/src/assets/clients/actifisio/logo.png`
 2. Verificar manifest.json generado
 3. Limpiar caché del navegador (Ctrl+Shift+R)
@@ -280,6 +296,7 @@ Pruebas mínimas:
 ### Problema: Datos aparecen mezclados
 
 **Verificar:**
+
 1. Header `X-Tenant-Slug` en DevTools
 2. Backend logs en Vercel
 3. Tablas en Supabase (sufijo correcto)
@@ -287,6 +304,7 @@ Pruebas mínimas:
 ### Problema: Error 500
 
 **Verificar:**
+
 1. Variables de entorno en Vercel
 2. Credenciales Supabase
 3. Logs de error (Vercel → Logs)
@@ -298,11 +316,13 @@ Pruebas mínimas:
 ### Logs de Vercel
 
 **Frontend:**
+
 ```
 https://vercel.com/davids-projects-8fa96e54/clinic-frontend
 ```
 
 **Backend:**
+
 ```
 https://vercel.com/davids-projects-8fa96e54/masajecorporaldeportivo-api
 ```
@@ -345,10 +365,12 @@ https://supabase.com/dashboard
 ## 💰 COSTOS
 
 **Vercel:**
+
 - Frontend Actifisio: Free tier ✅
 - Backend Compartido: Free tier ✅
 
 **Supabase:**
+
 - Proyecto Compartido: Free tier ✅
 - Tablas adicionales: Sin costo ✅
 

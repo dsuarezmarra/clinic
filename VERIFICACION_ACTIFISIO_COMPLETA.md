@@ -12,6 +12,7 @@
 ### ✅ SÍ - El sistema está completamente funcional
 
 **Flujo confirmado:**
+
 1. Frontend Actifisio en `actifisio.vercel.app` → **✅ Detecta tenant: `actifisio`**
 2. Interceptor HTTP agrega header → **✅ `X-Tenant-Slug: actifisio`**
 3. Backend recibe request → **✅ Middleware detecta tenant**
@@ -29,13 +30,13 @@
 ```typescript
 export const actifisioConfig: ClientConfig = {
   // ✅ Identificador único para el backend
-  tenantSlug: 'actifisio',
-  
+  tenantSlug: "actifisio",
+
   // ✅ Backend compartido
   backend: {
-    apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'
+    apiUrl: "https://masajecorporaldeportivo-api.vercel.app/api",
   },
-  
+
   // ... resto de config
 };
 ```
@@ -53,16 +54,16 @@ export const actifisioConfig: ClientConfig = {
 ```typescript
 function getTenantSlug(): string {
   const hostname = window.location.hostname;
-  
+
   // Para actifisio.vercel.app
-  if (hostname.includes('.vercel.app')) {
-    const parts = hostname.split('.');
-    const firstPart = parts[0];  // "actifisio"
+  if (hostname.includes(".vercel.app")) {
+    const parts = hostname.split(".");
+    const firstPart = parts[0]; // "actifisio"
     return firstPart;
   }
-  
+
   // Fallback: variable de entorno
-  return import.meta.env?.VITE_CLIENT_ID || 'masajecorporaldeportivo';
+  return import.meta.env?.VITE_CLIENT_ID || "masajecorporaldeportivo";
 }
 ```
 
@@ -87,21 +88,20 @@ X-Tenant-Slug: actifisio  ← ✅ Header agregado automáticamente
 ```javascript
 function injectDatabaseMiddleware(req, res, next) {
   // ✅ Lee el header X-Tenant-Slug
-  const tenantSlug = req.headers['x-tenant-slug'];
-  
+  const tenantSlug = req.headers["x-tenant-slug"];
+
   if (tenantSlug) {
     console.log(`📋 [Multi-Tenant] Tenant detectado: ${tenantSlug}`);
   }
-  
+
   // ✅ Crea DatabaseManager con el tenant
-  getManagerForTenant(tenantSlug)
-    .then(dbManager => {
-      req.dbManager = dbManager;
-      req.dbStatus = {
-        tenant: tenantSlug || 'legacy'  // ✅ "actifisio"
-      };
-      next();
-    });
+  getManagerForTenant(tenantSlug).then((dbManager) => {
+    req.dbManager = dbManager;
+    req.dbStatus = {
+      tenant: tenantSlug || "legacy", // ✅ "actifisio"
+    };
+    next();
+  });
 }
 ```
 
@@ -124,31 +124,31 @@ function injectDatabaseMiddleware(req, res, next) {
 
 ```javascript
 class DatabaseManager {
-    constructor(tenantSlug = null) {
-        this.tenantSlug = tenantSlug;  // ✅ "actifisio"
-    }
+  constructor(tenantSlug = null) {
+    this.tenantSlug = tenantSlug; // ✅ "actifisio"
+  }
 
-    getTableName(baseTableName) {
-        if (this.tenantSlug) {
-            const tableName = `${baseTableName}_${this.tenantSlug}`;
-            console.log(`📋 [Multi-Tenant] Usando tabla: ${tableName}`);
-            return tableName;
-        }
-        return baseTableName;  // Fallback sin tenant
+  getTableName(baseTableName) {
+    if (this.tenantSlug) {
+      const tableName = `${baseTableName}_${this.tenantSlug}`;
+      console.log(`📋 [Multi-Tenant] Usando tabla: ${tableName}`);
+      return tableName;
     }
+    return baseTableName; // Fallback sin tenant
+  }
 }
 ```
 
 **Ejemplos de conversión para Actifisio:**
 
-| Base Table | Tenant Slug | Resultado |
-|------------|-------------|-----------|
-| `patients` | `actifisio` | `patients_actifisio` ✅ |
-| `appointments` | `actifisio` | `appointments_actifisio` ✅ |
-| `credit_packs` | `actifisio` | `credit_packs_actifisio` ✅ |
-| `patient_files` | `actifisio` | `patient_files_actifisio` ✅ |
-| `invoices` | `actifisio` | `invoices_actifisio` ✅ |
-| `invoice_items` | `actifisio` | `invoice_items_actifisio` ✅ |
+| Base Table           | Tenant Slug | Resultado                         |
+| -------------------- | ----------- | --------------------------------- |
+| `patients`           | `actifisio` | `patients_actifisio` ✅           |
+| `appointments`       | `actifisio` | `appointments_actifisio` ✅       |
+| `credit_packs`       | `actifisio` | `credit_packs_actifisio` ✅       |
+| `patient_files`      | `actifisio` | `patient_files_actifisio` ✅      |
+| `invoices`           | `actifisio` | `invoices_actifisio` ✅           |
+| `invoice_items`      | `actifisio` | `invoice_items_actifisio` ✅      |
 | `credit_redemptions` | `actifisio` | `credit_redemptions_actifisio` ✅ |
 
 **Logs esperados:**
@@ -247,7 +247,7 @@ SELECT * FROM public.patients_actifisio;  ✅
 
 ```javascript
 // Frontend ejecuta:
-getTenantSlug()
+getTenantSlug();
 // Retorna: "actifisio" ✅
 ```
 
@@ -277,11 +277,11 @@ X-Tenant-Slug: actifisio  ← ✅ Header presente
 
 ```javascript
 // req.headers['x-tenant-slug'] = "actifisio"
-const dbManager = new DatabaseManager('actifisio');
+const dbManager = new DatabaseManager("actifisio");
 
 // Insert paciente
 await dbManager.supabase
-  .from(dbManager.getTableName('patients'))  // 'patients_actifisio'
+  .from(dbManager.getTableName("patients")) // 'patients_actifisio'
   .insert({ firstName: "Juan", lastName: "Pérez" });
 
 // Query real:
@@ -299,11 +299,13 @@ await dbManager.supabase
 **❌ NO - Datos completamente aislados**
 
 **Masaje Corporal Deportivo:**
+
 - Tablas: `patients_masajecorporaldeportivo`, `appointments_masajecorporaldeportivo`, etc.
 - Tenant Slug: `masajecorporaldeportivo`
 - URL: `masajecorporaldeportivo.vercel.app`
 
 **Actifisio:**
+
 - Tablas: `patients_actifisio`, `appointments_actifisio`, etc.
 - Tenant Slug: `actifisio`
 - URL: `actifisio.vercel.app`
@@ -336,15 +338,15 @@ URL: https://actifisio.vercel.app/patients
 
 ```typescript
 // tenant.interceptor.ts
-const hostname = window.location.hostname;  // "actifisio.vercel.app"
-const tenantSlug = "actifisio";  // ✅ Extraído del hostname
+const hostname = window.location.hostname; // "actifisio.vercel.app"
+const tenantSlug = "actifisio"; // ✅ Extraído del hostname
 ```
 
 ### 3. Frontend hace petición HTTP
 
 ```typescript
 // patient.service.ts
-this.http.get('/api/patients')
+this.http.get("/api/patients");
 ```
 
 ### 4. Interceptor agrega header
@@ -359,8 +361,8 @@ X-Tenant-Slug: actifisio  ← ✅ Agregado por interceptor
 
 ```javascript
 // database-middleware.js
-const tenantSlug = req.headers['x-tenant-slug'];  // "actifisio"
-const dbManager = new DatabaseManager('actifisio');
+const tenantSlug = req.headers["x-tenant-slug"]; // "actifisio"
+const dbManager = new DatabaseManager("actifisio");
 req.dbManager = dbManager;
 ```
 
@@ -368,13 +370,13 @@ req.dbManager = dbManager;
 
 ```javascript
 // routes/patients.js
-router.get('/patients', async (req, res) => {
-  const dbManager = req.dbManager;  // Tiene tenantSlug='actifisio'
-  
+router.get("/patients", async (req, res) => {
+  const dbManager = req.dbManager; // Tiene tenantSlug='actifisio'
+
   const { data } = await dbManager.supabase
-    .from(dbManager.getTableName('patients'))  // 'patients_actifisio'
-    .select('*');
-  
+    .from(dbManager.getTableName("patients")) // 'patients_actifisio'
+    .select("*");
+
   res.json(data);
 });
 ```

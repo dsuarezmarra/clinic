@@ -14,13 +14,14 @@
 ```sql
 -- ❌ INCORRECTO (sin comillas)
 ALTER TABLE public.appointments_actifisio
-ADD CONSTRAINT appointments_actifisio_patientId_fkey 
+ADD CONSTRAINT appointments_actifisio_patientId_fkey
 FOREIGN KEY (patientId)  -- ❌ PostgreSQL no encuentra esta columna
 REFERENCES public.patients_actifisio(id)
 ON DELETE CASCADE;
 ```
 
 **Error recibido:**
+
 ```
 ERROR: 42703: column "patientid" referenced in foreign key constraint does not exist
 ```
@@ -37,7 +38,7 @@ PostgreSQL convierte nombres sin comillas a minúsculas. Al buscar `patientId` s
 ```sql
 -- ✅ CORRECTO (con comillas dobles)
 ALTER TABLE public.appointments_actifisio
-ADD CONSTRAINT appointments_actifisio_patientId_fkey 
+ADD CONSTRAINT appointments_actifisio_patientId_fkey
 FOREIGN KEY ("patientId")  -- ✅ Comillas dobles respetan camelCase
 REFERENCES public.patients_actifisio(id)
 ON DELETE CASCADE;
@@ -80,6 +81,7 @@ ON invoice_items_actifisio(appointmentId) → ON invoice_items_actifisio("appoin
 ### Reglas de PostgreSQL
 
 1. **Sin comillas:** PostgreSQL convierte a minúsculas
+
    ```sql
    SELECT patientId FROM patients;
    -- PostgreSQL busca: patientid (todo minúsculas)
@@ -94,6 +96,7 @@ ON invoice_items_actifisio(appointmentId) → ON invoice_items_actifisio("appoin
 ### Mejores Prácticas
 
 **❌ Evitar:** camelCase sin comillas
+
 ```sql
 CREATE TABLE patients (
     patientId TEXT  -- Se guardará como "patientid"
@@ -101,6 +104,7 @@ CREATE TABLE patients (
 ```
 
 **✅ Mejor opción 1:** snake_case (estándar PostgreSQL)
+
 ```sql
 CREATE TABLE patients (
     patient_id TEXT  -- No necesita comillas
@@ -108,6 +112,7 @@ CREATE TABLE patients (
 ```
 
 **✅ Mejor opción 2:** camelCase CON comillas
+
 ```sql
 CREATE TABLE patients (
     "patientId" TEXT  -- Requiere comillas siempre
@@ -121,6 +126,7 @@ CREATE TABLE patients (
 **Archivo:** `AGREGAR_FOREIGN_KEYS_ACTIFISIO.sql`
 
 **Cambios totales:** 16 correcciones
+
 - 8 Foreign Keys corregidas
 - 8 Índices corregidos
 
@@ -131,14 +137,16 @@ CREATE TABLE patients (
 ## 🚀 PRÓXIMOS PASOS
 
 1. **Ejecutar script corregido:**
+
    - Abrir Supabase SQL Editor
    - Copiar `AGREGAR_FOREIGN_KEYS_ACTIFISIO.sql`
    - Ejecutar (Run)
 
 2. **Verificar éxito:**
+
    ```sql
    -- Deberías ver 8 foreign keys
-   SELECT constraint_name 
+   SELECT constraint_name
    FROM information_schema.table_constraints
    WHERE constraint_type = 'FOREIGN KEY'
      AND table_name LIKE '%_actifisio';
@@ -147,7 +155,7 @@ CREATE TABLE patients (
 3. **Verificar índices:**
    ```sql
    -- Deberías ver 8+ índices
-   SELECT indexname 
+   SELECT indexname
    FROM pg_indexes
    WHERE tablename LIKE '%_actifisio'
      AND indexname LIKE 'idx_%';

@@ -8,16 +8,19 @@
 ## 🌐 URLs DEL SISTEMA
 
 ### Frontend - Actifisio
+
 ```
 https://actifisio.vercel.app
 ```
 
 ### Frontend - Masaje Corporal Deportivo
+
 ```
 https://masajecorporaldeportivo.vercel.app
 ```
 
 ### Backend (Compartido)
+
 ```
 https://masajecorporaldeportivo-api.vercel.app/api
 ```
@@ -29,12 +32,14 @@ https://masajecorporaldeportivo-api.vercel.app/api
 ### 1️⃣ Verificar Deployment de Actifisio (2 min)
 
 **Pasos:**
+
 1. Abrir: https://actifisio.vercel.app
 2. Verificar que carga la aplicación
 3. Verificar logo de Actifisio (naranja/amarillo)
 4. Verificar colores del tema (naranja #ff6b35)
 
 **Resultado esperado:**
+
 - ✅ Logo de Actifisio visible
 - ✅ Tema naranja/amarillo aplicado
 - ✅ Título: "Actifisio"
@@ -44,6 +49,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 ### 2️⃣ Crear Paciente de Prueba en Actifisio (3 min)
 
 **Pasos:**
+
 1. Ir a: https://actifisio.vercel.app
 2. Click en "Pacientes" → "Añadir Paciente"
 3. Completar formulario:
@@ -57,6 +63,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 4. Guardar
 
 **Resultado esperado:**
+
 - ✅ Paciente creado exitosamente
 - ✅ Aparece en la lista de pacientes
 - ✅ ID generado automáticamente
@@ -66,6 +73,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 ### 3️⃣ Crear Cita para el Paciente (2 min)
 
 **Pasos:**
+
 1. En Actifisio, ir a "Calendario"
 2. Click en una fecha/hora
 3. Seleccionar paciente: "Juan Pérez Actifisio"
@@ -78,6 +86,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 5. Guardar
 
 **Resultado esperado:**
+
 - ✅ Cita creada exitosamente
 - ✅ Aparece en el calendario
 - ✅ Color naranja (tema Actifisio)
@@ -87,14 +96,16 @@ https://masajecorporaldeportivo-api.vercel.app/api
 ### 4️⃣ Verificar Aislamiento de Datos (5 min) ⚠️ CRÍTICO
 
 **Pasos:**
+
 1. Abrir en otra pestaña: https://masajecorporaldeportivo.vercel.app
 2. Ir a "Pacientes"
 3. Buscar: "Juan Pérez Actifisio"
 4. Verificar que NO aparece
-5. Ir a "Calendario" 
+5. Ir a "Calendario"
 6. Verificar que la cita de Actifisio NO aparece
 
 **Resultado esperado:**
+
 - ✅ Paciente "Juan Pérez Actifisio" NO visible en Masaje Corporal
 - ✅ Cita de Actifisio NO visible en Masaje Corporal
 - ✅ Datos completamente aislados
@@ -104,6 +115,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 ### 5️⃣ Verificar Tenant Header (Técnico - 5 min)
 
 **Pasos:**
+
 1. Abrir: https://actifisio.vercel.app
 2. Abrir DevTools (F12)
 3. Ir a "Network"
@@ -112,6 +124,7 @@ https://masajecorporaldeportivo-api.vercel.app/api
 6. Ver "Request Headers"
 
 **Resultado esperado:**
+
 ```
 X-Tenant-Slug: actifisio  ✅
 ```
@@ -121,6 +134,7 @@ X-Tenant-Slug: actifisio  ✅
 ### 6️⃣ Verificar Tablas en Supabase (5 min)
 
 **Pasos:**
+
 1. Abrir: https://supabase.com/dashboard
 2. Seleccionar proyecto
 3. Ir a "Table Editor"
@@ -128,6 +142,7 @@ X-Tenant-Slug: actifisio  ✅
 5. Verificar datos insertados
 
 **Consulta SQL:**
+
 ```sql
 -- Ver pacientes de Actifisio
 SELECT * FROM patients_actifisio;
@@ -143,6 +158,7 @@ SELECT * FROM appointments_actifisio;
 ```
 
 **Verificar aislamiento:**
+
 ```sql
 -- Pacientes de Masaje Corporal
 SELECT COUNT(*) FROM patients_masajecorporaldeportivo;
@@ -158,6 +174,7 @@ SELECT COUNT(*) FROM patients_actifisio;
 ### 7️⃣ Probar Foreign Keys (Opcional - 3 min)
 
 **Pasos:**
+
 1. En Actifisio, ir a lista de pacientes
 2. Seleccionar "Juan Pérez Actifisio"
 3. Click en "Eliminar"
@@ -166,6 +183,7 @@ SELECT COUNT(*) FROM patients_actifisio;
 6. Verificar que la cita también se eliminó (CASCADE)
 
 **Resultado esperado:**
+
 - ✅ Paciente eliminado
 - ✅ Cita eliminada automáticamente (ON DELETE CASCADE)
 - ✅ No quedan datos huérfanos
@@ -181,10 +199,12 @@ SELECT COUNT(*) FROM patients_actifisio;
 **Pasos:**
 
 1. **En Actifisio:**
+
    - Crear paciente: "María García Actifisio"
    - Crear cita para María
 
 2. **En Masaje Corporal:**
+
    - Verificar que María NO aparece
    - Crear paciente: "María García MCD"
    - Crear cita para María MCD
@@ -194,6 +214,7 @@ SELECT COUNT(*) FROM patients_actifisio;
    - Masaje Corporal: debe mostrar solo "María García MCD"
 
 **Resultado esperado:**
+
 - ✅ Cada cliente ve solo sus propios datos
 - ✅ Nombres idénticos no causan conflictos
 - ✅ Aislamiento total confirmado
@@ -205,12 +226,14 @@ SELECT COUNT(*) FROM patients_actifisio;
 ### Test de Carga
 
 **Pasos:**
+
 1. Crear 10 pacientes en Actifisio
 2. Crear 10 citas
 3. Listar pacientes
 4. Verificar tiempo de carga
 
 **Resultado esperado:**
+
 - ✅ Lista de pacientes carga < 1 segundo
 - ✅ Calendario carga < 2 segundos
 - ✅ Índices funcionando correctamente
@@ -222,33 +245,39 @@ SELECT COUNT(*) FROM patients_actifisio;
 ### 1. Paciente Duplicado (DNI)
 
 **Pasos:**
+
 1. Crear paciente con DNI: 11111111A
 2. Intentar crear otro con mismo DNI
 3. Verificar error
 
 **Resultado esperado:**
+
 - ❌ Error: "DNI ya existe"
 - ✅ No se crea el duplicado
 
 ### 2. Cita sin Paciente
 
 **Pasos:**
+
 1. Intentar crear cita sin seleccionar paciente
 2. Verificar validación
 
 **Resultado esperado:**
+
 - ❌ Error: "Paciente es obligatorio"
 - ✅ No se crea la cita
 
 ### 3. Foreign Key Constraint
 
 **Pasos:**
+
 1. Crear paciente: "Test FK"
 2. Crear cita para "Test FK"
 3. Eliminar paciente
 4. Verificar que cita también se eliminó
 
 **Resultado esperado:**
+
 - ✅ CASCADE funciona correctamente
 - ✅ No quedan citas huérfanas
 
@@ -259,6 +288,7 @@ SELECT COUNT(*) FROM patients_actifisio;
 ### Flujo Completo: Nuevo Paciente → Cita → Sesión
 
 **Pasos:**
+
 1. Crear paciente en Actifisio
 2. Crear pack de créditos (10 sesiones)
 3. Crear cita
@@ -267,6 +297,7 @@ SELECT COUNT(*) FROM patients_actifisio;
 6. Crear factura
 
 **Resultado esperado:**
+
 - ✅ Pack creado: 10 créditos disponibles
 - ✅ Cita completada: 9 créditos restantes
 - ✅ Factura generada con datos correctos
@@ -279,6 +310,7 @@ SELECT COUNT(*) FROM patients_actifisio;
 ### Instalar como App
 
 **Pasos:**
+
 1. Abrir: https://actifisio.vercel.app
 2. Click en "Instalar App" (navegador)
 3. Verificar manifest:
@@ -287,6 +319,7 @@ SELECT COUNT(*) FROM patients_actifisio;
    - Logo: Actifisio
 
 **Resultado esperado:**
+
 - ✅ App instalable
 - ✅ Manifest correcto
 - ✅ Ícono de Actifisio
@@ -300,8 +333,9 @@ SELECT COUNT(*) FROM patients_actifisio;
 
 ```markdown
 # Reporte de Pruebas - Actifisio
-Fecha: ___________
-Realizado por: ___________
+
+Fecha: ****\_\_\_****
+Realizado por: ****\_\_\_****
 
 ## Resultados
 
@@ -318,12 +352,12 @@ Realizado por: ___________
 
 ## Problemas Encontrados
 
-1. _____________________
-2. _____________________
+1. ***
+2. ***
 
 ## Notas Adicionales
 
-_____________________
+---
 ```
 
 ---
@@ -333,6 +367,7 @@ _____________________
 ### Problema: Datos no aparecen
 
 **Verificar:**
+
 1. Header `X-Tenant-Slug` en DevTools
 2. Tablas en Supabase (sufijo correcto)
 3. Logs del backend (Vercel Logs)
@@ -340,6 +375,7 @@ _____________________
 ### Problema: Error 500
 
 **Verificar:**
+
 1. Variables de entorno en Vercel
 2. Credenciales de Supabase
 3. Logs de error en Vercel
@@ -347,6 +383,7 @@ _____________________
 ### Problema: Logo no se ve
 
 **Verificar:**
+
 1. Archivo existe: `assets/clients/actifisio/logo.png`
 2. Build incluye assets
 3. Config tiene ruta correcta

@@ -37,22 +37,22 @@ appointmentId text  -- ❌ Sin Foreign Key a appointments_actifisio
 
 ```sql
 -- appointments_masajecorporaldeportivo
-CONSTRAINT appointments_patientId_fkey 
-  FOREIGN KEY (patientId) 
+CONSTRAINT appointments_patientId_fkey
+  FOREIGN KEY (patientId)
   REFERENCES patients_masajecorporaldeportivo(id)
 
 -- credit_packs_masajecorporaldeportivo
-CONSTRAINT credit_packs_patientId_fkey 
-  FOREIGN KEY (patientId) 
+CONSTRAINT credit_packs_patientId_fkey
+  FOREIGN KEY (patientId)
   REFERENCES patients_masajecorporaldeportivo(id)
 
 -- credit_redemptions_masajecorporaldeportivo
-CONSTRAINT credit_redemptions_creditPackId_fkey 
-  FOREIGN KEY (creditPackId) 
+CONSTRAINT credit_redemptions_creditPackId_fkey
+  FOREIGN KEY (creditPackId)
   REFERENCES credit_packs_masajecorporaldeportivo(id)
 
-CONSTRAINT credit_redemptions_appointmentId_fkey 
-  FOREIGN KEY (appointmentId) 
+CONSTRAINT credit_redemptions_appointmentId_fkey
+  FOREIGN KEY (appointmentId)
   REFERENCES appointments_masajecorporaldeportivo(id)
 
 -- ... etc (8 FKs en total)
@@ -62,16 +62,16 @@ CONSTRAINT credit_redemptions_appointmentId_fkey
 
 ## 📋 FOREIGN KEYS A AGREGAR
 
-| # | Tabla | Columna | Referencia | ON DELETE |
-|---|-------|---------|------------|-----------|
-| 1 | appointments_actifisio | patientId | patients_actifisio(id) | CASCADE |
-| 2 | credit_packs_actifisio | patientId | patients_actifisio(id) | CASCADE |
-| 3 | credit_redemptions_actifisio | creditPackId | credit_packs_actifisio(id) | CASCADE |
-| 4 | credit_redemptions_actifisio | appointmentId | appointments_actifisio(id) | CASCADE |
-| 5 | patient_files_actifisio | patientId | patients_actifisio(id) | CASCADE |
-| 6 | invoices_actifisio | patientId | patients_actifisio(id) | SET NULL |
-| 7 | invoice_items_actifisio | invoiceId | invoices_actifisio(id) | CASCADE |
-| 8 | invoice_items_actifisio | appointmentId | appointments_actifisio(id) | SET NULL |
+| #   | Tabla                        | Columna       | Referencia                 | ON DELETE |
+| --- | ---------------------------- | ------------- | -------------------------- | --------- |
+| 1   | appointments_actifisio       | patientId     | patients_actifisio(id)     | CASCADE   |
+| 2   | credit_packs_actifisio       | patientId     | patients_actifisio(id)     | CASCADE   |
+| 3   | credit_redemptions_actifisio | creditPackId  | credit_packs_actifisio(id) | CASCADE   |
+| 4   | credit_redemptions_actifisio | appointmentId | appointments_actifisio(id) | CASCADE   |
+| 5   | patient_files_actifisio      | patientId     | patients_actifisio(id)     | CASCADE   |
+| 6   | invoices_actifisio           | patientId     | patients_actifisio(id)     | SET NULL  |
+| 7   | invoice_items_actifisio      | invoiceId     | invoices_actifisio(id)     | CASCADE   |
+| 8   | invoice_items_actifisio      | appointmentId | appointments_actifisio(id) | SET NULL  |
 
 **Total:** 8 Foreign Keys
 
@@ -82,20 +82,24 @@ CONSTRAINT credit_redemptions_appointmentId_fkey
 ### Opción 1: SQL Editor de Supabase (Recomendado)
 
 1. **Abrir Supabase Dashboard:**
+
    ```
    https://supabase.com/dashboard
    ```
 
 2. **Ir a SQL Editor:**
+
    - Click en "SQL Editor" en el menú lateral
    - Click en "New Query"
 
 3. **Copiar y pegar el script:**
+
    - Abrir: `AGREGAR_FOREIGN_KEYS_ACTIFISIO.sql`
    - Copiar todo el contenido
    - Pegar en el editor
 
 4. **Ejecutar:**
+
    - Click en "Run" (o Ctrl+Enter)
    - Esperar confirmación: "Success"
 
@@ -189,6 +193,7 @@ idx_invoice_items_actifisio_appointmentId
 ### 1. Integridad Referencial ✅
 
 **Antes (sin FKs):**
+
 ```sql
 -- Se puede crear una cita con patientId que no existe
 INSERT INTO appointments_actifisio (patientId, start, end)
@@ -197,6 +202,7 @@ VALUES ('id-inexistente', NOW(), NOW());
 ```
 
 **Después (con FKs):**
+
 ```sql
 -- No se puede crear una cita con patientId que no existe
 INSERT INTO appointments_actifisio (patientId, start, end)
@@ -211,6 +217,7 @@ VALUES ('id-inexistente', NOW(), NOW());
 **Escenario:** Eliminar un paciente
 
 **Antes (sin FKs):**
+
 ```sql
 DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 -- Paciente eliminado, pero quedan huérfanos:
@@ -221,6 +228,7 @@ DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 ```
 
 **Después (con FKs y CASCADE):**
+
 ```sql
 DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 -- Paciente eliminado Y automáticamente:
@@ -261,6 +269,7 @@ SELECT * FROM credit_redemptions_actifisio WHERE creditPackId = 'xxx';
 ### ON DELETE CASCADE
 
 **Afecta a:**
+
 - `appointments_actifisio.patientId`
 - `credit_packs_actifisio.patientId`
 - `credit_redemptions_actifisio.creditPackId`
@@ -272,6 +281,7 @@ SELECT * FROM credit_redemptions_actifisio WHERE creditPackId = 'xxx';
 Si eliminas el registro padre, SE ELIMINAN automáticamente todos los hijos.
 
 **Ejemplo:**
+
 ```sql
 DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 -- Elimina automáticamente:
@@ -285,6 +295,7 @@ DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 ### ON DELETE SET NULL
 
 **Afecta a:**
+
 - `invoices_actifisio.patientId`
 - `invoice_items_actifisio.appointmentId`
 
@@ -292,6 +303,7 @@ DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 Si eliminas el registro padre, el campo en el hijo se pone a NULL (pero el hijo NO se elimina).
 
 **Ejemplo:**
+
 ```sql
 DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 -- Las facturas NO se eliminan, pero su patientId = NULL
@@ -305,6 +317,7 @@ DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 ### Backend
 
 ✅ **No requiere cambios**
+
 - El backend ya funciona correctamente
 - Las Foreign Keys son transparentes para el código
 - Solo mejoran la integridad a nivel de base de datos
@@ -312,12 +325,14 @@ DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 ### Frontend
 
 ✅ **No requiere cambios**
+
 - El frontend ya funciona correctamente
 - No hay impacto visible para el usuario
 
 ### Base de Datos
 
 ✅ **Mejoras automáticas**
+
 - Integridad referencial garantizada
 - Eliminación en cascada automática
 - Performance mejorada con índices
@@ -326,13 +341,13 @@ DELETE FROM patients_actifisio WHERE id = 'paciente-123';
 
 ## ⏱️ TIEMPO ESTIMADO
 
-| Actividad | Tiempo |
-|-----------|--------|
-| Copiar script SQL | 1 min |
-| Ejecutar en Supabase | 30 seg |
-| Verificar FKs creadas | 2 min |
-| Verificar índices | 1 min |
-| **TOTAL** | **~5 min** |
+| Actividad             | Tiempo     |
+| --------------------- | ---------- |
+| Copiar script SQL     | 1 min      |
+| Ejecutar en Supabase  | 30 seg     |
+| Verificar FKs creadas | 2 min      |
+| Verificar índices     | 1 min      |
+| **TOTAL**             | **~5 min** |
 
 ---
 
