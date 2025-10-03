@@ -3,11 +3,13 @@
 ## URLs Finales de Producción
 
 ### 🌐 Frontend (Para el Cliente)
+
 - **URL Principal**: https://masajecorporaldeportivo.vercel.app/
 - URL de Deployment: https://clinic-frontend-hd1w19vvg-davids-projects-8fa96e54.vercel.app
 - Alias configurado: ✅ masajecorporaldeportivo.vercel.app
 
 ### 🔧 Backend (API)
+
 - **URL de API**: https://clinic-backend-cjwoqkgwo-davids-projects-8fa96e54.vercel.app
 - Base Path: `/api`
 
@@ -16,6 +18,7 @@
 ## 📊 Arquitectura Multi-Tenant Implementada
 
 ### Características
+
 - ✅ **Un proyecto Supabase** con tablas sufijadas por cliente
 - ✅ **Detección automática de tenant** desde hostname de la URL
 - ✅ **Header HTTP automático**: `X-Tenant-Slug` agregado por interceptor
@@ -40,12 +43,14 @@
 ## 🔐 Configuración del Tenant Principal
 
 ### Tenant: masajecorporaldeportivo
+
 - **Slug**: `masajecorporaldeportivo`
 - **Table Suffix**: `masajecorporaldeportivo`
 - **Estado**: ✅ Activo
 - **Base de datos**: Supabase (proyecto compartido)
 
 ### Tablas Creadas
+
 - `patients_masajecorporaldeportivo` → 216 pacientes
 - `appointments_masajecorporaldeportivo` → 18 citas
 - `credit_packs_masajecorporaldeportivo` → 6 packs
@@ -58,6 +63,7 @@
 ## 🛠️ Cambios Técnicos Implementados
 
 ### Backend (Node.js + Express)
+
 - ✅ Middleware `tenant.js` creado
 - ✅ **231 reemplazos** de nombres de tabla
 - ✅ **25 JOINs corregidos** para usar nombres dinámicos
@@ -65,6 +71,7 @@
 - ✅ Desplegado en Vercel con SSL bypass
 
 **Scripts de Conversión Ejecutados**:
+
 1. `convert-backend-to-multitenant.js` → 103 reemplazos
 2. `fix-remaining-table-refs.js` → 128 reemplazos
 3. `fix-table-refs-corrected.js` → 79 reemplazos
@@ -72,6 +79,7 @@
 5. `fix-joins-with-suffix.js` → 25 reemplazos en JOINs
 
 ### Frontend (Angular 20.2.1)
+
 - ✅ `tenant.interceptor.ts` creado (95 líneas)
 - ✅ Interceptor registrado en `app.config.ts`
 - ✅ API URL actualizada en `client.config.ts`
@@ -80,6 +88,7 @@
 - ✅ Alias configurado en Vercel
 
 **Lógica de Detección**:
+
 ```typescript
 // masajecorporaldeportivo.vercel.app → "masajecorporaldeportivo"
 // clinic-frontend-xyz.vercel.app → usa VITE_CLIENT_ID
@@ -88,6 +97,7 @@
 ```
 
 ### Database (Supabase PostgreSQL)
+
 - ✅ Tabla maestra `tenants` creada
 - ✅ 6 tablas renombradas con sufijo
 - ✅ **267 registros preservados** correctamente
@@ -101,6 +111,7 @@
 ### Tests Ejecutados
 
 #### Backend API
+
 ```bash
 # Endpoint: GET /api/patients
 # Header: X-Tenant-Slug: masajecorporaldeportivo
@@ -112,6 +123,7 @@
 ```
 
 #### Frontend
+
 ```bash
 # URL: https://masajecorporaldeportivo.vercel.app/
 # Status: ✅ HTTP 200 OK
@@ -124,6 +136,7 @@
 ## 📝 Commits Realizados
 
 ### Commit 1: Backend Multi-Tenant
+
 ```
 feat: Implementar arquitectura multi-tenant con sufijos de tabla
 
@@ -135,6 +148,7 @@ feat: Implementar arquitectura multi-tenant con sufijos de tabla
 ```
 
 ### Commit 2: Frontend Multi-Tenant
+
 ```
 feat: Configurar frontend multi-tenant con interceptor HTTP
 
@@ -146,6 +160,7 @@ feat: Configurar frontend multi-tenant con interceptor HTTP
 ```
 
 ### Commit 3: Alias Vercel
+
 ```
 chore: Configurar alias masajecorporaldeportivo.vercel.app en Vercel
 ```
@@ -155,6 +170,7 @@ chore: Configurar alias masajecorporaldeportivo.vercel.app en Vercel
 ## 🎯 Estado del Proyecto
 
 ### Completado (100%)
+
 - ✅ FASE 1: Tabla tenants creada
 - ✅ FASE 2: Tablas renombradas (267 registros preservados)
 - ✅ FASE 3: Backend multi-tenant (231 reemplazos + 25 JOINs)
@@ -164,6 +180,7 @@ chore: Configurar alias masajecorporaldeportivo.vercel.app en Vercel
 - ✅ Testing end-to-end
 
 ### URLs para Testing
+
 - **Frontend**: https://masajecorporaldeportivo.vercel.app/
 - **Backend**: https://clinic-backend-cjwoqkgwo-davids-projects-8fa96e54.vercel.app/api
 - **Supabase**: [URL del proyecto Supabase]
@@ -173,6 +190,7 @@ chore: Configurar alias masajecorporaldeportivo.vercel.app en Vercel
 ## 🔮 Próximos Pasos (Opcional)
 
 ### Para Agregar Nuevos Clientes
+
 1. Ejecutar script: `node backend/scripts/create-tenant.js`
 2. Ingresar datos del nuevo cliente
 3. Script crea automáticamente:
@@ -181,11 +199,13 @@ chore: Configurar alias masajecorporaldeportivo.vercel.app en Vercel
    - Configuración inicial
 
 ### Para Dominios Personalizados
+
 1. Configurar dominio en Vercel dashboard
 2. Agregar DNS CNAME apuntando a `cname.vercel-dns.com`
 3. El interceptor detectará automáticamente el tenant desde el dominio
 
 ### Monitoreo y Mantenimiento
+
 - Ver logs en: Vercel Dashboard → Logs
 - Métricas en: Supabase Dashboard → Database
 - Backups automáticos: Tabla `backup_history_[tenant]`
@@ -215,5 +235,5 @@ La aplicación **Masaje Corporal Deportivo** ha sido exitosamente convertida a u
 
 ---
 
-*Deployment completado el 2 de octubre de 2025*
-*Versión: 2.2.0 Multi-Tenant*
+_Deployment completado el 2 de octubre de 2025_
+_Versión: 2.2.0 Multi-Tenant_

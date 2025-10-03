@@ -4,10 +4,10 @@ import localeEs from '@angular/common/locales/es';
 import { ApplicationConfig, LOCALE_ID, isDevMode } from '@angular/core';
 import { provideClientHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
+import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { EncodingInterceptor } from './interceptors/encoding.interceptor';
 import { tenantInterceptor } from './interceptors/tenant.interceptor';
-import { provideServiceWorker } from '@angular/service-worker';
 
 registerLocaleData(localeEs);
 
