@@ -40,6 +40,19 @@
   <meta name="theme-color" content="#007bff">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="manifest" href="manifest.webmanifest">
+  
+  <!-- =============================================
+       INYECCIÓN DE CLIENT_ID PARA MULTI-TENANT
+       Este script debe estar ANTES del cierre de </head>
+       ============================================= -->
+  <script>
+    // Inyectar CLIENT_ID desde variable de entorno de build
+    // El placeholder __VITE_CLIENT_ID__ se reemplaza en postbuild
+    // Por defecto: 'masajecorporaldeportivo'
+    // Para Actifisio: buildear con VITE_CLIENT_ID=actifisio
+    window.__CLIENT_ID = '__VITE_CLIENT_ID__';
+    console.log('[index.html] CLIENT_ID inyectado:', window.__CLIENT_ID);
+  </script>
 </head>
 
 <body>

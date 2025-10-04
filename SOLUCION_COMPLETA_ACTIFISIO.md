@@ -11,18 +11,22 @@
 ### 1. ❌ Problema: Login de Vercel
 
 **Síntoma:**
+
 - `actifisio.vercel.app` redirigía a página de autenticación de Vercel
 - El cliente no podía acceder sin cuenta de Vercel
 
 **Causa:**
+
 - El proyecto `browser` tenía "Deployment Protection" activada
 
 **Solución:**
+
 - ✅ Desactivar "Standard Protection" en Vercel Dashboard
 - ✅ Cambiar a "Only Preview Deployments"
 - ✅ Production ahora es público
 
 **Resultado:**
+
 - ✅ `actifisio.vercel.app` accesible sin login
 - ✅ Deployment Protection solo en previews
 
@@ -31,10 +35,12 @@
 ### 2. ❌ Problema: Página se queda "pensando" y no carga
 
 **Síntoma:**
+
 - Después de desactivar protection, la página no cargaba
 - Se quedaba en blanco o "pensando" indefinidamente
 
 **Causa Raíz:**
+
 - El deployment usaba `index.csr.html` pero Vercel buscaba `index.html`
 - El `vercel.json` tenía rutas incorrectas
 - Faltaba el archivo `index.html` en el build
@@ -64,6 +70,7 @@ vercel alias set browser-lj6bxumgb-davids-projects-8fa96e54.vercel.app actifisio
 ```
 
 **Resultado:**
+
 - ✅ Página carga correctamente
 - ✅ Status HTTP 200
 - ✅ Contiene texto "Actifisio"
@@ -74,6 +81,7 @@ vercel alias set browser-lj6bxumgb-davids-projects-8fa96e54.vercel.app actifisio
 ## 📱 PRUEBAS PENDIENTES: PWA en Móvil
 
 ### Para Android:
+
 1. Abre Chrome/Edge en el móvil
 2. Ve a `https://actifisio.vercel.app`
 3. Espera unos segundos
@@ -81,6 +89,7 @@ vercel alias set browser-lj6bxumgb-davids-projects-8fa96e54.vercel.app actifisio
 5. O menú (3 puntos) → "Agregar a pantalla de inicio" / "Instalar app"
 
 ### Para iOS:
+
 1. Abre Safari en el iPhone/iPad
 2. Ve a `https://actifisio.vercel.app`
 3. Toca el botón "Compartir" (cuadrado con flecha hacia arriba)
@@ -100,32 +109,34 @@ vercel alias set browser-lj6bxumgb-davids-projects-8fa96e54.vercel.app actifisio
 
 ### ❌ ANTES
 
-| Aspecto | Estado |
-|---------|--------|
+| Aspecto         | Estado                    |
+| --------------- | ------------------------- |
 | Login de Vercel | ❌ Requería autenticación |
-| Carga de página | ❌ Se quedaba "pensando" |
-| PWA instalable | ❌ No se podía instalar |
-| Status HTTP | ❌ 401 Unauthorized |
+| Carga de página | ❌ Se quedaba "pensando"  |
+| PWA instalable  | ❌ No se podía instalar   |
+| Status HTTP     | ❌ 401 Unauthorized       |
 
 ### ✅ DESPUÉS
 
-| Aspecto | Estado |
-|---------|--------|
-| Login de Vercel | ✅ Acceso público |
-| Carga de página | ✅ Carga correctamente (200 OK) |
-| PWA instalable | ✅ Debería funcionar (probar en móvil) |
-| Status HTTP | ✅ 200 OK |
-| Contenido | ✅ Muestra "Actifisio" |
+| Aspecto         | Estado                                 |
+| --------------- | -------------------------------------- |
+| Login de Vercel | ✅ Acceso público                      |
+| Carga de página | ✅ Carga correctamente (200 OK)        |
+| PWA instalable  | ✅ Debería funcionar (probar en móvil) |
+| Status HTTP     | ✅ 200 OK                              |
+| Contenido       | ✅ Muestra "Actifisio"                 |
 
 ---
 
 ## 🔧 CAMBIOS TÉCNICOS REALIZADOS
 
 ### 1. Vercel Dashboard
+
 - Proyecto: `browser`
 - Deployment Protection: **Standard → Only Preview Deployments**
 
 ### 2. Build de Actifisio
+
 ```
 frontend/dist/actifisio-build/browser/
 ├── index.html (NUEVO - copiado de index.csr.html)
@@ -136,6 +147,7 @@ frontend/dist/actifisio-build/browser/
 ```
 
 ### 3. Deployments
+
 - **Deployment anterior:** `browser-1s8wrs5qq` (con index.csr.html)
 - **Deployment nuevo:** `browser-lj6bxumgb` (con index.html)
 - **Alias actualizado:** `actifisio.vercel.app` → `browser-lj6bxumgb`
@@ -170,19 +182,21 @@ start https://actifisio.vercel.app
 ✅ Colores naranja/amarillo visibles  
 ✅ No pide login de Vercel  
 ✅ Funciona en modo incógnito  
-✅ Manifest.json descargable  
+✅ Manifest.json descargable
 
 ---
 
 ## 📱 SIGUIENTE PASO: Probar PWA
 
 **Acción requerida:**
+
 1. Abrir `https://actifisio.vercel.app` en el móvil
 2. Intentar "Agregar a pantalla de inicio"
 3. Verificar que la app se instala como PWA
 4. Comprobar que el ícono usa el logo de Actifisio
 
 **Si no funciona PWA:**
+
 - Verificar que el Service Worker se registra (DevTools → Application → Service Workers)
 - Verificar que manifest.json tiene `"display": "standalone"`
 - Verificar que los íconos en manifest.json existen en el servidor
@@ -192,15 +206,18 @@ start https://actifisio.vercel.app
 ## 🎉 RESUMEN EJECUTIVO
 
 ### Problema:
+
 `actifisio.vercel.app` pedía login de Vercel y luego no cargaba.
 
 ### Solución:
+
 1. Desactivar Deployment Protection en Vercel
 2. Corregir routing (index.csr.html → index.html)
 3. Redesplegar con archivos correctos
 4. Actualizar alias
 
 ### Resultado:
+
 ✅ **FUNCIONANDO** - Página accesible públicamente sin login  
 ⏳ **PENDIENTE** - Probar instalación de PWA en móvil
 
