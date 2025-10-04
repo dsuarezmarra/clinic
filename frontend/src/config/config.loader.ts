@@ -24,8 +24,8 @@ const CLIENT_CONFIGS: Record<string, ClientConfig> = {
  * Environment Variables → VITE_CLIENT_ID → 'masajecorporaldeportivo' (o el slug del cliente)
  */
 export function loadClientConfig(): ClientConfig {
-  // Opción 1: Variable de entorno (definida en build time por Vite/Vercel)
-  const clientId = import.meta.env.VITE_CLIENT_ID as string;
+  // Opción 1: Variable de entorno (inyectada globalmente)
+  const clientId = (typeof (window as any).__CLIENT_ID !== 'undefined' ? (window as any).__CLIENT_ID : 'masajecorporaldeportivo') as string;
   
   if (clientId && CLIENT_CONFIGS[clientId]) {
     console.log(`✅ Configuración cargada para cliente: ${clientId}`);

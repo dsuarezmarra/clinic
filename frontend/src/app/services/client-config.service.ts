@@ -109,11 +109,22 @@ export class ClientConfigService {
    * Actualiza el favicon de la página
    */
   setFavicon(): void {
-    const link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = 'image/x-icon';
+    // Detectar tipo de imagen (png o ico)
+    const faviconUrl = this.config.assets.favicon;
+    const isPng = faviconUrl.endsWith('.png');
+    
+    // Buscar o crear el elemento link
+    let link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = isPng ? 'image/png' : 'image/x-icon';
     link.rel = 'shortcut icon';
-    link.href = this.config.assets.favicon;
-    document.getElementsByTagName('head')[0].appendChild(link);
+    link.href = faviconUrl;
+    
+    // Agregar al head si es nuevo
+    if (!document.querySelector("link[rel*='icon']")) {
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    
+    console.log('🖼️ Favicon actualizado:', faviconUrl);
   }
 
   /**

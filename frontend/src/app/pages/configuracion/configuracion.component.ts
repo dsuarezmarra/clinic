@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 
 import { ClinicInfo, Configuration } from '../../models/config.model';
 import { BackupFile, BackupsByDate, BackupService, BackupStats } from '../../services/backup.service';
+import { ClientConfigService } from '../../services/client-config.service';
 import { ConfigService } from '../../services/config.service';
 import { NotificationService } from '../../services/notification.service';
 import { PatientService } from '../../services/patient.service';
@@ -42,6 +43,9 @@ export class ConfiguracionComponent implements OnInit {
   activeTab: 'clinic' | 'prices' | 'backup' = 'clinic';
 
   configuration: Configuration | null = null;
+  
+  // Logo del cliente actual
+  logoUrl: string = '';
 
   weekDays = [
     { key: 'monday', label: 'Lunes' },
@@ -59,11 +63,15 @@ export class ConfiguracionComponent implements OnInit {
     private notificationService: NotificationService,
     private backupService: BackupService,
     private patientService: PatientService,
-    private utils: UtilsService
+    private utils: UtilsService,
+    private clientConfigService: ClientConfigService
   ) {
     this.clinicForm = this.createClinicForm();
     this.schedulingForm = this.createSchedulingForm();
     this.pricesForm = this.createPricesForm();
+    
+    // Obtener logo del cliente actual
+    this.logoUrl = this.clientConfigService.getAssets().logo;
   }
 
   ngOnInit() {

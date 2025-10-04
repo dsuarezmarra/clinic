@@ -10,6 +10,7 @@
 ### ✅ PROYECTOS NECESARIOS (3)
 
 #### 1. **actifisio-app** ✅ MANTENER
+
 - **URL:** https://actifisio-app.vercel.app
 - **Alias:** actifisio.vercel.app
 - **Propósito:** Frontend de Actifisio
@@ -18,6 +19,7 @@
 - **Acción:** ✅ MANTENER
 
 #### 2. **clinic-frontend** ⚠️ VERIFICAR
+
 - **URL:** https://clinic-frontend-roan.vercel.app
 - **Propósito:** Frontend de Masaje Corporal Deportivo
 - **Estado:** Actualizado hace 25 minutos
@@ -26,6 +28,7 @@
 - **Acción:** ⚠️ VERIFICAR si tiene alias correcto
 
 #### 3. **clinic-backend** ✅ MANTENER (Backend API)
+
 - **URL:** https://clinic-backend-nu.vercel.app
 - **Alias:** masajecorporaldeportivo-api.vercel.app
 - **Propósito:** Backend API (compartido por ambos clientes)
@@ -38,6 +41,7 @@
 ### ❌ PROYECTOS INNECESARIOS (1)
 
 #### 4. **clinic** ❌ ELIMINAR
+
 - **URL:** https://clinic-iota-nine.vercel.app
 - **Estado:** Actualizado hace 7 horas
 - **Node:** 22.x
@@ -78,6 +82,7 @@ vercel alias ls clinic-frontend
 ```
 
 **Esperado:**
+
 - Debe tener alias: `masajecorporaldeportivo.vercel.app`
 - Si NO lo tiene, configurarlo
 
@@ -88,6 +93,7 @@ vercel inspect clinic-iota-nine.vercel.app
 ```
 
 **Preguntas:**
+
 - ¿Qué deployment es?
 - ¿Tiene alias?
 - ¿Es usado por algún cliente?
@@ -100,6 +106,7 @@ vercel alias ls clinic-backend
 ```
 
 **Esperado:**
+
 - Debe tener alias: `masajecorporaldeportivo-api.vercel.app`
 
 ---
@@ -107,28 +114,33 @@ vercel alias ls clinic-backend
 ## 📝 PLAN DE ACCIÓN
 
 ### Paso 1: Verificar clinic-frontend
+
 - ✅ Confirmar que tiene alias correcto
 - ✅ Si no lo tiene, configurar alias
 - ✅ Probar: https://masajecorporaldeportivo.vercel.app
 
 ### Paso 2: Investigar "clinic"
+
 - ⚠️ Ver qué es este proyecto
 - ⚠️ Ver si tiene deployments activos
 - ⚠️ Ver si alguien lo está usando
 
 ### Paso 3: Eliminar "clinic" (si es innecesario)
+
 ```powershell
 vercel remove clinic --yes
 ```
 
 ### Paso 4: Verificar estado final
+
 ```powershell
 vercel project ls
 ```
 
 **Esperado: 3 proyectos**
+
 - actifisio-app
-- clinic-frontend  
+- clinic-frontend
 - clinic-backend
 
 ---
@@ -136,11 +148,13 @@ vercel project ls
 ## ⚠️ ADVERTENCIAS
 
 ### NO ELIMINAR SIN VERIFICAR
+
 1. Verificar alias ANTES de eliminar
 2. Comprobar que "clinic" no está en uso
 3. Asegurar que masajecorporaldeportivo.vercel.app funciona
 
 ### ORDEN DE ELIMINACIÓN
+
 1. Primero: Verificar clinic-frontend tiene alias
 2. Segundo: Confirmar "clinic" es redundante
 3. Tercero: Eliminar "clinic"
@@ -173,12 +187,14 @@ vercel ls clinic
 ## 💡 HIPÓTESIS
 
 ### Posible Escenario
+
 1. **clinic** = Proyecto antiguo/inicial (antes de renombrar)
 2. **clinic-frontend** = Proyecto renombrado (actual Masaje Corporal)
 3. **clinic-backend** = Backend API (correcto)
 4. **actifisio-app** = Nuevo cliente (correcto)
 
 ### Resultado Esperado
+
 - Eliminar "clinic" (antiguo)
 - Mantener clinic-frontend, clinic-backend, actifisio-app
 
@@ -194,6 +210,7 @@ vercel ls clinic
 ---
 
 **Próximos pasos:**
+
 1. Ejecutar comandos de verificación
 2. Confirmar alias de clinic-frontend
 3. Eliminar proyecto "clinic" si es redundante

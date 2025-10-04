@@ -25,24 +25,28 @@ Deployment accidental sobrescribió el build correcto de `clinic-frontend` hace 
 ## ✅ SOLUCIÓN APLICADA (3 minutos)
 
 ### 1. Regenerar Manifest
+
 ```powershell
 $env:VITE_CLIENT_ID="masajecorporaldeportivo"
 npm run generate:manifest
 ```
 
 ### 2. Build Correcto
+
 ```powershell
 $env:VITE_CLIENT_ID="masajecorporaldeportivo"
 npx ng build --configuration production
 ```
 
 ### 3. Deploy al Proyecto Correcto
+
 ```powershell
 Remove-Item -Path ".vercel" -Recurse -Force
 vercel --prod --yes --name clinic-frontend
 ```
 
 ### 4. Actualizar Alias
+
 ```powershell
 vercel alias set clinic-frontend-pw70u0zxj... masajecorporaldeportivo.vercel.app
 ```
@@ -52,11 +56,13 @@ vercel alias set clinic-frontend-pw70u0zxj... masajecorporaldeportivo.vercel.app
 ## ✅ ESTADO FINAL
 
 ### Masaje Corporal Deportivo
+
 - **URL:** https://masajecorporaldeportivo.vercel.app
 - **Deployment:** clinic-frontend-pw70u0zxj-davids-projects-8fa96e54.vercel.app
 - **Estado:** ✅ FUNCIONANDO
 
 ### Actifisio
+
 - **URL:** https://actifisio.vercel.app
 - **Estado:** ✅ FUNCIONANDO (sin cambios)
 
@@ -73,11 +79,13 @@ vercel alias set clinic-frontend-pw70u0zxj... masajecorporaldeportivo.vercel.app
 ## ✅ VERIFICACIÓN
 
 **Probar ahora:**
+
 ```
 https://masajecorporaldeportivo.vercel.app
 ```
 
 **Esperado:**
+
 - ✅ Aplicación carga
 - ✅ Título: "Masaje Corporal Deportivo"
 - ✅ Sin errores en consola

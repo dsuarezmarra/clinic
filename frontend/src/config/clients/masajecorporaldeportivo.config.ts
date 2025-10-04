@@ -38,14 +38,13 @@ export const masajecorporaldeportivoConfig: ClientConfig = {
   // Rutas de assets
   assets: {
     logo: 'assets/clients/masajecorporaldeportivo/logo.png',
-    favicon: 'assets/clients/masajecorporaldeportivo/favicon.ico',
-    appleTouchIcon: 'assets/clients/masajecorporaldeportivo/apple-touch-icon.png'
+    favicon: 'assets/clients/masajecorporaldeportivo/logo.png',  // Usar logo.png como favicon temporalmente
+    appleTouchIcon: 'assets/clients/masajecorporaldeportivo/logo.png'
   },
   
   // Configuración de backend (API compartida)
   backend: {
-    apiUrl: 'http://localhost:3000/api'  // Desarrollo local
-    // apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'  // Producción
+    apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'
   },
   
   // Configuración de PWA

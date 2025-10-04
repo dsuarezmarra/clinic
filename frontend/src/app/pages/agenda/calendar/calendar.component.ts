@@ -3,10 +3,10 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // ...existing code... (PatientSelectorComponent removed because it's not used in the template)
-import { APP_CONFIG } from '../../../config/app.config';
 import { Appointment, CreateAppointmentRequest } from '../../../models/appointment.model';
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
+import { ClientConfigService } from '../../../services/client-config.service';
 import { CreditService } from '../../../services/credit.service';
 import { EventBusService } from '../../../services/event-bus.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -129,7 +129,8 @@ export class CalendarComponent implements OnInit {
         private creditService: CreditService,
         private notificationService: NotificationService,
         private router: Router,
-        private eventBusService: EventBusService
+        private eventBusService: EventBusService,
+        private clientConfigService: ClientConfigService
     ) {
         this.generateTimeSlots();
     }
@@ -137,11 +138,16 @@ export class CalendarComponent implements OnInit {
     async exportMonthCsv(year: number, monthIdx: number, groupBy: 'appointment' | 'patient' = 'appointment') {
         try {
             const month = monthIdx + 1;
-            const url = `${APP_CONFIG.apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
+            const apiUrl = this.clientConfigService.getApiUrl();
+            const tenantSlug = this.clientConfigService.getTenantSlug();
+            const url = `${apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
+            
+            console.log(`📊 Exportando CSV para ${tenantSlug}: ${url}`);
+            
             const resp = await fetch(url, { 
                 headers: { 
                     'Accept': 'text/csv',
-                    'X-Tenant-Slug': APP_CONFIG.clientId 
+                    'X-Tenant-Slug': tenantSlug
                 } 
             });
             if (!resp.ok) throw new Error('Error generando CSV');

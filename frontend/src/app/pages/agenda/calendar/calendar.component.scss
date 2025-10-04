@@ -160,7 +160,7 @@
 }
 
 .appointment-item {
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     padding: 2px 6px;
     margin-bottom: 2px;
@@ -171,7 +171,7 @@
 }
 
 .appointment-item:hover {
-    background: #0056b3;
+    background: var(--button-hover);
 }
 
 /* Vista Semanal */
@@ -211,7 +211,7 @@
 }
 
 .day-column-header.today {
-    background: #007bff;
+    background: var(--primary-color);
 }
 
 /* Día actual que NO es fin de semana debe tener el mismo color que días laborables normales */
@@ -222,7 +222,7 @@
 
 /* Si hoy es fin de semana, mantener el azul */
 .day-column-header.today.weekend {
-    background: #007bff;
+    background: var(--primary-color);
 }
 
 .day-name {
@@ -281,7 +281,7 @@
 }
 
 .appointment-block {
-    background: #007bff;
+    background: var(--primary-color);
     color: white;
     padding: 5px 8px;
     border-radius: 4px;
@@ -350,7 +350,7 @@
 }
 
 .appointment-block:hover {
-    background: #0056b3;
+    background: var(--button-hover);
 }
 
 
@@ -451,7 +451,7 @@
 
 .day-schedule h4 {
     color: #2c3e50;
-    border-bottom: 2px solid #007bff;
+    border-bottom: 2px solid var(--primary-color);
     padding-bottom: 10px;
 }
 
@@ -552,12 +552,12 @@
 
 .patient-card:hover,
 .patient-card:active {
-    border-color: #007bff;
+    border-color: var(--primary-color);
     background: #f8f9fa;
 }
 
 .patient-card.selected {
-    border-color: #007bff;
+    border-color: var(--primary-color);
     background: #e3f2fd;
 }
 
@@ -689,11 +689,53 @@
     border: 1px solid #0d6efd !important;
 }
 
-/* Botones de vista */
+/* Botones de vista - Personalización completa */
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    background-color: transparent !important;
+    
+    &:hover {
+        color: white !important;
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        opacity: 0.9;
+    }
+    
+    &:focus,
+    &:active {
+        color: white !important;
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        box-shadow: none !important;
+    }
+}
+
+.btn-outline-secondary {
+    color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    background-color: transparent !important;
+    
+    &:hover {
+        color: white !important;
+        background-color: var(--secondary-color) !important;
+        border-color: var(--secondary-color) !important;
+        opacity: 0.9;
+    }
+    
+    &:focus,
+    &:active {
+        color: white !important;
+        background-color: var(--secondary-color) !important;
+        border-color: var(--secondary-color) !important;
+        box-shadow: none !important;
+    }
+}
+
 .btn-group .btn.active {
-    background-color: #007bff;
-    border-color: #007bff;
-    color: white;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
 }
 
 /* Estados de citas */

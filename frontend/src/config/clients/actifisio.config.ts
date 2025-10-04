@@ -37,14 +37,13 @@ export const actifisioConfig: ClientConfig = {
   // Rutas de assets
   assets: {
     logo: 'assets/clients/actifisio/logo.png',
-    favicon: 'assets/clients/actifisio/favicon.ico',
-    appleTouchIcon: 'assets/clients/actifisio/apple-touch-icon.png'
+    favicon: 'assets/clients/actifisio/logo.png',  // Usar logo.png como favicon temporalmente
+    appleTouchIcon: 'assets/clients/actifisio/logo.png'
   },
   
   // Configuración de backend (API compartida)
   backend: {
     apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'  // Producción (compartido)
-    // apiUrl: 'http://localhost:3000/api'  // Desarrollo local
   },
   
   // Configuración de PWA

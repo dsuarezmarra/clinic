@@ -39,12 +39,25 @@ export const tenantInterceptor: HttpInterceptorFn = (req, next) => {
  * Detecta el tenant slug desde la URL del navegador o configuración
  */
 function getTenantSlug(): string {
-  // 1. Intentar desde hostname de la URL actual
+  // 1. PRIORIDAD MÁXIMA: Usar window.__CLIENT_ID inyectado en el HTML
+  // Este valor se inyecta en tiempo de build para cada cliente
+  const injectedClientId = (window as any).__CLIENT_ID;
+  if (injectedClientId && typeof injectedClientId === 'string') {
+    return injectedClientId;
+  }
+
+  // 2. Intentar desde variable de entorno de Vite (desarrollo)
+  const envClientId = getClientIdFromEnv();
+  if (envClientId && envClientId !== 'masajecorporaldeportivo') {
+    return envClientId;
+  }
+
+  // 3. Intentar desde hostname de la URL actual
   const hostname = window.location.hostname;
   
   // Casos comunes:
   // - masajecorporaldeportivo.vercel.app -> masajecorporaldeportivo
-  // - clinic-frontend-xyz.vercel.app -> usar VITE_CLIENT_ID
+  // - actifisio.vercel.app -> actifisio
   // - localhost -> usar VITE_CLIENT_ID
   
   if (hostname.includes('.vercel.app')) {
@@ -52,22 +65,27 @@ function getTenantSlug(): string {
     const parts = hostname.split('.');
     const firstPart = parts[0];
     
-    // Si es un deployment de Vercel tipo "clinic-frontend-xyz", usar variable de entorno
-    if (firstPart.startsWith('clinic-frontend')) {
+    // Si es un deployment temporal de Vercel (browser-xyz, clinic-frontend-xyz),
+    // NO usar como tenant slug, usar el inyectado
+    if (firstPart.startsWith('clinic-frontend') || 
+        firstPart.startsWith('browser') || 
+        firstPart.includes('-') && firstPart.split('-').length > 2) {
+      // Es un deployment temporal, usar variable de entorno
       return getClientIdFromEnv();
     }
     
     // Si es un dominio personalizado, usar la primera parte como slug
     // Ej: masajecorporaldeportivo.vercel.app -> masajecorporaldeportivo
+    //     actifisio.vercel.app -> actifisio
     return firstPart;
   }
   
-  // 2. Para localhost o dominios personalizados, usar VITE_CLIENT_ID
+  // 4. Para localhost, usar VITE_CLIENT_ID
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return getClientIdFromEnv();
   }
   
-  // 3. Para otros dominios, intentar extraer de la URL
+  // 5. Para otros dominios, intentar extraer de la URL
   // Ej: www.clinica-juan.com -> clinica-juan
   const domainWithoutWww = hostname.replace('www.', '');
   const domainParts = domainWithoutWww.split('.');
@@ -76,7 +94,7 @@ function getTenantSlug(): string {
     return domainParts[0];
   }
   
-  // 4. Último fallback: variable de entorno
+  // 6. Último fallback: variable de entorno
   return getClientIdFromEnv();
 }
 

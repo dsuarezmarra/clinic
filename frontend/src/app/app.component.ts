@@ -28,7 +28,10 @@ export class AppComponent implements OnInit {
     // 📝 Actualizar título de la página con el nombre del cliente
     this.clientConfig.setPageTitle();
     
-    // 📊 Log de información del cliente cargado
+    // �️ Actualizar favicon con el logo del cliente
+    this.clientConfig.setFavicon();
+    
+    // �📊 Log de información del cliente cargado
     const clientInfo = this.clientConfig.getClientInfo();
     console.log('🏢 Cliente cargado:', clientInfo.name);
     console.log('🎨 Tema aplicado:', this.clientConfig.getTheme().primary);

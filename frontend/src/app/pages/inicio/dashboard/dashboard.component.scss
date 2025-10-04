@@ -551,3 +551,51 @@
         box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
     }
 }
+
+/* ============================================
+   BOTONES CON COLORES DEL CLIENTE
+   ============================================ */
+
+/* Botón primario (ej: "Hoy") */
+.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    background-color: transparent !important;
+    
+    &:hover {
+        color: white !important;
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        opacity: 0.9;
+    }
+    
+    &:focus,
+    &:active {
+        color: white !important;
+        background-color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Botón secundario (ej: flechas de navegación) */
+.btn-outline-secondary {
+    color: var(--secondary-color) !important;
+    border-color: var(--secondary-color) !important;
+    background-color: transparent !important;
+    
+    &:hover {
+        color: white !important;
+        background-color: var(--secondary-color) !important;
+        border-color: var(--secondary-color) !important;
+        opacity: 0.9;
+    }
+    
+    &:focus,
+    &:active {
+        color: white !important;
+        background-color: var(--secondary-color) !important;
+        border-color: var(--secondary-color) !important;
+        box-shadow: none !important;
+    }
+}
