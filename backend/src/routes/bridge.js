@@ -604,9 +604,19 @@ router.post('/appointments', async (req, res) => {
       const requiredUnits = durationMinutes === 60 ? 2 : 1;
       
       // Obtener packs disponibles del paciente ordenados (pagados primero, luego por fecha)
-      const { data: packs } = await supabaseFetch(
+      const { data: rawPacks } = await supabaseFetch(
         `${req.getTable('credit_packs')}?patientId=eq.${patientId}&unitsRemaining=gt.0&order=paid.desc,createdAt.asc`
       );
+
+      // Normalizar packs: asegurar tipos correctos
+      const packs = (rawPacks || []).map(p => ({
+        ...p,
+        paid: !!p.paid,
+        unitsRemaining: Number(p.unitsRemaining) || 0,
+        unitsTotal: Number(p.unitsTotal) || 0,
+        unitMinutes: Number(p.unitMinutes) || 30,
+        createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : null
+      }));
       
       console.log('📦 Packs disponibles para consumir (ordenados por paid DESC, createdAt ASC):');
       if (packs && packs.length > 0) {
@@ -980,46 +990,80 @@ router.get('/credits', async (req, res) => {
 // POST /api/credits/packs - Crear nuevo pack de créditos
 router.post('/credits/packs', async (req, res) => {
   try {
-    const { patientId, type, minutes, quantity, paid, notes, priceCents } = req.body;
-    
-    // Calcular unidades totales (1 unidad = 30 minutos)
-    const unitsPerItem = minutes / 30;
-    const unitsTotal = type === 'bono' 
-      ? (minutes === 60 ? quantity * 10 : quantity * 5) 
-      : unitsPerItem;
-    
-    // Generar label
-    let label;
-    if (type === 'sesion') {
-      // Para sesiones: "Sesión 1x30min" o "Sesión 1x60min"
-      label = `Sesión 1x${minutes}min`;
-    } else {
-      // Para bonos: usar la cantidad ingresada por el usuario
-      // "Bono 5x30min" o "Bono 5x60min"
-      label = `Bono ${quantity}x${minutes}min`;
-    }
-    
-    const packData = {
-      patientId,
-      label,
-      unitsTotal,
-      unitsRemaining: unitsTotal,
-      unitMinutes: minutes, // 🔥 CRÍTICO: Guardar 30 o 60 para identificar tipo de pack
-      priceCents: priceCents || 0, // Precio en céntimos
-      paid: paid || false,
-      notes: notes || null,
-      createdAt: new Date().toISOString()
+    const { patientId, type, minutes, quantity = 1, paid, notes, priceCents } = req.body;
+
+    // Normalize inputs
+    const qty = Number(quantity || 1);
+    const providedPrice = Number(priceCents || 0);
+
+    // Helper to compute per-pack price (integer cents)
+    const computePerPackPrice = (totalCents, count) => {
+      if (!totalCents || count <= 1) return totalCents || 0;
+      // Distribute remainder to first pack(s)
+      const base = Math.floor(totalCents / count);
+      const remainder = totalCents - base * count;
+      return { base, remainder };
     };
-    
-    console.log('Creating credit pack with price:', packData);
-    console.log('💰 Price:', priceCents, 'cents (', ((priceCents || 0)/100).toFixed(2), '€)');
-    
-    const { data } = await supabaseFetch(`${req.getTable('credit_packs')}`, {
-      method: 'POST',
-      body: JSON.stringify(packData)
-    });
-    
-    res.status(201).json(data[0]);
+
+    const created = [];
+
+    // Determine per-pack units and label for each created pack
+    for (let i = 0; i < qty; i++) {
+      let perPackUnits;
+      let perPackLabel;
+
+      if (type === 'sesion') {
+        perPackUnits = (minutes === 60) ? 2 : 1;
+        perPackLabel = `Sesión 1x${minutes}min`;
+      } else {
+        // bono: each pack represents a standard bono (5x30m or 10x60m)
+        if (minutes === 60) {
+          perPackUnits = 10;
+          perPackLabel = `Bono 10×60m`;
+        } else {
+          perPackUnits = 5;
+          perPackLabel = `Bono 5×30m`;
+        }
+      }
+
+      // Price distribution
+      let perPackPrice = 0;
+      if (providedPrice > 0) {
+        const distrib = computePerPackPrice(providedPrice, qty);
+        if (typeof distrib === 'object') {
+          perPackPrice = distrib.base + (i < distrib.remainder ? 1 : 0);
+        } else {
+          perPackPrice = distrib;
+        }
+      }
+
+      const packData = {
+        patientId,
+        label: perPackLabel,
+        unitsTotal: perPackUnits,
+        unitsRemaining: perPackUnits,
+        unitMinutes: minutes, // 30 or 60
+        priceCents: perPackPrice,
+        paid: !!paid,
+        notes: notes || null,
+        createdAt: new Date().toISOString()
+      };
+
+      console.log('Creating credit pack (bridge) with data:', packData);
+
+      const { data } = await supabaseFetch(`${req.getTable('credit_packs')}`, {
+        method: 'POST',
+        body: JSON.stringify(packData)
+      });
+
+      if (data && data[0]) created.push(data[0]);
+    }
+
+    if (created.length === 1) {
+      res.status(201).json(created[0]);
+    } else {
+      res.status(201).json(created);
+    }
   } catch (error) {
     console.error('Error creating credit pack:', error);
     res.status(500).json({ error: error.message });

@@ -294,55 +294,79 @@ router.post('/packs', [
 
     if (type === 'sesion') {
       const pricePerSession = minutes === 60 ? prices.sessionPrice60 : prices.sessionPrice30;
-      priceCents = Math.round(pricePerSession * 100) * quantity;
+      // priceCents per PACK (each session is a pack when quantity>1)
+      priceCents = Math.round(pricePerSession * 100);
     } else {
-      // bono: usar precios configurados
+      // bono: precio POR pack
       if (minutes === 60) {
-        priceCents = Math.round(prices.bonoPrice60 * 100) * quantity;
+        priceCents = Math.round(prices.bonoPrice60 * 100);
       } else {
-        priceCents = Math.round(prices.bonoPrice30 * 100) * quantity;
+        priceCents = Math.round(prices.bonoPrice30 * 100);
       }
     }
 
-    // Crear pack de créditos (sin sesiones individuales)
-    let creditPack;
-    try {
-      creditPack = await getDb(req).credit_packs.create({
-        data: {
-          patientId,
-          label,
-          unitsTotal,
-          unitsRemaining: unitsTotal,
-          unitMinutes: minutes || 30,
-          paid,
-          notes: notes || null,
-          priceCents
+    // Crear uno o varios packs independientes según quantity
+    const createdPacks = [];
+    for (let i = 0; i < Number(quantity || 1); i++) {
+      // Para sesiones: cada pack representa UNA sesión (unitsPerItem)
+      // Para bonos: cada pack representa el pack completo (ej. 5 unidades de 30m)
+      let perPackUnits, perPackLabel;
+      if (type === 'sesion') {
+        const unitsPerItem = minutes === 60 ? 2 : 1;
+        perPackUnits = unitsPerItem;
+        perPackLabel = `Sesión ${minutes}m`;
+      } else {
+        if (minutes === 60) {
+          perPackUnits = 10; // 10 units of 30min per 60min bono
+          perPackLabel = `Bono 10×60m`;
+        } else {
+          perPackUnits = 5; // 5 units of 30min per 30min bono
+          perPackLabel = `Bono 5×30m`;
         }
-      });
-    } catch (err) {
-      // Si la base de datos / cliente Prisma no conoce el campo priceCents
-      // (por ejemplo en entornos donde no se ejecutó `prisma db push`),
-      // reintentamos sin ese campo para mantener compatibilidad.
-      const msg = (err && err.message) ? err.message : '';
-      if (msg.includes('Unknown argument `priceCents`') || msg.includes('priceCents')) {
-        console.warn('[CREDITS] priceCents not supported by Prisma client/schema, retrying without it');
-        creditPack = await getDb(req).credit_packs.create({
+      }
+
+      try {
+        const newPack = await getDb(req).credit_packs.create({
           data: {
             patientId,
-            label,
-            unitsTotal,
-            unitsRemaining: unitsTotal,
+            label: perPackLabel,
+            unitsTotal: perPackUnits,
+            unitsRemaining: perPackUnits,
             unitMinutes: minutes || 30,
             paid,
-            notes: notes || null
+            notes: notes || null,
+            priceCents
           }
         });
-      } else {
-        throw err;
+        createdPacks.push(newPack);
+      } catch (err) {
+        const msg = (err && err.message) ? err.message : '';
+        if (msg.includes('Unknown argument `priceCents`') || msg.includes('priceCents')) {
+          console.warn('[CREDITS] priceCents not supported by Prisma client/schema, retrying without it');
+          const newPack = await getDb(req).credit_packs.create({
+            data: {
+              patientId,
+              label: perPackLabel,
+              unitsTotal: perPackUnits,
+              unitsRemaining: perPackUnits,
+              unitMinutes: minutes || 30,
+              paid,
+              notes: notes || null
+            }
+          });
+          createdPacks.push(newPack);
+        } else {
+          throw err;
+        }
       }
     }
 
-    res.status(201).json(creditPack);
+    // Si quantity === 1, devolver objeto único para compatibilidad
+    if (createdPacks.length === 1) {
+      res.status(201).json(createdPacks[0]);
+    } else {
+      res.status(201).json(createdPacks);
+    }
   } catch (error) {
     next(error);
   }

@@ -2,9 +2,29 @@
 
 ## ✅ ESTADO DEL PROYECTO: COMPLETO Y PRODUCTIVO
 
-**Versión:** 2.4.11  
+**Versión:** 3.0.0 🔥 **ACTUALIZADO HOY**  
 **Fecha:** 04/10/2025  
-**Estado:** Sistema multi-cliente implementado, validado y listo para producción
+**Estado:** Sistema multi-cliente implementado, validado y 100% funcional en producción
+
+---
+
+## 🚨 ACTUALIZACIÓN V3 - CRÍTICO
+
+### ⚡ CAMBIOS IMPORTANTES HOY (4 OCT 2025):
+
+Se detectaron y corrigieron **6 bugs críticos** en producción con Actifisio:
+
+1. ✅ **CLIENT_ID Injection:** Ahora se inyecta automáticamente vía `postbuild`
+2. ✅ **Tenant Interceptor:** Prioriza `window.__CLIENT_ID` sobre hostname
+3. ✅ **SPA Routing:** vercel.json corregido (no más 404 en F5)
+4. ✅ **Deployment Protection:** Documentado cómo configurar correctamente
+5. ✅ **Cache Issues:** Procedimientos completos de troubleshooting
+6. ✅ **X-Tenant-Slug Bug:** Corregido (usaba deployment URL)
+
+**📄 DOCUMENTOS NUEVOS:**
+
+- `CAMBIOS_CRITICOS_V3_04OCT2025.md` - Resumen de todos los fixes
+- `CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md` - Checklist con todos los fixes
 
 ---
 
@@ -13,23 +33,27 @@
 **📁 Ubicación:** `docs/implementacion-clientes/`  
 **📄 Punto de Entrada:** `docs/implementacion-clientes/README.md`
 
-### Documentos Disponibles (8 archivos, ~5,300 líneas)
+### ⭐ Documentos Principales (USA SIEMPRE V3)
 
-1. **README.md** - Índice y guía de acceso rápido
+1. **README.md** - Índice y guía de acceso rápido (actualizado con V3)
 2. **QUICK_REFERENCE_NUEVO_CLIENTE.md** - Cheat sheet (5 min)
-3. **CHECKLIST_NUEVO_CLIENTE_RAPIDO.md** - Implementación guiada (60 min)
-4. **TEMPLATE_NUEVO_CLIENTE_COMPLETO.md** - Guía exhaustiva (2,500+ líneas)
-5. **LECCIONES_APRENDIDAS_ACTIFISIO.md** - Bugs y soluciones (1,000+ líneas)
-6. **ANTES_DESPUES_CAMBIOS_VISUALES.md** - Comparación de código
-7. **CREAR_TABLAS_NUEVO_CLIENTE.md** - SQL scripts
-8. **INDICE_MAESTRO_DOCUMENTACION.md** - Navegación general
+3. **CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md** ⭐ **USA ESTE** - Con todos los fixes (70 min)
+4. ~~**CHECKLIST_NUEVO_CLIENTE_RAPIDO.md**~~ ❌ **OBSOLETO** - Usa V3 en su lugar
+5. **TEMPLATE_NUEVO_CLIENTE_COMPLETO.md** - Guía exhaustiva (2,500+ líneas)
+6. **LECCIONES_APRENDIDAS_ACTIFISIO.md** - Bugs y soluciones (1,000+ líneas)
+7. **ANTES_DESPUES_CAMBIOS_VISUALES.md** - Comparación de código
+8. **CREAR_TABLAS_NUEVO_CLIENTE.md** - SQL scripts
+9. **INDICE_MAESTRO_DOCUMENTACION.md** - Navegación general
 
 ### 🚀 Para Implementar un Nuevo Cliente
+
+**⚠️ IMPORTANTE: USA SIEMPRE LA VERSIÓN V3**
 
 **Comando rápido:**
 
 ```bash
 code docs/implementacion-clientes/README.md
+code docs/implementacion-clientes/CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md
 ```
 
 **Prompt recomendado:**
@@ -41,7 +65,8 @@ Necesito implementar un nuevo cliente:
 - Logo: [archivo.png]
 - Info: teléfono, email, dirección
 
-Usa docs/implementacion-clientes/CHECKLIST_NUEVO_CLIENTE_RAPIDO.md
+⚠️ USA CHECKLIST V3: docs/implementacion-clientes/CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md
+(NO uses CHECKLIST_NUEVO_CLIENTE_RAPIDO.md - está obsoleto)
 ```
 
 ---

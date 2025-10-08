@@ -1,15 +1,15 @@
 # 🚀 DOCUMENTACIÓN IMPLEMENTACIÓN DE NUEVOS CLIENTES
 
 **Ubicación:** `c:\Users\dsuarez1\git\clinic\docs\implementacion-clientes\`  
-**Versión:** 1.0.0  
+**Versión:** 3.0.0  
 **Fecha:** 4 de octubre de 2025  
-**Estado:** ✅ Completa y validada con Actifisio
+**Estado:** ✅ Completa y validada con Actifisio (Producción)
 
 ---
 
 ## 📌 PROPÓSITO
 
-Esta carpeta contiene **TODA** la documentación necesaria para implementar un nuevo cliente en **45-60 minutos** con solo:
+Esta carpeta contiene **TODA** la documentación necesaria para implementar un nuevo cliente en **60-70 minutos** con solo:
 
 ```yaml
 ✅ Nombre del cliente
@@ -20,14 +20,34 @@ Esta carpeta contiene **TODA** la documentación necesaria para implementar un n
 
 ---
 
-## 📚 DOCUMENTOS INCLUIDOS
+## � **ACTUALIZACIÓN V3 (4 OCT 2025)**
+
+**⚠️ DOCUMENTO PRINCIPAL ACTUALIZADO:**
+
+El **CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md** incluye TODOS los fixes críticos implementados hoy:
+
+- ✅ Sistema de inyección automática de CLIENT_ID
+- ✅ Prioridades correctas en tenant.interceptor.ts
+- ✅ Script postbuild para inject-client-id-postbuild.js
+- ✅ Configuración vercel.json para SPA routing
+- ✅ Verificación de Deployment Protection
+- ✅ Procedimientos de troubleshooting de caché
+- ✅ Soluciones a X-Tenant-Slug incorrecto
+- ✅ Corrección de 404 en F5 refresh
+
+**👉 USA SIEMPRE LA VERSIÓN V3:** `CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md`
+
+---
+
+## �📚 DOCUMENTOS INCLUIDOS
 
 ### 🎯 **1. Para Implementación Rápida (EMPEZAR AQUÍ)**
 
-| Documento                             | Descripción             | Tiempo                               | Uso                                  |
-| ------------------------------------- | ----------------------- | ------------------------------------ | ------------------------------------ |
-| **QUICK_REFERENCE_NUEVO_CLIENTE.md**  | Cheat sheet de 1 página | 5 min lectura                        | Lookup rápido durante implementación |
-| **CHECKLIST_NUEVO_CLIENTE_RAPIDO.md** | Checklist paso a paso   | 10 min lectura + 45-60 min ejecución | Implementación guiada                |
+| Documento                                  | Descripción                     | Tiempo                               | Uso                                      |
+| ------------------------------------------ | ------------------------------- | ------------------------------------ | ---------------------------------------- |
+| **QUICK_REFERENCE_NUEVO_CLIENTE.md**       | Cheat sheet de 1 página         | 5 min lectura                        | Lookup rápido durante implementación     |
+| **CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO** | ⭐ **VERSIÓN ACTUALIZADA 2025** | 10 min lectura + 60-70 min ejecución | ✅ **USA ESTE** - Con todos los fixes V3 |
+| **CHECKLIST_NUEVO_CLIENTE_RAPIDO.md**      | Versión V1 (outdated)           | ⚠️ **NO USAR** - Falta fixes         | ❌ Versión obsoleta - Reemplazada por V3 |
 
 ### 📖 **2. Para Entender el Sistema Completo**
 
