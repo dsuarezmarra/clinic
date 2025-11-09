@@ -1,24 +1,45 @@
-# 🚀 DOCUMENTACIÓN IMPLEMENTACIÓN DE NUEVOS CLIENTES
+# 📚 Documentación Implementación Clientes# 🚀 DOCUMENTACIÓN IMPLEMENTACIÓN DE NUEVOS CLIENTES
 
-**Ubicación:** `c:\Users\dsuarez1\git\clinic\docs\implementacion-clientes\`  
+
+
+Guías técnicas para el sistema multi-tenant.**Ubicación:** `c:\Users\dsuarez1\git\clinic\docs\implementacion-clientes\`  
+
 **Versión:** 3.0.0  
-**Fecha:** 4 de octubre de 2025  
+
+## Contexto**Fecha:** 4 de octubre de 2025  
+
 **Estado:** ✅ Completa y validada con Actifisio (Producción)
 
----
+El sistema está configurado para trabajar con variables de entorno en Vercel:
 
-## 📌 PROPÓSITO
+- `VITE_CLIENT_ID` define el cliente activo---
 
-Esta carpeta contiene **TODA** la documentación necesaria para implementar un nuevo cliente en **60-70 minutos** con solo:
+- Cada cliente tiene su propia base de datos (sufijo en tablas)
 
-```yaml
-✅ Nombre del cliente
+- Temas CSS y assets personalizados por cliente## 📌 PROPÓSITO
+
+
+
+## Clientes ActivosEsta carpeta contiene **TODA** la documentación necesaria para implementar un nuevo cliente en **60-70 minutos** con solo:
+
+
+
+1. **masajecorporaldeportivo** - Azul/Púrpura```yaml
+
+2. **actifisio** - Naranja/Amarillo✅ Nombre del cliente
+
 ✅ Paleta de colores (3 hex codes)
-✅ Logo (512x512 PNG)
-✅ Información de la clínica (teléfono, email, dirección)
-```
 
----
+## Archivos Importantes✅ Logo (512x512 PNG)
+
+✅ Información de la clínica (teléfono, email, dirección)
+
+- `frontend/src/config/clients/*.config.ts` - Configuración por cliente```
+
+- `frontend/src/config/config.loader.ts` - Loader de configuración
+
+- `backend/src/middleware/tenant-middleware.js` - Middleware multi-tenant---
+
 
 ## � **ACTUALIZACIÓN V3 (4 OCT 2025)**
 

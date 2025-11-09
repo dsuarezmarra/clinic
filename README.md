@@ -1,87 +1,171 @@
-# 🏥 Masaje Corporal Deportivo - Aplicación de Gestión
+# 🏥 Clinic - Sistema Multi-Cliente# 🏥 Masaje Corporal Deportivo - Aplicación de Gestión
 
-Sistema completo de gestión para clínica de masaje deportivo con Angular, Node.js, Express y Supabase (PostgreSQL).
 
-## ✨ Características
 
-- 📅 **Sistema de Citas** - Calendario interactivo con FullCalendar
-- 👥 **Gestión de Pacientes** - CRUD completo con archivos adjuntos
-- 🎟️ **Sistema de Bonos** - Gestión de sesiones de 30m/60m
-- 📱 **PWA** - Funciona offline y se puede instalar
+Sistema de gestión para clínicas con arquitectura multi-tenant.Sistema completo de gestión para clínica de masaje deportivo con Angular, Node.js, Express y Supabase (PostgreSQL).
+
+
+
+## Stack## ✨ Características
+
+
+
+- **Frontend:** Angular 20 + PWA- 📅 **Sistema de Citas** - Calendario interactivo con FullCalendar
+
+- **Backend:** Node.js + Express- 👥 **Gestión de Pacientes** - CRUD completo con archivos adjuntos
+
+- **Database:** Supabase (PostgreSQL)- 🎟️ **Sistema de Bonos** - Gestión de sesiones de 30m/60m
+
+- **Deploy:** Vercel- 📱 **PWA** - Funciona offline y se puede instalar
+
 - 🚫 **Sin Autenticación** - Acceso directo y simple
-- 🗄️ **PostgreSQL** - Base de datos robusta en Supabase
+
+## Características- 🗄️ **PostgreSQL** - Base de datos robusta en Supabase
+
 - 🌍 **Zona Horaria** - Europe/Madrid con conversión UTC
 
-## 🚀 Inicio Rápido
+- 📅 Calendario de citas (FullCalendar)
 
-### Desarrollo Local
+- 👥 Gestión de pacientes## 🚀 Inicio Rápido
 
-```bash
+- 🎟️ Sistema de bonos/sesiones
+
+- 📱 PWA instalable### Desarrollo Local
+
+- 🎨 Temas personalizables por cliente
+
+- 🏢 Multi-tenant (múltiples clientes)```bash
+
 # 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/clinic.git
+
+## Inicio Rápidogit clone https://github.com/tu-usuario/clinic.git
+
 cd clinic
 
-# 2. Configurar Backend
-cd backend
-npm install
-# Editar .env con credenciales de Supabase
-npm run dev
+### Backend
 
-# 3. Configurar Frontend (en otra terminal)
-cd frontend
-npm install
-npm start
+```bash# 2. Configurar Backend
+
+cd backendcd backend
+
+npm installnpm install
+
+npm run dev# Editar .env con credenciales de Supabase
+
+```npm run dev
+
+
+
+### Frontend# 3. Configurar Frontend (en otra terminal)
+
+```bashcd frontend
+
+cd frontendnpm install
+
+npm installnpm start
+
+npm start```
+
 ```
 
 **URLs de desarrollo:**
 
+## Clientes Configurados
+
 - Frontend: http://localhost:4300
-- Backend: http://localhost:3000
-- Health Check: http://localhost:3000/health
+
+### Masaje Corporal Deportivo- Backend: http://localhost:3000
+
+- URL: https://app-masajecorporaldeportivo.vercel.app- Health Check: http://localhost:3000/health
+
+- Colores: Azul/Púrpura
 
 ## 📦 Desplegar en la Nube (Vercel)
 
-### Opción 1: Despliegue Automático con Script
+### Actifisio
+
+- URL: https://app-actifisio.vercel.app### Opción 1: Despliegue Automático con Script
+
+- Colores: Naranja/Amarillo
 
 **Windows (PowerShell):**
 
+## Estructura
+
 ```powershell
-.\scripts\deploy-vercel.ps1
-```
 
-**Linux/Mac:**
+```.\scripts\deploy-vercel.ps1
 
-```bash
-chmod +x scripts/deploy-vercel.sh
+clinic/```
+
+├── backend/          Node.js + Express API
+
+├── frontend/         Angular 20 + PWA**Linux/Mac:**
+
+├── scripts/          Utilidades y deployment
+
+└── docs/             Documentación técnica```bash
+
+```chmod +x scripts/deploy-vercel.sh
+
 ./scripts/deploy-vercel.sh
-```
 
-### Opción 2: Despliegue Manual
+## Deploy```
 
-Sigue la guía completa paso a paso:
 
-📖 **[GUÍA COMPLETA DE DESPLIEGUE](DEPLOY_VERCEL.md)**
 
-✅ **[CHECKLIST DE DESPLIEGUE](DEPLOY_CHECKLIST.md)**
+El proyecto se despliega automáticamente a Vercel con `git push`.### Opción 2: Despliegue Manual
+
+
+
+### Variables de Entorno RequeridasSigue la guía completa paso a paso:
+
+
+
+**Backend:**📖 **[GUÍA COMPLETA DE DESPLIEGUE](DEPLOY_VERCEL.md)**
+
+- `DATABASE_URL` - Supabase connection string
+
+- `SUPABASE_URL` - Supabase project URL✅ **[CHECKLIST DE DESPLIEGUE](DEPLOY_CHECKLIST.md)**
+
+- `SUPABASE_SERVICE_KEY` - Supabase service role key
 
 ### Requisitos para Desplegar
 
-- Cuenta en [Vercel](https://vercel.com/signup) (gratis)
-- Cuenta en [Supabase](https://supabase.com) (gratis)
+**Frontend:**
+
+- `VITE_API_URL` - Backend API URL- Cuenta en [Vercel](https://vercel.com/signup) (gratis)
+
+- `VITE_CLIENT_ID` - Cliente específico (masajecorporaldeportivo/actifisio)- Cuenta en [Supabase](https://supabase.com) (gratis)
+
 - Vercel CLI: `npm install -g vercel`
+
+## Comandos Útiles
 
 **Tu app estará disponible en URLs como:**
 
-- `https://tu-clinic.vercel.app`
-- `https://tu-backend.vercel.app/api`
+```bash
 
-## 📁 Estructura del Proyecto
+# Tests multi-cliente- `https://tu-clinic.vercel.app`
 
-```
+.\scripts\test-multicliente.ps1- `https://tu-backend.vercel.app/api`
+
+
+
+# Generar manifest PWA## 📁 Estructura del Proyecto
+
+.\scripts\generate-manifest.ps1 -ClientId actifisio
+
+``````
+
 clinic/
-├── backend/              # Node.js + Express + Supabase
+
+## Licencia├── backend/              # Node.js + Express + Supabase
+
 │   ├── src/
-│   │   ├── routes/       # Endpoints de la API
+
+MIT│   │   ├── routes/       # Endpoints de la API
+
 │   │   ├── middleware/   # Middlewares personalizados
 │   │   └── database/     # Conexión a Supabase
 │   ├── scripts/          # Scripts de utilidad
