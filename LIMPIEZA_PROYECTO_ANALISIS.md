@@ -8,6 +8,7 @@
 ## 📊 RESUMEN EJECUTIVO
 
 ### Estado Actual
+
 - **113 archivos .md** en la raíz del proyecto
 - **6 scripts .ps1** en la raíz
 - **1 carpeta de deploy obsoleta** (actifisio-deploy)
@@ -15,6 +16,7 @@
 - **Múltiples versiones** de la misma documentación
 
 ### Mantenimiento Necesario
+
 - ✅ **Supabase:** Base de datos operativa
 - ✅ **Vercel:** Frontend y Backend desplegados
 - ❌ **Electron/Desktop:** NO SE USA (eliminar)
@@ -27,6 +29,7 @@
 ### 1️⃣ CARPETAS COMPLETAS (ELIMINAR)
 
 #### `actifisio-deploy/`
+
 **Razón:** Build viejo y obsoleto de frontend  
 **Tamaño:** ~20+ archivos JS/CSS compilados  
 **Acción:** Eliminar completamente
@@ -36,6 +39,7 @@ Remove-Item -Path "c:\git\clinic\actifisio-deploy" -Recurse -Force
 ```
 
 #### `DISTRIBUCION/`
+
 **Razón:** Carpeta vacía/no utilizada  
 **Acción:** Eliminar
 
@@ -44,6 +48,7 @@ Remove-Item -Path "c:\git\clinic\DISTRIBUCION" -Recurse -Force
 ```
 
 #### `node_modules/` en raíz
+
 **Razón:** Dependencias Electron no utilizadas  
 **Nota:** Ya está en .gitignore pero ocupa espacio  
 **Acción:** Eliminar (se regeneran si se necesitan)
@@ -368,6 +373,7 @@ CAMBIOS_CRITICOS_V3_04OCT2025.md            ✅ Fixes V3
 ## 📂 CARPETA `docs/` - MANTENER TODO
 
 ### Estructura Actual (CORRECTA)
+
 ```
 docs/
 ├── implementacion-clientes/
@@ -392,6 +398,7 @@ docs/
 ## 📂 CARPETA `scripts/` - REVISAR
 
 ### Scripts Útiles (MANTENER)
+
 ```
 scripts/
 ├── generate-manifest.js                     ✅ PWA manifest
@@ -403,6 +410,7 @@ scripts/
 ```
 
 ### Scripts Duplicados/Obsoletos (ELIMINAR)
+
 ```
 scripts/
 ├── deploy-vercel.ps1                        ❌ Duplicado
@@ -414,6 +422,7 @@ scripts/
 ```
 
 ### Scripts Google Drive (MANTENER SI SE USA)
+
 ```
 scripts/drive/
 ├── backup-and-upload.ps1                    ⚠️ ¿Se usa?
@@ -455,6 +464,7 @@ backend/src/routes/test-direct.js               ⚠️ Solo dev (comentado en in
 ```
 
 **Notas:**
+
 - `corporate-bypass.js`: Solo necesario si desarrollas detrás de proxy corporativo
 - `sql.js`: No se usa, las rutas usan `database-manager.js` directamente
 - `debug.js` y `test-direct.js`: Están comentados en `index.js`, se pueden eliminar
@@ -491,6 +501,7 @@ backend/src/routes/test-direct.js               ⚠️ Solo dev (comentado en in
 ```
 
 **Después de limpiar package.json root:**
+
 ```powershell
 cd c:\git\clinic
 npm install  # Regenerar package-lock.json limpio
@@ -501,16 +512,19 @@ npm install  # Regenerar package-lock.json limpio
 ## 🎯 RESUMEN DE ACCIONES
 
 ### Carpetas a Eliminar (4)
+
 - `actifisio-deploy/` (build obsoleto)
 - `DISTRIBUCION/` (vacía)
 - `node_modules/` root (Electron no usado)
 - `scripts/drive/` (si no se usa backup a Drive)
 
 ### Scripts .ps1 a Eliminar (11)
+
 - **Raíz (6):** DEPLOY_ACTIFISIO.ps1, DEPLOY_ACTIFISIO_VERCEL.ps1, DEPLOY_MASAJE_CORPORAL.ps1, DEPLOY_V2.4.4_MOVIL.ps1, FIX_ACTIFISIO_ENV.ps1, REDEPLOY_BACKEND.ps1
 - **scripts/ (5):** deploy-vercel.ps1, deploy-vercel-fixed.ps1, deploy-to-vercel.ps1, deploy-vercel.sh, build-client.ps1
 
 ### Archivos .md a Eliminar (~90)
+
 - **Deployment:** 15 archivos
 - **Correcciones:** 20 archivos
 - **Diagnósticos:** 5 archivos
@@ -522,9 +536,11 @@ npm install  # Regenerar package-lock.json limpio
 - **Varios:** 20+ archivos
 
 ### Archivos SQL a Mover (3)
+
 - Mover a `docs/sql/historico/`
 
 ### Configuración a Limpiar (1)
+
 - `package.json` root (eliminar Electron)
 
 ---
