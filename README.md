@@ -1,14 +1,8 @@
 # 🏥 Clinic - Sistema Multi-Cliente# 🏥 Masaje Corporal Deportivo - Aplicación de Gestión
 
-
-
 Sistema de gestión para clínicas con arquitectura multi-tenant.Sistema completo de gestión para clínica de masaje deportivo con Angular, Node.js, Express y Supabase (PostgreSQL).
 
-
-
 ## Stack## ✨ Características
-
-
 
 - **Frontend:** Angular 20 + PWA- 📅 **Sistema de Citas** - Calendario interactivo con FullCalendar
 
@@ -44,7 +38,7 @@ cd clinic
 
 ### Backend
 
-```bash# 2. Configurar Backend
+````bash# 2. Configurar Backend
 
 cd backendcd backend
 
@@ -66,7 +60,7 @@ npm installnpm start
 
 npm start```
 
-```
+````
 
 **URLs de desarrollo:**
 
@@ -92,7 +86,7 @@ npm start```
 
 ## Estructura
 
-```powershell
+````powershell
 
 ```.\scripts\deploy-vercel.ps1
 
@@ -156,38 +150,39 @@ El proyecto se despliega automáticamente a Vercel con `git push`.### Opción 2:
 
 .\scripts\generate-manifest.ps1 -ClientId actifisio
 
-``````
+````
 
 clinic/
 
-## Licencia├── backend/              # Node.js + Express + Supabase
+## Licencia├── backend/ # Node.js + Express + Supabase
 
-│   ├── src/
+│ ├── src/
 
-MIT│   │   ├── routes/       # Endpoints de la API
+MIT│ │ ├── routes/ # Endpoints de la API
 
-│   │   ├── middleware/   # Middlewares personalizados
-│   │   └── database/     # Conexión a Supabase
-│   ├── scripts/          # Scripts de utilidad
-│   ├── vercel.json       # Configuración de Vercel
-│   └── package.json
+│ │ ├── middleware/ # Middlewares personalizados
+│ │ └── database/ # Conexión a Supabase
+│ ├── scripts/ # Scripts de utilidad
+│ ├── vercel.json # Configuración de Vercel
+│ └── package.json
 │
-├── frontend/             # Angular 20 + PWA
-│   ├── src/
-│   │   ├── app/          # Componentes y servicios
-│   │   ├── assets/       # Recursos estáticos
-│   │   └── environments/ # Configuración por entorno
-│   ├── vercel.json       # Configuración de Vercel
-│   └── package.json
+├── frontend/ # Angular 20 + PWA
+│ ├── src/
+│ │ ├── app/ # Componentes y servicios
+│ │ ├── assets/ # Recursos estáticos
+│ │ └── environments/ # Configuración por entorno
+│ ├── vercel.json # Configuración de Vercel
+│ └── package.json
 │
 ├── scripts/
-│   ├── deploy-vercel.ps1  # Script de despliegue (Windows)
-│   └── deploy-vercel.sh   # Script de despliegue (Linux/Mac)
+│ ├── deploy-vercel.ps1 # Script de despliegue (Windows)
+│ └── deploy-vercel.sh # Script de despliegue (Linux/Mac)
 │
-├── DEPLOY_VERCEL.md      # Guía completa de despliegue
-├── DEPLOY_CHECKLIST.md   # Checklist de verificación
-└── README.md             # Este archivo
-```
+├── DEPLOY_VERCEL.md # Guía completa de despliegue
+├── DEPLOY_CHECKLIST.md # Checklist de verificación
+└── README.md # Este archivo
+
+````
 
 ## 🛠️ Stack Tecnológico
 
@@ -223,7 +218,7 @@ cd backend
 npm run dev          # Desarrollo con nodemon
 npm start            # Producción
 npm run backup       # Backup manual de la BD
-```
+````
 
 ### Frontend
 
