@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "name": "actifisio-app",
+  "name": "masajecorporaldeportivo-app",
   "version": 2,
   "builds": [
     {
@@ -18,11 +18,11 @@
     }
   ],
   "env": {
-    "VITE_CLIENT_ID": "actifisio"
+    "VITE_CLIENT_ID": "masajecorporaldeportivo"
   },
   "build": {
     "env": {
-      "VITE_CLIENT_ID": "actifisio"
+      "VITE_CLIENT_ID": "masajecorporaldeportivo"
     }
   },
   "headers": [

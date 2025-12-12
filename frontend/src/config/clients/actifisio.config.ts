@@ -41,9 +41,9 @@ export const actifisioConfig: ClientConfig = {
     appleTouchIcon: 'assets/clients/actifisio/logo.png'
   },
   
-  // Configuración de backend (API compartida)
+  // Configuraci�n de backend (API compartida multi-tenant)
   backend: {
-    apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'  // Producción (compartido)
+    apiUrl: 'https://clinic-backend-nu.vercel.app/api'
   },
   
   // Configuración de PWA

@@ -11,8 +11,10 @@
     "serve:ssr:clinic-frontend": "node dist/clinic-frontend/server/server.mjs",
     "generate:manifest": "node scripts/generate-manifest.js",
     "prebuild": "npm run generate:manifest",
-    "build:masajecorporal": "cross-env VITE_CLIENT_ID=masajecorporaldeportivo npm run build",
-    "build:actifisio": "cross-env VITE_CLIENT_ID=actifisio npm run build"
+    "build:masajecorporaldeportivo": "cross-env VITE_CLIENT_ID=masajecorporaldeportivo npm run build",
+    "build:actifisio": "cross-env VITE_CLIENT_ID=actifisio npm run build",
+    "deploy:masajecorporaldeportivo": "npm run build:masajecorporaldeportivo && cp vercel.masajecorporaldeportivo.json vercel.json.bak && cp vercel.masajecorporaldeportivo.json vercel.json",
+    "deploy:actifisio": "npm run build:actifisio && cp vercel.actifisio.json vercel.json.bak && cp vercel.actifisio.json vercel.json"
   },
   "private": true,
   "dependencies": {

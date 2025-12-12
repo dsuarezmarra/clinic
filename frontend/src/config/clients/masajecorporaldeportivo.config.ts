@@ -42,9 +42,9 @@ export const masajecorporaldeportivoConfig: ClientConfig = {
     appleTouchIcon: 'assets/clients/masajecorporaldeportivo/logo.png'
   },
   
-  // Configuración de backend (API compartida)
+  // Configuraci�n de backend (API compartida multi-tenant)
   backend: {
-    apiUrl: 'https://masajecorporaldeportivo-api.vercel.app/api'
+    apiUrl: 'https://clinic-backend-nu.vercel.app/api'
   },
   
   // Configuración de PWA
