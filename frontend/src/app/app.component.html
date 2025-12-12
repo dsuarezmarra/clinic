@@ -1,29 +1,43 @@
 <!-- Interfaz simple con Bootstrap -->
 <div class="container-fluid">
-  <!-- Header -->
-  <header class="clinic-header">
+  <!-- Header - Solo mostrar si NO estamos en login -->
+  <header class="clinic-header" *ngIf="!isLoginPage()">
     <div class="container">
       <div class="row align-items-center">
-        <div class="col-md-8">
+        <div class="col-md-6">
           <button class="clinic-brand-btn" (click)="navigateToInicio()">
             <img [src]="clientConfig.getAssets().logo" [alt]="clientConfig.getClientInfo().name + ' Logo'" class="clinic-logo">
             {{ clientConfig.getClientInfo().name }}
           </button>
         </div>
-        <div class="col-md-4 text-end">
-          <div class="btn-group" role="group">
-            <button type="button" class="btn btn-outline-light" [class.active]="isCurrentRoute('/agenda')"
-              (click)="navigateToAgenda()">
-              📅 Agenda
-            </button>
-            <button type="button" class="btn btn-outline-light" [class.active]="isCurrentRoute('/pacientes')"
-              (click)="navigateToPacientes()">
-              👥 Pacientes
-            </button>
-            <button type="button" class="btn btn-outline-light" [class.active]="isCurrentRoute('/configuracion')"
-              (click)="navigateToConfiguracion()">
-              ⚙️ Configuración
-            </button>
+        <div class="col-md-6 text-end">
+          <div class="header-actions">
+            <div class="btn-group nav-buttons" role="group">
+              <button type="button" class="btn btn-outline-light" [class.active]="isCurrentRoute('/agenda')"
+                (click)="navigateToAgenda()">
+                <i class="bi bi-calendar3"></i> Agenda
+              </button>
+              <button type="button" class="btn btn-outline-light" [class.active]="isCurrentRoute('/pacientes')"
+                (click)="navigateToPacientes()">
+                <i class="bi bi-people"></i> Pacientes
+              </button>
+              <button type="button" class="btn btn-outline-light" [class.active]="isCurrentRoute('/configuracion')"
+                (click)="navigateToConfiguracion()">
+                <i class="bi bi-gear"></i> Config
+              </button>
+            </div>
+            
+            <!-- Boton de Logout -->
+            <div class="user-section" *ngIf="authService.isAuthenticated()">
+              <span class="user-email">
+                <i class="bi bi-person-circle"></i>
+                {{ (authService.currentUser$ | async)?.email }}
+              </span>
+              <button class="btn btn-logout" (click)="logout()" title="Cerrar sesion">
+                <i class="bi bi-box-arrow-right"></i>
+                Salir
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -31,8 +45,8 @@
   </header>
 
   <!-- Contenido principal con router-outlet -->
-  <main class="main-content">
-    <div class="container">
+  <main [class.main-content]="!isLoginPage()" [class.login-content]="isLoginPage()">
+    <div [class.container]="!isLoginPage()">
       <router-outlet></router-outlet>
     </div>
   </main>

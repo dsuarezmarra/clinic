@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth.service';
 import { ClientConfigService } from './services/client-config.service';
 
 @Component({
@@ -18,24 +19,25 @@ export class AppComponent implements OnInit {
 
   constructor(
     private router: Router,
-    public clientConfig: ClientConfigService  // ✅ Cambiado a public para usar en template
+    public clientConfig: ClientConfigService,
+    public authService: AuthService
   ) { }
 
   ngOnInit(): void {
-    // 🎨 Aplicar tema del cliente (colores, gradientes)
+    // Aplicar tema del cliente (colores, gradientes)
     this.clientConfig.applyTheme();
     
-    // 📝 Actualizar título de la página con el nombre del cliente
+    // Actualizar titulo de la pagina con el nombre del cliente
     this.clientConfig.setPageTitle();
     
-    // �️ Actualizar favicon con el logo del cliente
+    // Actualizar favicon con el logo del cliente
     this.clientConfig.setFavicon();
     
-    // �📊 Log de información del cliente cargado
+    // Log de informacion del cliente cargado
     const clientInfo = this.clientConfig.getClientInfo();
-    console.log('🏢 Cliente cargado:', clientInfo.name);
-    console.log('🎨 Tema aplicado:', this.clientConfig.getTheme().primary);
-    console.log('🔑 Tenant Slug:', this.clientConfig.getTenantSlug());
+    console.log('Cliente cargado:', clientInfo.name);
+    console.log('Tema aplicado:', this.clientConfig.getTheme().primary);
+    console.log('Tenant Slug:', this.clientConfig.getTenantSlug());
   }
 
   navigateToAgenda() {
@@ -56,5 +58,19 @@ export class AppComponent implements OnInit {
 
   isCurrentRoute(route: string): boolean {
     return this.router.url.startsWith(route);
+  }
+
+  /**
+   * Cerrar sesion
+   */
+  async logout(): Promise<void> {
+    await this.authService.logout();
+  }
+
+  /**
+   * Verificar si esta en la pagina de login (para ocultar header)
+   */
+  isLoginPage(): boolean {
+    return this.router.url.startsWith('/login') || this.router.url.startsWith('/reset-password');
   }
 }

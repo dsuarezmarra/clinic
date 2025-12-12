@@ -4,51 +4,98 @@ import { masajecorporaldeportivoConfig } from './clients/masajecorporaldeportivo
 
 /**
  * Mapa de todas las configuraciones de clientes disponibles
- * Para agregar un nuevo cliente, importar su config y agregarlo aquí
+ * Para agregar un nuevo cliente, importar su config y agregarlo aqui
  */
 const CLIENT_CONFIGS: Record<string, ClientConfig> = {
   'masajecorporaldeportivo': masajecorporaldeportivoConfig,
   'actifisio': actifisioConfig,
-  // Agregar nuevos clientes aquí:
+  // Agregar nuevos clientes aqui:
   // 'nuevocliente': nuevoclienteConfig,
 };
 
 /**
- * Carga la configuración del cliente basado en variable de entorno
- * 
- * Flujo de detección:
- * 1. Lee VITE_CLIENT_ID de las variables de entorno de Vite
- * 2. Si no existe o es inválida, usa 'masajecorporaldeportivo' como default
- * 
- * En Vercel, configurar en cada proyecto:
- * Environment Variables → VITE_CLIENT_ID → 'masajecorporaldeportivo' (o el slug del cliente)
+ * Verifica si estamos en entorno browser (no SSR)
+ */
+function isBrowser(): boolean {
+  return typeof window !== 'undefined' && typeof window.document !== 'undefined';
+}
+
+/**
+ * Obtiene el CLIENT_ID del entorno
+ * Solo accede a window si estamos en browser
+ */
+function getClientIdFromEnvironment(): string {
+  // Si no estamos en browser, devolver default
+  if (!isBrowser()) {
+    return 'masajecorporaldeportivo';
+  }
+  
+  // En browser, intentar obtener el CLIENT_ID inyectado
+  try {
+    const windowClientId = (window as any).__CLIENT_ID;
+    if (typeof windowClientId === 'string' && windowClientId.length > 0) {
+      return windowClientId;
+    }
+  } catch {
+    // Ignorar errores de acceso a window
+  }
+  
+  return 'masajecorporaldeportivo';
+}
+
+/**
+ * Cache para la configuracion del cliente
+ * Evita recalcular en cada acceso
+ */
+let _cachedConfig: ClientConfig | null = null;
+
+/**
+ * Carga la configuracion del cliente
+ * Es lazy y SSR-safe
  */
 export function loadClientConfig(): ClientConfig {
-  // Opción 1: Variable de entorno (inyectada globalmente)
-  const clientId = (typeof (window as any).__CLIENT_ID !== 'undefined' ? (window as any).__CLIENT_ID : 'masajecorporaldeportivo') as string;
-  
-  if (clientId && CLIENT_CONFIGS[clientId]) {
-    console.log(`✅ Configuración cargada para cliente: ${clientId}`);
-    return CLIENT_CONFIGS[clientId];
+  // Si ya tenemos cache, devolverlo
+  if (_cachedConfig) {
+    return _cachedConfig;
   }
   
-  // Opción 2: Fallback a masajecorporaldeportivo (cliente por defecto)
-  if (!clientId) {
-    console.warn('⚠️ VITE_CLIENT_ID no definida, usando configuración por defecto: masajecorporaldeportivo');
-  } else {
-    console.error(`❌ Cliente '${clientId}' no encontrado en CLIENT_CONFIGS, usando configuración por defecto`);
+  const clientId = getClientIdFromEnvironment();
+  
+  // Buscar configuracion del cliente
+  const config = CLIENT_CONFIGS[clientId];
+  
+  if (config) {
+    if (isBrowser()) {
+      console.log(`[Config] Configuracion cargada para cliente: ${clientId}`);
+    }
+    _cachedConfig = config;
+    return config;
   }
   
+  // Fallback: si el cliente no existe, usar default
+  console.warn(`[Config] Cliente '${clientId}' no encontrado, usando masajecorporaldeportivo`);
+  _cachedConfig = masajecorporaldeportivoConfig;
   return masajecorporaldeportivoConfig;
 }
 
 /**
- * Configuración activa de la aplicación
- * Esta es la instancia que deben usar todos los componentes y servicios
+ * Configuracion activa de la aplicacion
+ * NOTA: Esta constante es lazy - la configuracion real se carga
+ * la primera vez que se accede via loadClientConfig()
+ * 
+ * En SSR siempre devuelve la configuracion por defecto
  */
-export const APP_CONFIG = loadClientConfig();
+export const APP_CONFIG: ClientConfig = masajecorporaldeportivoConfig;
 
 /**
- * Lista de todos los clientes disponibles (útil para debugging)
+ * Obtiene la configuracion actual (usar esto en servicios Angular)
+ * Esta funcion es SSR-safe y devuelve la configuracion correcta en browser
+ */
+export function getAppConfig(): ClientConfig {
+  return loadClientConfig();
+}
+
+/**
+ * Lista de todos los clientes disponibles (util para debugging)
  */
 export const AVAILABLE_CLIENTS = Object.keys(CLIENT_CONFIGS);

@@ -1,0 +1,159 @@
+<div class="login-container">
+  <div class="login-card">
+    <!-- Logo y nombre del cliente -->
+    <div class="login-header">
+      <img [src]="getLogoUrl()" [alt]="getClientName()" class="login-logo" />
+      <h1 class="login-title">{{ getClientName() }}</h1>
+      <p class="login-subtitle">Sistema de Gestion</p>
+    </div>
+
+    <!-- Formulario de Login -->
+    <form *ngIf="!showForgotPassword" (ngSubmit)="onLogin()" class="login-form">
+      <h2 class="form-title">Iniciar Sesion</h2>
+
+      <!-- Campo Email -->
+      <div class="form-group">
+        <label for="email">
+          <i class="bi bi-envelope"></i>
+          Email
+        </label>
+        <input
+          type="email"
+          id="email"
+          [(ngModel)]="credentials.email"
+          name="email"
+          placeholder="tu@email.com"
+          autocomplete="email"
+          [disabled]="isLoading"
+          required
+        />
+      </div>
+
+      <!-- Campo Contrasena -->
+      <div class="form-group">
+        <label for="password">
+          <i class="bi bi-lock"></i>
+          Contrasena
+        </label>
+        <div class="password-input-wrapper">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            [(ngModel)]="credentials.password"
+            name="password"
+            placeholder="********"
+            autocomplete="current-password"
+            [disabled]="isLoading"
+            required
+          />
+          <button 
+            type="button" 
+            class="password-toggle"
+            (click)="togglePasswordVisibility()"
+            tabindex="-1"
+          >
+            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensajes de error/exito -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <i class="bi bi-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        <i class="bi bi-check-circle"></i>
+        {{ successMessage }}
+      </div>
+
+      <!-- Boton de Login -->
+      <button 
+        type="submit" 
+        class="btn-login"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="bi bi-box-arrow-in-right"></i>
+          Entrar
+        </span>
+        <span *ngIf="isLoading" class="loading-spinner">
+          <i class="bi bi-arrow-repeat spinning"></i>
+          Iniciando sesion...
+        </span>
+      </button>
+
+      <!-- Link olvide contrasena -->
+      <div class="forgot-password-link">
+        <a href="javascript:void(0)" (click)="toggleForgotPassword()">
+          Olvidaste tu contrasena?
+        </a>
+      </div>
+    </form>
+
+    <!-- Formulario de Recuperar Contrasena -->
+    <form *ngIf="showForgotPassword" (ngSubmit)="onForgotPassword()" class="login-form">
+      <h2 class="form-title">Recuperar Contrasena</h2>
+      <p class="form-description">
+        Introduce tu email y te enviaremos instrucciones para restablecer tu contrasena.
+      </p>
+
+      <!-- Campo Email -->
+      <div class="form-group">
+        <label for="forgot-email">
+          <i class="bi bi-envelope"></i>
+          Email
+        </label>
+        <input
+          type="email"
+          id="forgot-email"
+          [(ngModel)]="forgotPasswordEmail"
+          name="forgotEmail"
+          placeholder="tu@email.com"
+          [disabled]="isLoading"
+          required
+        />
+      </div>
+
+      <!-- Mensajes de error/exito -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        <i class="bi bi-exclamation-circle"></i>
+        {{ errorMessage }}
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        <i class="bi bi-check-circle"></i>
+        {{ successMessage }}
+      </div>
+
+      <!-- Botones -->
+      <button 
+        type="submit" 
+        class="btn-login"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="!isLoading">
+          <i class="bi bi-envelope"></i>
+          Enviar Email
+        </span>
+        <span *ngIf="isLoading" class="loading-spinner">
+          <i class="bi bi-arrow-repeat spinning"></i>
+          Enviando...
+        </span>
+      </button>
+
+      <div class="back-to-login">
+        <a href="javascript:void(0)" (click)="toggleForgotPassword()">
+          <i class="bi bi-arrow-left"></i>
+          Volver al login
+        </a>
+      </div>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p>© {{ getClientName() }} {{ currentYear }}</p>
+    </div>
+  </div>
+</div>

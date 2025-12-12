@@ -6,6 +6,7 @@ import { provideClientHydration } from '@angular/platform-browser';
 import { provideRouter } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
+import { authInterceptor } from './interceptors/auth.interceptor';
 import { EncodingInterceptor } from './interceptors/encoding.interceptor';
 import { tenantInterceptor } from './interceptors/tenant.interceptor';
 
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(
       withFetch(),
-      withInterceptors([tenantInterceptor])
+      withInterceptors([tenantInterceptor, authInterceptor])  // Agregar authInterceptor
     ),
     {
       provide: HTTP_INTERCEPTORS,

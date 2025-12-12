@@ -1,29 +1,37 @@
-import { Injectable } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { ClientConfig, ClientInfo, ClientTheme } from '../../config/client-config.interface';
-import { APP_CONFIG } from '../../config/config.loader';
+import { getAppConfig } from '../../config/config.loader';
 
 /**
- * Servicio de configuración multi-cliente
- * Proporciona acceso a la configuración del cliente actual (tenantSlug, tema, info, etc.)
+ * Servicio de configuracion multi-cliente
+ * Proporciona acceso a la configuracion del cliente actual (tenantSlug, tema, info, etc.)
  * 
- * Este servicio es diferente a ConfigService que maneja la configuración de horarios/precios.
- * Este servicio maneja la configuración visual y de identidad del cliente.
+ * Este servicio es diferente a ConfigService que maneja la configuracion de horarios/precios.
+ * Este servicio maneja la configuracion visual y de identidad del cliente.
  */
 @Injectable({
   providedIn: 'root'
 })
 export class ClientConfigService {
-  private config: ClientConfig = APP_CONFIG;
+  private config: ClientConfig;
+  private isBrowser: boolean;
 
-  constructor() {
-    console.log('🏢 ClientConfigService inicializado');
-    console.log('   Cliente:', this.config.info.name);
-    console.log('   Tenant Slug:', this.config.tenantSlug);
-    console.log('   Tema primario:', this.config.theme.primary);
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+    // Cargar configuracion de forma SSR-safe
+    this.config = getAppConfig();
+    
+    if (this.isBrowser) {
+      console.log('[ClientConfigService] Inicializado');
+      console.log('   Cliente:', this.config.info.name);
+      console.log('   Tenant Slug:', this.config.tenantSlug);
+      console.log('   Tema primario:', this.config.theme.primary);
+    }
   }
 
   /**
-   * Obtiene la configuración completa del cliente
+   * Obtiene la configuracion completa del cliente
    */
   getConfig(): ClientConfig {
     return this.config;
@@ -51,35 +59,42 @@ export class ClientConfigService {
   }
 
   /**
-   * Obtiene la información del cliente (nombre, dirección, contacto, etc.)
+   * Obtiene la informacion del cliente
    */
   getClientInfo(): ClientInfo {
     return this.config.info;
   }
 
   /**
-   * Obtiene las rutas de assets (logo, favicon, etc.)
+   * Obtiene los assets (logo, iconos)
    */
-  getAssets() {
+  getAssets(): ClientConfig['assets'] {
     return this.config.assets;
   }
 
   /**
-   * Obtiene la configuración de PWA
+   * Obtiene el header HTTP necesario para identificar el tenant
+   * Este header debe incluirse en todas las peticiones HTTP al backend
    */
-  getPwaConfig() {
-    return this.config.pwa;
+  getTenantHeader(): { [key: string]: string } {
+    return {
+      'X-Tenant-Slug': this.config.tenantSlug
+    };
   }
 
   /**
-   * Aplica los colores del tema al documento usando CSS variables
-   * Debe llamarse en app.component.ts al iniciar la aplicación
+   * Aplica el tema del cliente al documento
+   * Establece las variables CSS customizables
    */
   applyTheme(): void {
+    // Solo aplicar tema en browser
+    if (!this.isBrowser) {
+      return;
+    }
+
     const theme = this.config.theme;
     const root = document.documentElement;
 
-    // Definir CSS variables en :root
     root.style.setProperty('--primary-color', theme.primary);
     root.style.setProperty('--secondary-color', theme.secondary);
     root.style.setProperty('--accent-color', theme.accent);
@@ -87,53 +102,39 @@ export class ClientConfigService {
     root.style.setProperty('--button-color', theme.buttonColor);
     root.style.setProperty('--button-hover', theme.buttonHover);
 
-    console.log('🎨 Tema aplicado:', {
-      primary: theme.primary,
-      secondary: theme.secondary,
-      gradient: theme.headerGradient
-    });
+    console.log('[ClientConfigService] Tema aplicado:', theme.primary);
   }
 
   /**
-   * Actualiza el título de la página con el nombre corto del cliente
+   * Actualiza el titulo de la pagina con el nombre del cliente
    */
   setPageTitle(suffix?: string): void {
-    const title = suffix 
-      ? `${this.config.info.shortName} - ${suffix}`
-      : this.config.info.shortName;
-    
-    document.title = title;
+    // Solo en browser
+    if (!this.isBrowser) {
+      return;
+    }
+
+    const baseTitle = this.config.info.name;
+    document.title = suffix ? `${suffix} | ${baseTitle}` : baseTitle;
   }
 
   /**
-   * Actualiza el favicon de la página
+   * Actualiza el favicon con el logo del cliente
    */
   setFavicon(): void {
-    // Detectar tipo de imagen (png o ico)
-    const faviconUrl = this.config.assets.favicon;
-    const isPng = faviconUrl.endsWith('.png');
-    
-    // Buscar o crear el elemento link
-    let link: HTMLLinkElement = document.querySelector("link[rel*='icon']") || document.createElement('link');
-    link.type = isPng ? 'image/png' : 'image/x-icon';
-    link.rel = 'shortcut icon';
-    link.href = faviconUrl;
-    
-    // Agregar al head si es nuevo
-    if (!document.querySelector("link[rel*='icon']")) {
-      document.getElementsByTagName('head')[0].appendChild(link);
+    // Solo en browser
+    if (!this.isBrowser) {
+      return;
     }
-    
-    console.log('🖼️ Favicon actualizado:', faviconUrl);
-  }
 
-  /**
-   * Obtiene el header HTTP para multi-tenant (X-Tenant-Slug)
-   * Usar en servicios HTTP que necesiten identificar al cliente
-   */
-  getTenantHeader(): { [key: string]: string } {
-    return {
-      'X-Tenant-Slug': this.config.tenantSlug
-    };
+    const existingFavicon = document.querySelector('link[rel="icon"]');
+    if (existingFavicon) {
+      existingFavicon.setAttribute('href', this.config.assets.logo);
+    } else {
+      const favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = this.config.assets.logo;
+      document.head.appendChild(favicon);
+    }
   }
 }
