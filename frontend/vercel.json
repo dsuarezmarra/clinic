@@ -10,12 +10,20 @@
       }
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
+  "env": {
+    "VITE_CLIENT_ID": "masajecorporaldeportivo"
+  },
+  "build": {
+    "env": {
+      "VITE_CLIENT_ID": "masajecorporaldeportivo"
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
