@@ -41,7 +41,7 @@ export class LoginComponent implements OnInit {
   ngOnInit(): void {
     // Aplicar tema del cliente
     this.clientConfig.applyTheme();
-    this.clientConfig.setPageTitle('Iniciar Sesión');
+    this.clientConfig.setPageTitle('Iniciar Sesi\u00F3n');
 
     // Obtener returnUrl de los query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/inicio';
