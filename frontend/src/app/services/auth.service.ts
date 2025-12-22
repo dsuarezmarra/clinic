@@ -34,9 +34,9 @@ export class AuthService {
   currentUser$ = this.currentUserSubject.asObservable();
   isLoading$ = this.isLoadingSubject.asObservable();
 
-  // URLs de Supabase (las mismas que usa el backend)
-  private readonly SUPABASE_URL = 'https://skukyfkrwqsfnkbxedty.supabase.co';
-  private readonly SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNrdWt5Zmtyd3FzZm5rYnhlZHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY0NjExNjgsImV4cCI6MjA3MjAzNzE2OH0.b1muFW9Ht0f_OLW16dfooA5wro2LnxsvW1NDmtVN-Rg';
+  // URLs de Supabase (las mismas que usa el backend) - Cuenta Personal
+  private readonly SUPABASE_URL = 'https://kctoxebchyrgkwofdkht.supabase.co';
+  private readonly SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjdG94ZWJjaHlyZ2t3b2Zka2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MTgxNDYsImV4cCI6MjA4MTk5NDE0Nn0.WAvvg89qBQ_APPR4TKeVMd9ARBn2tbkRoW3kVLCOTJ0';
 
   constructor(
     private router: Router,
