@@ -149,39 +149,24 @@
                         </button>
                     </div>
                     <div class="card-body">
-                        <div class="row text-center">
-                            <div class="col-6">
-                                <div class="border-end">
-                                    <div class="h4 mb-0 text-primary">{{ patient._count?.appointments || 0 }}</div>
-                                    <small class="text-muted">Citas</small>
-                                </div>
+                        <!-- Detalle de sesiones -->
+                        <div *ngIf="creditSummary?.summary" class="row text-center">
+                            <div class="col-4">
+                                <div class="h4 mb-0 text-success">{{ getTotalSessions() }}</div>
+                                <small class="text-muted">Total Citas</small>
                             </div>
-                            <div class="col-6">
-                                <div class="h4 mb-0 text-info">
-                                    {{ getActiveSessions() }}
-                                </div>
-                                <small class="text-muted">Sesiones</small>
+                            <div class="col-4">
+                                <div class="h4 mb-0 text-warning">{{ getUsedSessions() }}</div>
+                                <small class="text-muted">Citas Usadas</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="h4 mb-0 text-info">{{ getRemainingSessions() }}</div>
+                                <small class="text-muted">Citas Activas</small>
                             </div>
                         </div>
-
-                        <!-- Detalle de sesiones si existen -->
-                        <div *ngIf="creditSummary?.summary" class="mt-3 pt-3 border-top">
-                            <div class="row text-center small">
-                                <div class="col-4">
-                                    <div class="text-success fw-bold">{{ getTotalSessions() }}
-                                    </div>
-                                    <small class="text-muted">Total</small>
-                                </div>
-                                <div class="col-4">
-                                    <div class="text-warning fw-bold">{{ getUsedSessions() }}</div>
-                                    <small class="text-muted">Usadas</small>
-                                </div>
-                                <div class="col-4">
-                                    <div class="text-info fw-bold">{{ getRemainingSessions() }}
-                                    </div>
-                                    <small class="text-muted">Activas</small>
-                                </div>
-                            </div>
+                        <!-- Mensaje si no hay sesiones -->
+                        <div *ngIf="!creditSummary?.summary" class="text-center text-muted">
+                            <p class="mb-0">Sin sesiones registradas</p>
                         </div>
                     </div>
                 </div>

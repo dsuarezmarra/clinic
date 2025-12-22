@@ -175,4 +175,45 @@ router.get('/status', async (req, res, next) => {
     }
 });
 
+// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automático semanal)
+// Este endpoint es llamado automáticamente por Vercel Cron según la configuración en vercel.json
+router.get('/cron', async (req, res, next) => {
+    try {
+        // Verificar que la llamada viene de Vercel Cron o tiene la clave correcta
+        const authHeader = req.headers['authorization'];
+        const cronSecret = process.env.CRON_SECRET;
+        
+        // Vercel envía el header Authorization con el valor Bearer <CRON_SECRET>
+        // Si no hay CRON_SECRET configurado, permitimos la ejecución (para desarrollo)
+        if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+            console.log('[CRON] Acceso no autorizado al endpoint de cron');
+            return res.status(401).json({
+                success: false,
+                message: 'No autorizado'
+            });
+        }
+
+        console.log('[CRON] Ejecutando backup semanal automático...');
+        
+        const backup = new DatabaseBackup();
+        const result = await backup.createBackup('weekly');
+        
+        console.log('[CRON] Backup semanal completado:', result);
+        
+        res.json({
+            success: true,
+            message: 'Backup semanal automático completado',
+            type: 'weekly',
+            timestamp: new Date().toISOString(),
+            ...result
+        });
+    } catch (error) {
+        console.error('[CRON] Error en backup semanal:', error.message);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Error al crear backup automático'
+        });
+    }
+});
+
 module.exports = router;

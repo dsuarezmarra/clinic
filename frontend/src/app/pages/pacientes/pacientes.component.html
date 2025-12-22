@@ -231,7 +231,6 @@
                                     <th>Contacto</th>
                                     <th>Notas</th>
                                     <th>Sesiones</th>
-                                    <th>Citas</th>
                                     <th class="text-center">Acciones</th>
                                 </tr>
                             </thead>
@@ -295,12 +294,6 @@
                                                 patient['pricePreview'] }}</small>
                                         </div>
                                     </td>
-                                    <td>
-                                        <span class="badge bg-secondary">
-                                            {{ patient._count?.appointments || 0 }}
-                                        </span>
-                                    </td>
-
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm" role="group">
                                             <button type="button" class="btn btn-outline-primary"

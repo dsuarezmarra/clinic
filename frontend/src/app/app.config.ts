@@ -25,12 +25,11 @@ export const appConfig: ApplicationConfig = {
       useClass: EncodingInterceptor,
       multi: true
     },
-    { provide: LOCALE_ID, useValue: 'es' }, provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          }), provideServiceWorker('ngsw-worker.js', {
-            enabled: !isDevMode(),
-            registrationStrategy: 'registerWhenStable:30000'
-          })
+    { provide: LOCALE_ID, useValue: 'es' },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      // Registrar inmediatamente para evitar bloqueos en PWA
+      registrationStrategy: 'registerImmediately'
+    })
   ]
 };

@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { ClientConfigService } from './services/client-config.service';
+import { PwaUpdateService } from './services/pwa-update.service';
 
 @Component({
     selector: 'app-root',
@@ -20,10 +21,15 @@ export class AppComponent implements OnInit {
   constructor(
     private router: Router,
     public clientConfig: ClientConfigService,
-    public authService: AuthService
+    public authService: AuthService,
+    private pwaUpdateService: PwaUpdateService
   ) { }
 
   ngOnInit(): void {
+    // Inicializar servicio de actualizaciones PWA
+    // Esto evita que la app se congele cuando hay nuevas versiones
+    this.pwaUpdateService.initialize();
+    
     // Aplicar tema del cliente (colores, gradientes)
     this.clientConfig.applyTheme();
     
