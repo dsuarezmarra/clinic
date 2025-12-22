@@ -3,6 +3,7 @@
 ## ?? Resumen
 
 El sistema de backups automáticos anterior usaba `node-cron` que **NO funciona en Vercel** porque:
+
 - Vercel usa funciones serverless que se "duermen" cuando no hay tráfico
 - Los cron jobs de node-cron requieren un proceso persistente
 
@@ -10,24 +11,26 @@ El sistema de backups automáticos anterior usaba `node-cron` que **NO funciona e
 
 ### Cambios Realizados
 
-#### 1. Nuevo Endpoint `/api/backup/cron` 
+#### 1. Nuevo Endpoint `/api/backup/cron`
+
 **Archivo:** `backend/src/routes/backup.js`
 
 ```javascript
 // Endpoint para Vercel Cron Jobs
-router.get('/cron', async (req, res, next) => {
-    // Verifica autorización con CRON_SECRET
-    const authHeader = req.headers.authorization;
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    // Ejecuta backup semanal
-    const result = await backup.createBackup('weekly');
-    res.json({ success: true, result });
+router.get("/cron", async (req, res, next) => {
+  // Verifica autorización con CRON_SECRET
+  const authHeader = req.headers.authorization;
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  // Ejecuta backup semanal
+  const result = await backup.createBackup("weekly");
+  res.json({ success: true, result });
 });
 ```
 
 #### 2. Configuración Cron en vercel.json
+
 **Archivo:** `backend/vercel.json`
 
 ```json
@@ -80,6 +83,7 @@ curl -H "Authorization: Bearer TU_CRON_SECRET" \
 ```
 
 Respuesta esperada:
+
 ```json
 {
   "success": true,
@@ -94,11 +98,11 @@ Respuesta esperada:
 
 ## ?? Schedule (Horario)
 
-| Cron Expression | Descripción |
-|-----------------|-------------|
-| `0 3 * * 0` | Domingos 3:00 AM UTC |
-| `0 3 * * *` | Diario 3:00 AM UTC (alternativa) |
-| `0 3 * * 1` | Lunes 3:00 AM UTC |
+| Cron Expression | Descripción                      |
+| --------------- | -------------------------------- |
+| `0 3 * * 0`     | Domingos 3:00 AM UTC             |
+| `0 3 * * *`     | Diario 3:00 AM UTC (alternativa) |
+| `0 3 * * 1`     | Lunes 3:00 AM UTC                |
 
 Para cambiar la frecuencia, modifica `schedule` en `vercel.json`.
 
@@ -115,6 +119,7 @@ Para cambiar la frecuencia, modifica `schedule` en `vercel.json`.
 ## ?? Logs
 
 Para ver logs de ejecución:
+
 1. Vercel Dashboard ? **Deployments** ? Seleccionar deployment
 2. **Functions** tab ? Ver logs de `/api/backup/cron`
 

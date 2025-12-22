@@ -1,6 +1,6 @@
-import { Injectable, ApplicationRef } from '@angular/core';
+import { ApplicationRef, Injectable } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { concat, interval, first, filter } from 'rxjs';
+import { concat, filter, first, interval } from 'rxjs';
 
 /**
  * Servicio para manejar actualizaciones de la PWA
