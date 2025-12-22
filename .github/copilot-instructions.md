@@ -156,16 +156,16 @@ Necesito implementar un nuevo cliente:
 ### Cliente 1: Masaje Corporal Deportivo
 
 - **ID:** `masajecorporaldeportivo`
-- **Colores:** Azul (#667eea) y Púrpura (#764ba2)
-- **Estado:** ✅ Completo y funcional
-- **URL:** https://app-masajecorporaldeportivo.vercel.app
+- **Colores:** Azul (#667eea) y P�rpura (#764ba2)
+- **Estado:** ? Completo y funcional
+- **URL:** https://masajecorporaldeportivo.vercel.app
 
 ### Cliente 2: Actifisio
 
 - **ID:** `actifisio`
 - **Colores:** Naranja (#ff6b35) y Amarillo (#f7b731)
-- **Estado:** ✅ Configurado (pendiente deployment)
-- **URL:** https://app-actifisio.vercel.app (pendiente)
+- **Estado:** ? Configurado (pendiente deployment)
+- **URL:** https://actifisio.vercel.app (pendiente)
 
 ---
 

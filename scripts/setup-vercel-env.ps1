@@ -39,11 +39,11 @@ Get-Content $envFile | Where-Object { $_ -match '^\s*[A-Z_]+=.+' } | ForEach-Obj
     $envVars[$key] = $value
 }
 
-# Agregar variables adicionales necesarias para producción
+# Agregar variables adicionales necesarias para producci�n
 $envVars["NODE_ENV"] = "production"
 $envVars["USE_SUPABASE"] = "true"
 $envVars["DB_TYPE"] = "postgresql"
-$envVars["FRONTEND_URL"] = "https://clinic-frontend-4ztbquo0g-davids-projects-8fa96e54.vercel.app"
+$envVars["FRONTEND_URL"] = "https://masajecorporaldeportivo.vercel.app"
 
 # Verificar que existen las variables críticas
 $missing = @()
@@ -123,6 +123,6 @@ if ($failed -eq 0) {
     Write-Host "`n🔄 SIGUIENTE PASO: Redeploy el backend" -ForegroundColor Yellow
     Write-Host "   Ejecuta: cd backend; vercel --prod`n" -ForegroundColor White
 } else {
-    Write-Host "`n⚠️  Algunas variables fallaron. Configúralas manualmente en:" -ForegroundColor Yellow
-    Write-Host "   https://vercel.com/davids-projects-8fa96e54/clinic-backend/settings/environment-variables`n" -ForegroundColor White
+    Write-Host "`n??  Algunas variables fallaron. Config�ralas manualmente en:" -ForegroundColor Yellow
+    Write-Host "   https://vercel.com/dsuarezmarras-projects/api-clinic-personal/settings/environment-variables`n" -ForegroundColor White
 }

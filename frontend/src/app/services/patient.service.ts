@@ -1,7 +1,6 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { APP_CONFIG } from '../config/app.config';
 import { CreatePatientRequest, Patient, PatientFile, PatientListResponse, PatientSearchParams } from '../models/patient.model';
 import { ClientConfigService } from './client-config.service';
 
@@ -84,12 +83,12 @@ export class PatientService {
 
   // Obtener provincias y localidades para autocompletar
   getLocations(): Observable<any> {
-    return this.http.get<any>(`${APP_CONFIG.apiUrl}/meta/locations`, this.httpOptions);
+    return this.http.get<any>(`${this.clientConfig.getApiUrl()}/meta/locations`, this.httpOptions);
   }
 
-  // Buscar provincia/localidades por cÃ³digo postal
+  // Buscar provincia/localidades por código postal
   lookupByCp(cp: string): Observable<any> {
-    return this.http.get<any>(`${APP_CONFIG.apiUrl}/meta/locations/by-cp/${encodeURIComponent(cp)}`, this.httpOptions);
+    return this.http.get<any>(`${this.clientConfig.getApiUrl()}/meta/locations/by-cp/${encodeURIComponent(cp)}`, this.httpOptions);
   }
 
   // Obtener archivos del paciente

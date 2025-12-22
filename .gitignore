@@ -12,6 +12,8 @@ backend/node_modules/
 .env.local
 .env.production
 .env.*.local
+.env.vercel
+.env.check
 backend/.env
 frontend/.env
 
@@ -65,3 +67,4 @@ test-*.json
 test-*.js
 
 frontend/package-lock.json
+.env*.local

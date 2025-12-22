@@ -21,15 +21,15 @@ param(
     [string]$ClientId
 )
 
-# ConfiguraciÃ³n de proyectos
+# Configuración de proyectos
 $VERCEL_PROJECTS = @{
     masajecorporaldeportivo = @{
-        ProjectName = "masajecorporaldeportivo-web"
-        ApiUrl = "https://masajecorporaldeportivo-api.vercel.app/api"
+        ProjectName = "masajecorporaldeportivo"
+        ApiUrl = "https://api-clinic-personal.vercel.app/api"
     }
     actifisio = @{
-        ProjectName = "actifisio-web"
-        ApiUrl = "https://actifisio-api.vercel.app/api"  # TODO: Actualizar con URL real
+        ProjectName = "actifisio"
+        ApiUrl = "https://api-clinic-personal.vercel.app/api"
     }
 }
 

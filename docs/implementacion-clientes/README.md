@@ -328,10 +328,10 @@ Ctrl+Shift+F → Buscar en: docs/implementacion-clientes
 
 ### ⚠️ Antes de Empezar
 
-1. **Verificar que backend API está funcionando:**
+1. **Verificar que backend API est� funcionando:**
 
    ```powershell
-   curl https://masajecorporaldeportivo-api.vercel.app/api/health
+   curl https://api-clinic-personal.vercel.app/api/health
    ```
 
 2. **Verificar acceso a Supabase:**

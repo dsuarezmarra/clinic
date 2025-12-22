@@ -51,7 +51,7 @@ router.get("/cron", async (req, res, next) => {
 ### Paso 1: Crear CRON_SECRET
 
 1. Ir a [Vercel Dashboard](https://vercel.com/dashboard)
-2. Seleccionar proyecto `clinic-backend`
+2. Seleccionar proyecto `api-clinic-personal`
 3. Ir a **Settings** ? **Environment Variables**
 4. Agregar nueva variable:
    - **Name:** `CRON_SECRET`
@@ -79,7 +79,7 @@ Para probar el endpoint manualmente:
 
 ```bash
 curl -H "Authorization: Bearer TU_CRON_SECRET" \
-  https://clinic-backend-nu.vercel.app/api/backup/cron
+  https://api-clinic-personal.vercel.app/api/backup/cron
 ```
 
 Respuesta esperada:
