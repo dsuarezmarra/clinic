@@ -43,7 +43,7 @@ export const actifisioConfig: ClientConfig = {
   
   // Configuración de backend (API compartida multi-tenant)
   backend: {
-    apiUrl: 'https://clinic-backend-nu.vercel.app/api'
+    apiUrl: 'https://api-clinic-personal.vercel.app/api'
   },
   
   // ConfiguraciÃ³n de PWA
