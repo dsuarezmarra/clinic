@@ -10,6 +10,7 @@ import { concat, filter, first, interval } from 'rxjs';
   providedIn: 'root'
 })
 export class PwaUpdateService {
+  private initializationTimeout: any;
   
   constructor(
     private swUpdate: SwUpdate,
@@ -27,6 +28,17 @@ export class PwaUpdateService {
     }
 
     console.log('[PWA] Inicializando servicio de actualizaciones...');
+
+    // CRITICAL FIX: Timeout de seguridad para evitar que la app se quede colgada
+    // Si después de 5 segundos la app no está estable, forzar recarga
+    this.initializationTimeout = setTimeout(() => {
+      this.appRef.isStable.pipe(first()).subscribe(isStable => {
+        if (!isStable) {
+          console.warn('[PWA] App no estable después de 5s, verificando SW...');
+          this.handleStuckState();
+        }
+      });
+    }, 5000);
 
     // Escuchar cuando hay una nueva versión lista
     this.swUpdate.versionUpdates
@@ -106,9 +118,44 @@ export class PwaUpdateService {
     const everyThirtyMinutes$ = interval(30 * 60 * 1000);
     const everyThirtyMinutesOnceAppIsStable$ = concat(appIsStable$, everyThirtyMinutes$);
 
+    // Limpiar timeout de inicialización cuando la app esté estable
+    appIsStable$.subscribe(() => {
+      if (this.initializationTimeout) {
+        clearTimeout(this.initializationTimeout);
+        console.log('[PWA] App estable, timeout de inicialización cancelado');
+      }
+    });
+
     everyThirtyMinutesOnceAppIsStable$.subscribe(async () => {
       await this.checkForUpdate();
     });
+  }
+
+  /**
+   * Manejar estado atascado de la app
+   */
+  private async handleStuckState(): Promise<void> {
+    console.warn('[PWA] Detectado posible estado atascado...');
+    
+    try {
+      // Intentar activar cualquier actualización pendiente
+      if (this.swUpdate.isEnabled) {
+        const hasUpdate = await this.swUpdate.checkForUpdate();
+        if (hasUpdate) {
+          console.log('[PWA] Actualización encontrada, activando...');
+          await this.swUpdate.activateUpdate();
+          this.forceReload();
+          return;
+        }
+      }
+      
+      // Si no hay actualización pero seguimos atascados, intentar recuperar
+      console.log('[PWA] No hay actualizaciones, la app debería cargar...');
+    } catch (err) {
+      console.error('[PWA] Error manejando estado atascado:', err);
+      // En último caso, forzar recarga limpia
+      this.forceReload();
+    }
   }
 
   /**

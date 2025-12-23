@@ -17,7 +17,7 @@
   "crons": [
     {
       "path": "/api/backup/cron",
-      "schedule": "0 3 * * 0"
+      "schedule": "0 1 * * *"
     }
   ],
   "env": {

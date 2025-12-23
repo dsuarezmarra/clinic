@@ -555,7 +555,7 @@ DatabaseBackup.prototype._getFetch = async function () {
 
 DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
     try {
-        console.log('🔁 Exportando datos vía Supabase API (JSON)...');
+        console.log('?? Exportando datos v�a Supabase API (JSON) - Multi-tenant...');
         const SUPABASE_URL = process.env.SUPABASE_URL;
         const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
         if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -563,73 +563,90 @@ DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
         }
 
         const fetchFn = await this._getFetch();
-    const tables = ['patients', 'appointments', 'credit_packs', 'credit_redemptions', 'configurations'];
-        const exportObj = {};
+        
+        // Obtener lista de tenants activos
+        let tenants = [];
+        try {
+            const tenantsUrl = `${SUPABASE_URL}/rest/v1/tenants?select=*&is_active=eq.true`;
+            const tenantsRes = await fetchFn(tenantsUrl, {
+                headers: {
+                    apikey: SUPABASE_KEY,
+                    Authorization: `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            if (tenantsRes.ok) {
+                tenants = await tenantsRes.json();
+                console.log(`? Encontrados ${tenants.length} tenants activos:`, tenants.map(t => t.slug).join(', '));
+            }
+        } catch (e) {
+            console.warn('?? No se pudo obtener lista de tenants, usando fallback');
+        }
+        
+        // Fallback a tenants conocidos si no se encontraron
+        if (tenants.length === 0) {
+            tenants = [
+                { slug: 'masajecorporaldeportivo', name: 'Masaje Corporal Deportivo' },
+                { slug: 'actifisio', name: 'Actifisio' }
+            ];
+            console.log('?? Usando tenants por defecto:', tenants.map(t => t.slug).join(', '));
+        }
+        
+        // Tablas base que existen para cada tenant
+        const baseTables = ['patients', 'appointments', 'credit_packs', 'credit_redemptions', 'configurations'];
+        const exportObj = {
+            tenants: tenants,
+            byTenant: {}
+        };
 
-        for (const table of tables) {
-            try {
-                // Prepare candidate names to try: original, plural (add 's' when missing), and camelCase->snake_case
-                const candidates = [table];
-                if (!table.endsWith('s')) candidates.push(table + 's');
-                const camelToSnake = table.replace(/[A-Z]/g, m => '_' + m.toLowerCase());
-                if (camelToSnake !== table) candidates.push(camelToSnake);
-
-                let succeeded = false;
-                let usedName = null;
-                for (const candidate of candidates) {
-                    try {
-                        const url = `${SUPABASE_URL}/rest/v1/${candidate}?select=*`;
-                        const res = await fetchFn(url, {
-                            headers: {
-                                apikey: SUPABASE_KEY,
-                                Authorization: `Bearer ${SUPABASE_KEY}`
-                            }
-                        });
-
-                        if (!res.ok) {
-                            // if 404, try next candidate; otherwise record the error and stop trying
-                            if (res.status === 404) {
-                                console.warn(`⚠️ Supabase export ${candidate} responded with status 404`);
-                                continue;
-                            }
-                            const text = await res.text().catch(() => '');
-                            console.warn(`⚠️ Supabase export ${candidate} responded with status ${res.status} ${text}`);
-                            exportObj[table] = { error: `status ${res.status} ${text}` };
-                            succeeded = true; // mark as handled
-                            usedName = candidate;
-                            break;
+        // Exportar datos para cada tenant
+        for (const tenant of tenants) {
+            console.log(`\n?? Exportando datos de tenant: ${tenant.slug}`);
+            exportObj.byTenant[tenant.slug] = {};
+            
+            for (const baseTable of baseTables) {
+                const tableName = `${baseTable}_${tenant.slug}`;
+                try {
+                    const url = `${SUPABASE_URL}/rest/v1/${tableName}?select=*`;
+                    const res = await fetchFn(url, {
+                        headers: {
+                            apikey: SUPABASE_KEY,
+                            Authorization: `Bearer ${SUPABASE_KEY}`
                         }
+                    });
 
-                        const json = await res.json();
-                        exportObj[table] = json;
-                        succeeded = true;
-                        usedName = candidate;
-                        break;
-                    } catch (err) {
-                        console.warn('⚠️ Error exporting table candidate', candidate, err && err.message ? err.message : err);
-                        // try next candidate
+                    if (!res.ok) {
+                        if (res.status === 404) {
+                            console.warn(`?? Tabla ${tableName} no existe (404)`);
+                            exportObj.byTenant[tenant.slug][baseTable] = { error: 'table not found', tableName };
+                        } else {
+                            const text = await res.text().catch(() => '');
+                            console.warn(`?? Error en ${tableName}: ${res.status} ${text}`);
+                            exportObj.byTenant[tenant.slug][baseTable] = { error: `status ${res.status}`, tableName };
+                        }
+                        continue;
                     }
-                }
 
-                if (!succeeded) {
-                    exportObj[table] = { error: `status 404 (tried: ${candidates.join(',')})` };
-                } else if (usedName && usedName !== table) {
-                    console.log(`ℹ️ Supabase table fallback: requested='${table}' used='${usedName}'`);
-                    // store mapping for diagnostics (kept in export object under a meta key)
-                    // Normalize meta key name when table is 'configurations'
-                    const metaKey = `__usedName_${table}`;
-                    exportObj[metaKey] = usedName;
+                    const json = await res.json();
+                    exportObj.byTenant[tenant.slug][baseTable] = json;
+                    console.log(`  ? ${tableName}: ${json.length} registros`);
+                } catch (e) {
+                    console.warn(`?? Error exportando ${tableName}:`, e.message || e);
+                    exportObj.byTenant[tenant.slug][baseTable] = { error: e.message || String(e), tableName };
                 }
-            } catch (e) {
-                console.warn('⚠️ Error exporting table', table, e && e.message ? e.message : e);
-                exportObj[table] = { error: e.message || String(e) };
             }
         }
 
-        fs.writeFileSync(backupPath, JSON.stringify({ exportedAt: new Date().toISOString(), data: exportObj }, null, 2), 'utf-8');
-        console.log('✅ Export via Supabase saved to', backupPath);
+        // Resumen del backup
+        const summary = {
+            exportedAt: new Date().toISOString(),
+            tenantsCount: tenants.length,
+            tenants: tenants.map(t => t.slug)
+        };
+        
+        fs.writeFileSync(backupPath, JSON.stringify({ ...summary, data: exportObj }, null, 2), 'utf-8');
+        console.log('\n? Backup multi-tenant guardado en', backupPath);
     } catch (e) {
-        console.error('❌ _exportViaSupabase failed:', e && e.message ? e.message : e);
+        console.error('? _exportViaSupabase failed:', e && e.message ? e.message : e);
         throw e;
     }
 };

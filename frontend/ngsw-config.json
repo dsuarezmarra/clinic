@@ -5,14 +5,11 @@
     {
       "name": "app",
       "installMode": "prefetch",
-      "updateMode": "prefetch",
+      "updateMode": "lazy",
       "resources": {
         "files": [
           "/favicon.ico",
-          "/index.csr.html",
           "/index.html",
-          "/manifest.webmanifest",
-          "/manifest.json",
           "/*.css",
           "/*.js"
         ]
@@ -21,7 +18,7 @@
     {
       "name": "assets",
       "installMode": "lazy",
-      "updateMode": "prefetch",
+      "updateMode": "lazy",
       "resources": {
         "files": [
           "/**/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
@@ -39,8 +36,14 @@
         "strategy": "freshness",
         "maxSize": 100,
         "maxAge": "1h",
-        "timeout": "10s"
+        "timeout": "5s"
       }
     }
-  ]
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/api/**"
+  ],
+  "navigationRequestStrategy": "freshness"
 }
