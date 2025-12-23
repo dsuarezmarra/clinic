@@ -562,6 +562,9 @@ DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
             throw new Error('No hay credenciales SUPABASE disponibles para exportar');
         }
 
+        // Detectar si estamos en Vercel Serverless
+        const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME || !fs.existsSync(this.backupDir);
+
         const fetchFn = await this._getFetch();
         
         // Obtener lista de tenants activos
@@ -598,6 +601,9 @@ DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
             byTenant: {}
         };
 
+        // Contadores para resumen
+        let totalRecords = 0;
+
         // Exportar datos para cada tenant
         for (const tenant of tenants) {
             console.log(`\n?? Exportando datos de tenant: ${tenant.slug}`);
@@ -628,6 +634,7 @@ DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
 
                     const json = await res.json();
                     exportObj.byTenant[tenant.slug][baseTable] = json;
+                    totalRecords += json.length;
                     console.log(`  ? ${tableName}: ${json.length} registros`);
                 } catch (e) {
                     console.warn(`?? Error exportando ${tableName}:`, e.message || e);
@@ -640,11 +647,56 @@ DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
         const summary = {
             exportedAt: new Date().toISOString(),
             tenantsCount: tenants.length,
-            tenants: tenants.map(t => t.slug)
+            tenants: tenants.map(t => t.slug),
+            totalRecords
         };
         
-        fs.writeFileSync(backupPath, JSON.stringify({ ...summary, data: exportObj }, null, 2), 'utf-8');
-        console.log('\n? Backup multi-tenant guardado en', backupPath);
+        const fullBackup = { ...summary, data: exportObj };
+
+        // En entorno serverless, guardar en tabla de Supabase en lugar de disco
+        if (isServerless) {
+            console.log('\n?? Entorno serverless detectado - guardando backup en Supabase...');
+            
+            // Guardar backup en tabla backups_storage
+            const backupRecord = {
+                filename: path.basename(backupPath),
+                type: backupPath.includes('daily') ? 'daily' : backupPath.includes('weekly') ? 'weekly' : 'manual',
+                created_at: new Date().toISOString(),
+                size_bytes: JSON.stringify(fullBackup).length,
+                tenants_count: tenants.length,
+                total_records: totalRecords,
+                data: fullBackup
+            };
+
+            const saveRes = await fetchFn(`${SUPABASE_URL}/rest/v1/backups_storage`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    apikey: SUPABASE_KEY,
+                    Authorization: `Bearer ${SUPABASE_KEY}`,
+                    'Prefer': 'return=representation'
+                },
+                body: JSON.stringify(backupRecord)
+            });
+
+            if (!saveRes.ok) {
+                const errText = await saveRes.text().catch(() => '');
+                console.warn(`?? No se pudo guardar en backups_storage: ${saveRes.status} ${errText}`);
+                // No es un error fatal - el backup se hizo, solo no se guard� en DB
+            } else {
+                console.log('? Backup guardado en tabla backups_storage');
+            }
+
+            // Guardar tambi�n el resultado en this.lastBackupData para acceso inmediato
+            this.lastBackupData = fullBackup;
+            console.log('\n? Backup multi-tenant completado (serverless mode)');
+        } else {
+            // En entorno con sistema de archivos, guardar normalmente
+            fs.writeFileSync(backupPath, JSON.stringify(fullBackup, null, 2), 'utf-8');
+            console.log('\n? Backup multi-tenant guardado en', backupPath);
+        }
+
+        return fullBackup;
     } catch (e) {
         console.error('? _exportViaSupabase failed:', e && e.message ? e.message : e);
         throw e;
