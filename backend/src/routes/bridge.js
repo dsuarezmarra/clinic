@@ -125,7 +125,12 @@ router.use('/patients*', loadTenant);
 router.use('/appointments*', loadTenant);
 router.use('/credits*', loadTenant);
 router.use('/reports*', loadTenant);
-router.use('/backup*', loadTenant);
+// Backup: solo aplicar loadTenant a rutas espec�ficas que lo necesiten (create, restore)
+router.use('/backup/create', loadTenant);
+router.use('/backup/restore*', loadTenant);
+router.use('/backup/download*', loadTenant);
+router.use('/backup/delete*', loadTenant);
+// Rutas de backup sin tenant: /backup/cron, /backup/list, /backup/stats, /backup/status, /backup/grouped
 router.use('/meta/config*', loadTenant);
 router.use('/files*', loadTenant);  // ✅ AGREGADO: archivos necesitan tenant
 
