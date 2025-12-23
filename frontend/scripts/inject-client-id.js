@@ -7,8 +7,8 @@
  *   VITE_CLIENT_ID=actifisio node scripts/inject-client-id.js dist/actifisio-build/browser
  */
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 // Obtener el CLIENT_ID de las variables de entorno
 const clientId = process.env.VITE_CLIENT_ID || 'masajecorporaldeportivo';

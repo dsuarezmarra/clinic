@@ -1,6 +1,7 @@
 {
   "name": "clinic-frontend",
   "version": "2.4.10",
+  "type": "module",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
