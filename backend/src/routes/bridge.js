@@ -1,4 +1,4 @@
-// Endpoints "bridge" usando fetch directo a Supabase REST API
+ï»¿// Endpoints "bridge" usando fetch directo a Supabase REST API
 // Estos endpoints evitan el bug del SDK @supabase/supabase-js en Vercel
 // VERSION: 2.4.2 - CSV billing SELECT fix (use req.getTable for relations)
 
@@ -1622,16 +1622,16 @@ router.get('/meta/locations/by-cp/:cp', async (req, res) => {
 // BACKUP ENDPOINTS (simplificados)
 // ============================================================
 
-// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automático multi-tenant)
-// Este endpoint es llamado automáticamente por Vercel Cron según la configuración en vercel.json
+// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automï¿½tico multi-tenant)
+// Este endpoint es llamado automï¿½ticamente por Vercel Cron segï¿½n la configuraciï¿½n en vercel.json
 router.get('/backup/cron', async (req, res) => {
   try {
     // Verificar que la llamada viene de Vercel Cron o tiene la clave correcta
     const authHeader = req.headers['authorization'];
     const cronSecret = process.env.CRON_SECRET;
     
-    // Vercel envía el header Authorization con el valor Bearer <CRON_SECRET>
-    // Si no hay CRON_SECRET configurado, permitimos la ejecución (para desarrollo)
+    // Vercel envï¿½a el header Authorization con el valor Bearer <CRON_SECRET>
+    // Si no hay CRON_SECRET configurado, permitimos la ejecuciï¿½n (para desarrollo)
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       console.log('[CRON] Acceso no autorizado al endpoint de cron');
       return res.status(401).json({
@@ -1640,7 +1640,7 @@ router.get('/backup/cron', async (req, res) => {
       });
     }
 
-    console.log('[CRON] Ejecutando backup automático multi-tenant...');
+    console.log('[CRON] Ejecutando backup automï¿½tico multi-tenant...');
     
     // Usar el script de backup multi-tenant
     const { DatabaseBackup } = require('../../scripts/backup');
@@ -1651,16 +1651,16 @@ router.get('/backup/cron', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Backup automático multi-tenant completado',
+      message: 'Backup automï¿½tico multi-tenant completado',
       type: 'daily',
       timestamp: new Date().toISOString(),
       ...result
     });
   } catch (error) {
-    console.error('[CRON] Error en backup automático:', error.message);
+    console.error('[CRON] Error en backup automï¿½tico:', error.message);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error al crear backup automático'
+      message: error.message || 'Error al crear backup automï¿½tico'
     });
   }
 });
@@ -1668,27 +1668,38 @@ router.get('/backup/cron', async (req, res) => {
 // GET /api/backup/list - Listar backups disponibles
 router.get('/backup/list', async (req, res) => {
   try {
-    // Obtener backups guardados en la tabla backups
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?select=*&order=created.desc`);
+    // Obtener tenant del header (opcional)
+    const tenantSlug = req.headers['x-tenant-slug'];
+    
+    // Construir query - filtrar por tenant si se proporciona
+    let endpoint = 'backups_storage?select=*&order=created_at.desc';
+    if (tenantSlug) {
+      endpoint += `&tenant_slug=eq.${tenantSlug}`;
+    }
+    
+    // Obtener backups guardados en la tabla backups_storage
+    const { data: backups, error } = await supabaseFetch(endpoint);
     
     if (error) {
       console.error('Error fetching backups from database:', error);
-      return res.json([]); // Devolver array vacÃ­o si hay error
+      return res.json([]); // Devolver array vacï¿½o si hay error
     }
     
     // Formatear backups para el frontend
     const formattedBackups = (backups || []).map(backup => {
-      const createdDate = new Date(backup.created);
+      const createdDate = new Date(backup.created_at);
       return {
-        fileName: backup.file_name,
-        filePath: backup.file_name,
+        id: backup.id,
+        fileName: backup.filename,
+        filePath: backup.filename,
         size: formatBytes(backup.size_bytes || 0),
-        created: backup.created,
-        modified: backup.created,
-        type: 'manual',
+        created: backup.created_at,
+        modified: backup.created_at,
+        type: backup.backup_type || 'manual',
+        tenantSlug: backup.tenant_slug,
         date: createdDate.toISOString().split('T')[0],
         time: createdDate.toTimeString().split(' ')[0],
-        displayName: backup.file_name
+        displayName: backup.filename
       };
     });
     
@@ -1709,11 +1720,20 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// GET /api/backup/stats - EstadÃ­sticas de backups
+// GET /api/backup/stats - Estadï¿½sticas de backups
 router.get('/backup/stats', async (req, res) => {
   try {
-    // Obtener todos los backups
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?select=*&order=created.desc`);
+    // Obtener tenant del header (opcional)
+    const tenantSlug = req.headers['x-tenant-slug'];
+    
+    // Construir query - filtrar por tenant si se proporciona
+    let endpoint = 'backups_storage?select=*&order=created_at.desc';
+    if (tenantSlug) {
+      endpoint += `&tenant_slug=eq.${tenantSlug}`;
+    }
+    
+    // Obtener todos los backups de backups_storage
+    const { data: backups, error } = await supabaseFetch(endpoint);
     
     if (error) {
       console.error('Error fetching backup stats:', error);
@@ -1728,8 +1748,8 @@ router.get('/backup/stats', async (req, res) => {
     
     const totalBackups = backups ? backups.length : 0;
     const totalSizeBytes = backups ? backups.reduce((sum, b) => sum + (b.size_bytes || 0), 0) : 0;
-    const lastBackup = backups && backups.length > 0 ? backups[0].created : null;
-    const oldestBackup = backups && backups.length > 0 ? backups[backups.length - 1].created : null;
+    const lastBackup = backups && backups.length > 0 ? backups[0].created_at : null;
+    const oldestBackup = backups && backups.length > 0 ? backups[backups.length - 1].created_at : null;
     
     res.json({
       totalBackups,
@@ -1782,15 +1802,22 @@ router.post('/backup/create', async (req, res) => {
     const backupJson = JSON.stringify(backupData);
     const sizeBytes = new Blob([backupJson]).size;
     
-    // 4. Guardar en la tabla backups
-    const { data: savedBackup, error: saveError } = await supabaseFetch(`${req.getTable('backups')}`, {
+    // 4. Guardar en la tabla backups_storage (tabla central)
+    const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug || 'unknown';
+    const totalRecords = patients.length + appointments.length + creditPacks.length + redemptions.length + files.length;
+    
+    const { data: savedBackup, error: saveError } = await supabaseFetch('backups_storage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify({
-        file_name: fileName,
-        data: backupData,
+        filename: fileName,
+        backup_type: 'manual',
+        tenant_slug: tenantSlug,
+        created_at: timestamp,
         size_bytes: sizeBytes,
-        created: timestamp
+        tenants_count: 1,
+        total_records: totalRecords,
+        data: backupData
       })
     });
     
@@ -1835,8 +1862,17 @@ router.get('/backup/status', async (req, res) => {
 // GET /api/backup/grouped - Backups agrupados por fecha
 router.get('/backup/grouped', async (req, res) => {
   try {
-    // Obtener backups guardados
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?select=*&order=created.desc`);
+    // Obtener tenant del header (opcional)
+    const tenantSlug = req.headers['x-tenant-slug'];
+    
+    // Construir query - filtrar por tenant si se proporciona
+    let endpoint = 'backups_storage?select=*&order=created_at.desc';
+    if (tenantSlug) {
+      endpoint += `&tenant_slug=eq.${tenantSlug}`;
+    }
+    
+    // Obtener backups guardados de backups_storage
+    const { data: backups, error } = await supabaseFetch(endpoint);
     
     if (error) {
       console.error('Error fetching backups:', error);
@@ -1846,7 +1882,7 @@ router.get('/backup/grouped', async (req, res) => {
     // Agrupar por fecha
     const grouped = {};
     (backups || []).forEach(backup => {
-      const createdDate = new Date(backup.created);
+      const createdDate = new Date(backup.created_at);
       const dateKey = createdDate.toISOString().split('T')[0];
       
       if (!grouped[dateKey]) {
@@ -1857,15 +1893,17 @@ router.get('/backup/grouped', async (req, res) => {
       }
       
       grouped[dateKey].backups.push({
-        fileName: backup.file_name,
-        filePath: backup.file_name,
+        id: backup.id,
+        fileName: backup.filename,
+        filePath: backup.filename,
         size: formatBytes(backup.size_bytes || 0),
-        created: backup.created,
-        modified: backup.created,
-        type: 'manual',
+        created: backup.created_at,
+        modified: backup.created_at,
+        type: backup.backup_type || 'manual',
+        tenantSlug: backup.tenant_slug,
         date: dateKey,
         time: createdDate.toTimeString().split(' ')[0],
-        displayName: backup.file_name
+        displayName: backup.filename
       });
     });
     
@@ -1880,10 +1918,15 @@ router.get('/backup/grouped', async (req, res) => {
 router.post('/backup/restore/:fileName', async (req, res) => {
   try {
     const { fileName } = req.params;
-    console.log('ðŸ”„ Iniciando restauraciÃ³n del backup:', fileName);
+    const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug;
+    console.log('ðŸ”„ Iniciando restauraciÃ³n del backup:', fileName, 'para tenant:', tenantSlug);
     
-    // 1. Obtener el backup de la base de datos
-    const { data: backups, error: fetchError } = await supabaseFetch(`${req.getTable('backups')}?file_name=eq.${encodeURIComponent(fileName)}`);
+    // 1. Obtener el backup de backups_storage
+    let endpoint = `backups_storage?filename=eq.${encodeURIComponent(fileName)}`;
+    if (tenantSlug) {
+      endpoint += `&tenant_slug=eq.${tenantSlug}`;
+    }
+    const { data: backups, error: fetchError } = await supabaseFetch(endpoint);
     
     if (fetchError || !backups || backups.length === 0) {
       console.error('âŒ Backup no encontrado:', fileName);
@@ -2026,9 +2069,14 @@ router.post('/backup/restore/:fileName', async (req, res) => {
 router.get('/backup/download/:fileName', async (req, res) => {
   try {
     const { fileName } = req.params;
+    const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug;
     
-    // Buscar el backup en la base de datos
-    const { data: backups, error } = await supabaseFetch(`${req.getTable('backups')}?file_name=eq.${encodeURIComponent(fileName)}`);
+    // Buscar el backup en backups_storage
+    let endpoint = `backups_storage?filename=eq.${encodeURIComponent(fileName)}`;
+    if (tenantSlug) {
+      endpoint += `&tenant_slug=eq.${tenantSlug}`;
+    }
+    const { data: backups, error } = await supabaseFetch(endpoint);
     
     if (error || !backups || backups.length === 0) {
       return res.status(404).json({ error: 'Backup no encontrado' });
@@ -2049,9 +2097,14 @@ router.get('/backup/download/:fileName', async (req, res) => {
 router.delete('/backup/delete/:fileName', async (req, res) => {
   try {
     const { fileName } = req.params;
+    const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug;
     
-    // Eliminar el backup de la base de datos
-    const { error } = await supabaseFetch(`${req.getTable('backups')}?file_name=eq.${encodeURIComponent(fileName)}`, {
+    // Eliminar el backup de backups_storage
+    let endpoint = `backups_storage?filename=eq.${encodeURIComponent(fileName)}`;
+    if (tenantSlug) {
+      endpoint += `&tenant_slug=eq.${tenantSlug}`;
+    }
+    const { error } = await supabaseFetch(endpoint, {
       method: 'DELETE'
     });
     

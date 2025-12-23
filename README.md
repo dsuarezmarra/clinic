@@ -22,20 +22,22 @@ Sistema de gestión para clínicas con arquitectura multi-tenant.
 ## Clientes Configurados
 
 ### Masaje Corporal Deportivo
+
 - **URL:** https://masajecorporaldeportivo.vercel.app
 - **Colores:** Azul/Púrpura (#667eea / #764ba2)
 
 ### Actifisio
+
 - **URL:** https://actifisio.vercel.app (pendiente deployment)
 - **Colores:** Naranja/Amarillo (#ff6b35 / #f7b731)
 
 ## Infraestructura
 
-| Servicio | URL | Cuenta |
-|----------|-----|--------|
+| Servicio     | URL                                | Cuenta                 |
+| ------------ | ---------------------------------- | ---------------------- |
 | **Frontend** | masajecorporaldeportivo.vercel.app | dsuarezmarras-projects |
-| **Backend** | api-clinic-personal.vercel.app | dsuarezmarras-projects |
-| **Database** | kctoxebchyrgkwofdkht.supabase.co | dsuarezmarra |
+| **Backend**  | api-clinic-personal.vercel.app     | dsuarezmarras-projects |
+| **Database** | kctoxebchyrgkwofdkht.supabase.co   | dsuarezmarra           |
 
 ## Inicio Rápido
 
@@ -57,6 +59,7 @@ npm start
 ```
 
 **URLs de desarrollo:**
+
 - Frontend: http://localhost:4300
 - Backend: http://localhost:3000
 - Health Check: http://localhost:3000/health
@@ -117,6 +120,7 @@ CLIENT_ID=masajecorporaldeportivo
 Ver documentación completa en `docs/implementacion-clientes/`
 
 Pasos principales:
+
 1. Crear configuración en `frontend/src/config/clients/[cliente].config.ts`
 2. Crear tablas en Supabase con sufijo `_[cliente]`
 3. Configurar proyecto Vercel para frontend

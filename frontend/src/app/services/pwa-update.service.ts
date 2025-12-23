@@ -1,16 +1,15 @@
 import { ApplicationRef, Injectable } from '@angular/core';
 import { SwUpdate, VersionReadyEvent } from '@angular/service-worker';
-import { concat, filter, first, interval } from 'rxjs';
+import { filter, first, interval } from 'rxjs';
 
 /**
  * Servicio para manejar actualizaciones de la PWA
- * Evita que la app se quede congelada cuando hay nuevas versiones
+ * Versión simplificada - solo maneja actualizaciones, no bloquea
  */
 @Injectable({
   providedIn: 'root'
 })
 export class PwaUpdateService {
-  private initializationTimeout: any;
   
   constructor(
     private swUpdate: SwUpdate,
@@ -27,18 +26,7 @@ export class PwaUpdateService {
       return;
     }
 
-    console.log('[PWA] Inicializando servicio de actualizaciones...');
-
-    // CRITICAL FIX: Timeout de seguridad para evitar que la app se quede colgada
-    // Si después de 5 segundos la app no está estable, forzar recarga
-    this.initializationTimeout = setTimeout(() => {
-      this.appRef.isStable.pipe(first()).subscribe(isStable => {
-        if (!isStable) {
-          console.warn('[PWA] App no estable después de 5s, verificando SW...');
-          this.handleStuckState();
-        }
-      });
-    }, 5000);
+    console.log('[PWA] Servicio PWA inicializado');
 
     // Escuchar cuando hay una nueva versión lista
     this.swUpdate.versionUpdates
@@ -58,11 +46,8 @@ export class PwaUpdateService {
       this.forceReload();
     });
 
-    // Verificar actualizaciones periódicamente (cada 30 minutos)
+    // Verificar actualizaciones periódicamente (cada 30 minutos, después de que la app esté estable)
     this.scheduleUpdateCheck();
-    
-    // Verificar actualización al iniciar
-    this.checkForUpdate();
   }
 
   /**
@@ -97,14 +82,12 @@ export class PwaUpdateService {
       
       if (activated) {
         console.log('[PWA] Nueva versión activada, recargando...');
-        // Pequeño delay para que el usuario vea que algo pasa
         setTimeout(() => {
           window.location.reload();
         }, 100);
       }
     } catch (err) {
       console.error('[PWA] Error al activar actualización:', err);
-      // En caso de error, forzar recarga
       this.forceReload();
     }
   }
@@ -113,49 +96,18 @@ export class PwaUpdateService {
    * Programar verificación periódica de actualizaciones
    */
   private scheduleUpdateCheck(): void {
-    // Esperar a que la app esté estable, luego verificar cada 30 minutos
-    const appIsStable$ = this.appRef.isStable.pipe(first(isStable => isStable === true));
-    const everyThirtyMinutes$ = interval(30 * 60 * 1000);
-    const everyThirtyMinutesOnceAppIsStable$ = concat(appIsStable$, everyThirtyMinutes$);
-
-    // Limpiar timeout de inicialización cuando la app esté estable
-    appIsStable$.subscribe(() => {
-      if (this.initializationTimeout) {
-        clearTimeout(this.initializationTimeout);
-        console.log('[PWA] App estable, timeout de inicialización cancelado');
-      }
-    });
-
-    everyThirtyMinutesOnceAppIsStable$.subscribe(async () => {
-      await this.checkForUpdate();
-    });
-  }
-
-  /**
-   * Manejar estado atascado de la app
-   */
-  private async handleStuckState(): Promise<void> {
-    console.warn('[PWA] Detectado posible estado atascado...');
-    
-    try {
-      // Intentar activar cualquier actualización pendiente
-      if (this.swUpdate.isEnabled) {
-        const hasUpdate = await this.swUpdate.checkForUpdate();
-        if (hasUpdate) {
-          console.log('[PWA] Actualización encontrada, activando...');
-          await this.swUpdate.activateUpdate();
-          this.forceReload();
-          return;
-        }
-      }
+    // Esperar a que la app esté estable antes de verificar actualizaciones
+    this.appRef.isStable.pipe(first(isStable => isStable === true)).subscribe(() => {
+      console.log('[PWA] App estable');
       
-      // Si no hay actualización pero seguimos atascados, intentar recuperar
-      console.log('[PWA] No hay actualizaciones, la app debería cargar...');
-    } catch (err) {
-      console.error('[PWA] Error manejando estado atascado:', err);
-      // En último caso, forzar recarga limpia
-      this.forceReload();
-    }
+      // Verificar actualizaciones ahora
+      this.checkForUpdate();
+      
+      // Y cada 30 minutos
+      interval(30 * 60 * 1000).subscribe(() => {
+        this.checkForUpdate();
+      });
+    });
   }
 
   /**
@@ -163,7 +115,6 @@ export class PwaUpdateService {
    */
   private forceReload(): void {
     console.log('[PWA] Forzando recarga limpia...');
-    // Usar location.href para evitar cache
     window.location.href = window.location.href;
   }
 }
