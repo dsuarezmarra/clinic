@@ -1622,6 +1622,49 @@ router.get('/meta/locations/by-cp/:cp', async (req, res) => {
 // BACKUP ENDPOINTS (simplificados)
 // ============================================================
 
+// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automático multi-tenant)
+// Este endpoint es llamado automáticamente por Vercel Cron según la configuración en vercel.json
+router.get('/backup/cron', async (req, res) => {
+  try {
+    // Verificar que la llamada viene de Vercel Cron o tiene la clave correcta
+    const authHeader = req.headers['authorization'];
+    const cronSecret = process.env.CRON_SECRET;
+    
+    // Vercel envía el header Authorization con el valor Bearer <CRON_SECRET>
+    // Si no hay CRON_SECRET configurado, permitimos la ejecución (para desarrollo)
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      console.log('[CRON] Acceso no autorizado al endpoint de cron');
+      return res.status(401).json({
+        success: false,
+        message: 'No autorizado'
+      });
+    }
+
+    console.log('[CRON] Ejecutando backup automático multi-tenant...');
+    
+    // Usar el script de backup multi-tenant
+    const { DatabaseBackup } = require('../../scripts/backup');
+    const backup = new DatabaseBackup();
+    const result = await backup.createBackup('daily');
+    
+    console.log('[CRON] Backup multi-tenant completado:', result);
+    
+    res.json({
+      success: true,
+      message: 'Backup automático multi-tenant completado',
+      type: 'daily',
+      timestamp: new Date().toISOString(),
+      ...result
+    });
+  } catch (error) {
+    console.error('[CRON] Error en backup automático:', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Error al crear backup automático'
+    });
+  }
+});
+
 // GET /api/backup/list - Listar backups disponibles
 router.get('/backup/list', async (req, res) => {
   try {
