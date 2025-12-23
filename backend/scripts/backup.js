@@ -53,27 +53,55 @@ class DatabaseBackup {
      */
     async createBackup(type = 'manual') {
         try {
-            console.log(`🔄 Iniciando backup ${type} de la base de datos (Supabase JSON export)...`);
-            this.ensureBackupDirectory();
+            console.log(`?? Iniciando backup ${type} de la base de datos (Supabase JSON export)...`);
+            
+            // Detectar si estamos en Vercel Serverless
+            const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+            
+            if (!isServerless) {
+                this.ensureBackupDirectory();
+            }
 
             const backupFileName = this.generateBackupFileName(type);
             const backupPath = path.join(this.backupDir, backupFileName);
 
             // Always export via Supabase REST as JSON
             let createdVia = 'supabase-json';
-            await this._exportViaSupabase(backupPath);
+            const backupData = await this._exportViaSupabase(backupPath);
 
-            // Verificar que el backup se creó correctamente
+            // En modo serverless, usar los datos retornados
+            if (isServerless) {
+                const backupSizeInMB = backupData ? (JSON.stringify(backupData).length / (1024 * 1024)).toFixed(2) : '0';
+                
+                console.log(`? Backup ${type} creado exitosamente (via=${createdVia}, serverless):`);
+                console.log(`   ?? Archivo: ${backupFileName}`);
+                console.log(`   ?? Tama�o: ${backupSizeInMB} MB`);
+                console.log(`   ?? Almacenado: Supabase backups_storage`);
+
+                return {
+                    success: true,
+                    fileName: backupFileName,
+                    size: backupSizeInMB,
+                    timestamp: new Date().toISOString(),
+                    type: type,
+                    createdVia,
+                    serverless: true,
+                    tenantsCount: backupData ? backupData.tenantsCount : 0,
+                    totalRecords: backupData ? backupData.totalRecords : 0
+                };
+            }
+
+            // Verificar que el backup se cre� correctamente (modo local)
             if (fs.existsSync(backupPath)) {
                 const backupStats = fs.statSync(backupPath);
                 const backupSizeInMB = (backupStats.size / (1024 * 1024)).toFixed(2);
 
-                console.log(`✅ Backup ${type} creado exitosamente (via=${createdVia}):`);
-                console.log(`   📁 Archivo: ${backupFileName}`);
-                console.log(`   📏 Tamaño: ${backupSizeInMB} MB`);
-                console.log(`   📍 Ubicación: ${backupPath}`);
+                console.log(`? Backup ${type} creado exitosamente (via=${createdVia}):`);
+                console.log(`   ?? Archivo: ${backupFileName}`);
+                console.log(`   ?? Tama�o: ${backupSizeInMB} MB`);
+                console.log(`   ?? Ubicaci�n: ${backupPath}`);
 
-                // Limpiar backups antiguos solo si es automático
+                // Limpiar backups antiguos solo si es autom�tico
                 if (type !== 'manual') {
                     await this.cleanOldBackups();
                 }
@@ -92,10 +120,11 @@ class DatabaseBackup {
             }
 
         } catch (error) {
-            console.error(`❌ Error al crear backup ${type}:`, error.message);
+            console.error(`? Error al crear backup ${type}:`, error.message);
             throw error;
         }
     }
+}
 
     /**
      * Lista todos los backups existentes
