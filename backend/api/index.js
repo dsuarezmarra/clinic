@@ -1,8 +1,11 @@
 // Vercel Serverless Function Entry Point
-// Este archivo adapta nuestra aplicación Express para funcionar en Vercel
+// Este archivo adapta nuestra aplicaci�n Express para funcionar en Vercel
 
-// Deshabilitar SSL verification para Supabase en red corporativa
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// ?? SSL bypass SOLO para desarrollo local (nunca en producci�n)
+if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_TLS_CHECK === 'true') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  console.warn('?? ADVERTENCIA: SSL verification deshabilitada (solo desarrollo)');
+}
 
 const express = require('express');
 const cors = require('cors');
@@ -15,10 +18,26 @@ require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 
-// CORS manual para Vercel Serverless - INCLUIR X-Tenant-Slug para multi-tenant
+// CORS con whitelist de dominios permitidos
+const ALLOWED_ORIGINS = [
+  'https://masajecorporaldeportivo.vercel.app',
+  'https://actifisio.vercel.app',
+  'http://localhost:4200',
+  'http://localhost:4300',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use((req, res, next) => {
-  // Permitir todos los orígenes en producción por ahora
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  // Permitir origen si est� en la whitelist
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (process.env.NODE_ENV !== 'production') {
+    // En desarrollo, permitir cualquier localhost
+    if (origin && origin.includes('localhost')) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+    }
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With, Accept, Content-Length');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -54,22 +73,24 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Diagnóstico de variables de entorno
+// Diagn�stico de variables de entorno (SOLO desarrollo)
 app.get('/api/env-check', (req, res) => {
+  // ?? Bloquear en producci�n
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  
   const envVars = {
-    SUPABASE_URL: process.env.SUPABASE_URL ? `✅ ${process.env.SUPABASE_URL.substring(0, 30)}...` : '❌ NO configurada',
-    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? `✅ Configurada (${process.env.SUPABASE_SERVICE_KEY.length} chars)` : '❌ NO configurada',
-    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? `✅ Configurada (${process.env.SUPABASE_ANON_KEY.length} chars)` : '❌ NO configurada',
-    DATABASE_URL: process.env.DATABASE_URL ? '✅ Configurada' : '❌ NO configurada',
-    USE_SUPABASE: process.env.USE_SUPABASE || '❌ NO configurada',
-    NODE_ENV: process.env.NODE_ENV || 'development',
-    FRONTEND_URL: process.env.FRONTEND_URL || '❌ NO configurada'
+    SUPABASE_URL: process.env.SUPABASE_URL ? '? Configurada' : '? NO configurada',
+    SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? '? Configurada' : '? NO configurada',
+    SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? '? Configurada' : '? NO configurada',
+    DATABASE_URL: process.env.DATABASE_URL ? '? Configurada' : '? NO configurada',
+    NODE_ENV: process.env.NODE_ENV || 'development'
   };
   
   res.json({
-    message: 'Diagnóstico de variables de entorno',
-    variables: envVars,
-    allEnvKeys: Object.keys(process.env).filter(k => !k.includes('SECRET') && !k.includes('KEY')).sort()
+    message: 'Diagn�stico de variables de entorno (solo dev)',
+    variables: envVars
   });
 });
 
@@ -81,11 +102,9 @@ app.get('/api/test-direct', async (req, res) => {
     const url = (process.env.SUPABASE_URL || '').trim();
     const key = (process.env.SUPABASE_SERVICE_KEY || '').trim();
     
-    console.log('🧪 Test directo a Supabase...');
-    console.log('   URL length:', url.length, 'chars');
-    console.log('   KEY length:', key.length, 'chars');
-    console.log('   URL:', url.substring(0, 40) + '...');
-    console.log('   KEY starts:', key.substring(0, 20) + '...');
+    console.log('?? Test directo a Supabase...');
+    console.log('   URL: [CONFIGURADA]');
+    console.log('   KEY: [CONFIGURADA]');
     
     if (!url || !key) {
       return res.status(500).json({
