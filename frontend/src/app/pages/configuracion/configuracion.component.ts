@@ -326,7 +326,7 @@ export class ConfiguracionComponent implements OnInit {
     this.backupService.createBackup().subscribe({
       next: (response) => {
         if (response.success) {
-          this.notificationService.showSuccess('backup creado exitosamente');
+          this.notificationService.showSuccess('Backup creado exitosamente');
           this.loadBackupData(); // Recargar datos
         } else {
           this.notificationService.showError(response.message || 'Error al crear el backup');
@@ -365,7 +365,7 @@ export class ConfiguracionComponent implements OnInit {
     this.backupService.restoreBackup(backup.fileName).subscribe({
       next: (response) => {
         if (response.success) {
-          this.notificationService.showSuccess('backup restaurado exitosamente');
+          this.notificationService.showSuccess('Backup restaurado exitosamente');
           // Recargar la pÃ¡gina para reflejar los cambios
           window.location.reload();
         } else {
@@ -395,7 +395,7 @@ export class ConfiguracionComponent implements OnInit {
     this.backupService.deleteBackup(backup.fileName).subscribe({
       next: (response) => {
         if (response.success) {
-          this.notificationService.showSuccess('backup eliminado exitosamente');
+          this.notificationService.showSuccess('Backup eliminado exitosamente');
           this.loadBackupData(); // Recargar datos
         } else {
           this.notificationService.showError(response.message || 'Error al eliminar el backup');
@@ -431,8 +431,14 @@ export class ConfiguracionComponent implements OnInit {
 
   /**
    * Formatear fecha para mostrar
+   * Maneja casos donde el valor no es una fecha válida (ej: "Manual")
    */
   formatDate(dateString: string): string {
+    if (!dateString) return '-';
+    // Si no es un formato de fecha ISO, devolver el valor tal cual
+    if (!dateString.includes('T') && !dateString.match(/^\d{4}-\d{2}-\d{2}/)) {
+      return dateString;
+    }
     return this.utils.formatDate(dateString);
   }
 
