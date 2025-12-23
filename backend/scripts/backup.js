@@ -124,7 +124,6 @@ class DatabaseBackup {
             throw error;
         }
     }
-}
 
     /**
      * Lista todos los backups existentes
