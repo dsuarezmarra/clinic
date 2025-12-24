@@ -1,6 +1,6 @@
 // ...existing code...
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import {
@@ -37,15 +37,11 @@ export class AppointmentService {
   // Obtener todas las citas sin filtrar por fecha
   getAllAppointments(): Observable<Appointment[]> {
     const url = `${this.apiUrl}/all`;
-    console.log('🌐 [AppointmentService] Calling URL:', url);
-    console.log('🌐 [AppointmentService] apiUrl:', this.apiUrl);
     return this.http.get<Appointment[]>(url, this.httpOptions).pipe(
       tap((appointments: Appointment[]) => {
-        console.log('🔍 [AppointmentService] RAW HTTP Response:', JSON.stringify(appointments, null, 2));
-        console.log('🔍 [AppointmentService] getAllAppointments response:', appointments);
-        if (appointments && appointments.length > 0) {
-          console.log('🔍 [AppointmentService] Primera cita:', appointments[0]);
-          console.log('🔍 [AppointmentService] creditRedemptions de primera cita:', appointments[0].creditRedemptions);
+        // Debug solo en desarrollo
+        if (isDevMode()) {
+          console.log('[AppointmentService] getAllAppointments:', appointments?.length || 0);
         }
       })
     );

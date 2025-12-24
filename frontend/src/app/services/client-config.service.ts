@@ -1,5 +1,5 @@
 import { isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { Inject, Injectable, isDevMode, PLATFORM_ID } from '@angular/core';
 import { ClientConfig, ClientInfo, ClientTheme } from '../../config/client-config.interface';
 import { getAppConfig } from '../../config/config.loader';
 
@@ -22,11 +22,11 @@ export class ClientConfigService {
     // Cargar configuracion de forma SSR-safe
     this.config = getAppConfig();
     
-    if (this.isBrowser) {
+    // Logs solo en desarrollo
+    if (this.isBrowser && isDevMode()) {
       console.log('[ClientConfigService] Inicializado');
       console.log('   Cliente:', this.config.info.name);
       console.log('   Tenant Slug:', this.config.tenantSlug);
-      console.log('   Tema primario:', this.config.theme.primary);
     }
   }
 
@@ -102,7 +102,10 @@ export class ClientConfigService {
     root.style.setProperty('--button-color', theme.buttonColor);
     root.style.setProperty('--button-hover', theme.buttonHover);
 
-    console.log('[ClientConfigService] Tema aplicado:', theme.primary);
+    // Log solo en desarrollo
+    if (isDevMode()) {
+      console.log('[ClientConfigService] Tema aplicado:', theme.primary);
+    }
   }
 
   /**

@@ -1,6 +1,30 @@
 import { ClientConfig } from './client-config.interface';
 import { actifisioConfig } from './clients/actifisio.config';
 import { masajecorporaldeportivoConfig } from './clients/masajecorporaldeportivo.config';
+import { isDevMode } from '@angular/core';
+
+/**
+ * Logging condicional (solo en desarrollo)
+ */
+const devLog = (...args: unknown[]) => {
+  if (typeof isDevMode === 'function') {
+    try {
+      if (isDevMode()) console.log(...args);
+    } catch {
+      // isDevMode puede fallar fuera del contexto Angular
+    }
+  }
+};
+
+const devWarn = (...args: unknown[]) => {
+  if (typeof isDevMode === 'function') {
+    try {
+      if (isDevMode()) console.warn(...args);
+    } catch {
+      // isDevMode puede fallar fuera del contexto Angular
+    }
+  }
+};
 
 /**
  * Mapa de todas las configuraciones de clientes disponibles
@@ -66,14 +90,14 @@ export function loadClientConfig(): ClientConfig {
   
   if (config) {
     if (isBrowser()) {
-      console.log(`[Config] Configuracion cargada para cliente: ${clientId}`);
+      devLog(`[Config] Configuracion cargada para cliente: ${clientId}`);
     }
     _cachedConfig = config;
     return config;
   }
   
   // Fallback: si el cliente no existe, usar default
-  console.warn(`[Config] Cliente '${clientId}' no encontrado, usando masajecorporaldeportivo`);
+  devWarn(`[Config] Cliente '${clientId}' no encontrado, usando masajecorporaldeportivo`);
   _cachedConfig = masajecorporaldeportivoConfig;
   return masajecorporaldeportivoConfig;
 }
