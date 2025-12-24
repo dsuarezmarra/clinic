@@ -9,6 +9,7 @@ import { CreditService } from '../../../services/credit.service';
 import { EventBusService } from '../../../services/event-bus.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PatientService } from '../../../services/patient.service';
+import { StatsService, DashboardStats, StatsPeriod } from '../../../services/stats.service';
 import { CalendarComponent } from '../../agenda/calendar/calendar.component';
 
 @Component({
@@ -21,6 +22,13 @@ import { CalendarComponent } from '../../agenda/calendar/calendar.component';
 export class DashboardComponent implements OnInit {
     @ViewChild(CalendarComponent) calendarComponent: CalendarComponent | undefined;
     @ViewChild('patientSearchInput') patientSearchInput!: ElementRef;
+
+    // Dashboard stats
+    stats: DashboardStats | null = null;
+    statsLoading = false;
+    statsPeriod: StatsPeriod = 'month';
+    showStats = true;
+
     previousPeriod() {
         if (this.calendarComponent) {
             this.calendarComponent.previousPeriod();
@@ -64,7 +72,8 @@ export class DashboardComponent implements OnInit {
         private router: Router,
         private cdr: ChangeDetectorRef,
         private creditService: CreditService,
-        private eventBusService: EventBusService
+        private eventBusService: EventBusService,
+        private statsService: StatsService
     ) { }
     // export controls removed â€” use calendar monthly export
     ngAfterViewInit() {
@@ -75,6 +84,7 @@ export class DashboardComponent implements OnInit {
         this.loadAppointments();
         this.loadPatients();
         this.generateTimeSlots();
+        this.loadStats();
         
         // Suscribirse a cambios de estado de pago
         this.eventBusService.packPaymentStatusChanged$.subscribe(change => {
@@ -82,6 +92,32 @@ export class DashboardComponent implements OnInit {
             // Actualizar las citas que usan este pack
             this.updateAppointmentPaymentStatus(change.packId, change.paid);
         });
+    }
+
+    // Cargar estadísticas del dashboard
+    loadStats() {
+        this.statsLoading = true;
+        this.statsService.getDashboardStats(this.statsPeriod).subscribe({
+            next: (stats) => {
+                this.stats = stats;
+                this.statsLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading stats:', error);
+                this.statsLoading = false;
+            }
+        });
+    }
+
+    // Cambiar período de estadísticas
+    changeStatsPeriod(period: StatsPeriod) {
+        this.statsPeriod = period;
+        this.loadStats();
+    }
+
+    // Toggle mostrar/ocultar estadísticas
+    toggleStats() {
+        this.showStats = !this.showStats;
     }
 
     // Generar slots de tiempo cada 30 minutos para horario laboral

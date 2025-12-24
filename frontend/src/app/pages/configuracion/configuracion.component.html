@@ -497,7 +497,7 @@
                     </div>
                 </div>
 
-                <!-- Sistema eliminado por peticiÃ³n del usuario -->
+                <!-- Sistema eliminado por petición del usuario -->
             </div>
 
             <!-- Loading overlay -->
@@ -508,10 +508,40 @@
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Cargando...</span>
                     </div>
-                    <p class="mt-3 text-muted">Cargando configuraciÃ³n...</p>
+                    <p class="mt-3 text-muted">Cargando configuración...</p>
                 </div>
             </div>
 
         </div>
     </div>
 </div>
+
+<!-- Modal de confirmación para eliminar backup -->
+<app-confirm-modal
+    [isOpen]="showDeleteBackupConfirm"
+    title="Eliminar Backup"
+    message="¿Está seguro de que desea eliminar este backup?"
+    details="Esta acción no se puede deshacer."
+    itemLabel="Fecha"
+    [itemName]="backupToDelete ? formatDate(backupToDelete.created) : ''"
+    confirmText="Eliminar"
+    type="danger"
+    [loading]="deleteBackupLoading"
+    (confirm)="executeDeleteBackup()"
+    (cancel)="cancelDeleteBackup()">
+</app-confirm-modal>
+
+<!-- Modal de confirmación para restaurar backup -->
+<app-confirm-modal
+    [isOpen]="showRestoreBackupConfirm"
+    title="Restaurar Backup"
+    message="¿Está seguro de que desea restaurar este backup?"
+    details="Esta acción reemplazará todos los datos actuales con los del backup seleccionado. Los datos actuales se perderán."
+    itemLabel="Fecha del backup"
+    [itemName]="backupToRestore ? formatDate(backupToRestore.created) : ''"
+    confirmText="Restaurar"
+    type="warning"
+    [loading]="restoreBackupLoading"
+    (confirm)="executeRestoreBackup()"
+    (cancel)="cancelRestoreBackup()">
+</app-confirm-modal>

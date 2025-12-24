@@ -3,6 +3,7 @@ import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // ...existing code... (PatientSelectorComponent removed because it's not used in the template)
+import { ConfirmModalComponent } from '../../../components/confirm-modal/confirm-modal.component';
 import { Appointment, CreateAppointmentRequest } from '../../../models/appointment.model';
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
@@ -15,7 +16,7 @@ import { PatientService } from '../../../services/patient.service';
 @Component({
     selector: 'app-calendar',
     standalone: true,
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ConfirmModalComponent],
     templateUrl: './calendar.component.html',
     styleUrls: ['./calendar.component.scss']
 })
@@ -106,10 +107,15 @@ export class CalendarComponent implements OnInit {
     editingTimeLocal: string = '';
     // Nuevo: bandera para marcar la cita como pagada en el modal
     editingPaid: boolean = false;
-    // Flag para evitar creaciÃ³n duplicada de citas (race condition)
+    // Flag para evitar creación duplicada de citas (race condition)
     isCreatingAppointment: boolean = false;
-    // Flag para evitar actualizaciÃ³n duplicada de citas (race condition con click + touchstart)
+    // Flag para evitar actualización duplicada de citas (race condition con click + touchstart)
     isUpdatingAppointment: boolean = false;
+
+    // Delete confirmation modal
+    showDeleteConfirm = false;
+    appointmentToDelete: string | null = null;
+    deleteLoading = false;
 
     timeSlots: string[] = [];
     weekDays = ['Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b', 'Dom'];
@@ -370,12 +376,28 @@ export class CalendarComponent implements OnInit {
         return slotDate.getTime() === aptStart.getTime();
     }
 
-    // Devuelve true si la cita dura mÃ¡s de 30 minutos (ocuparÃ¡ al menos dos slots)
+    // Devuelve true si la cita dura más de 30 minutos (ocupará al menos dos slots)
     appointmentSpansMultipleSlots(appointment: Appointment): boolean {
         if (!appointment || !appointment.start || !appointment.end) return false;
         const start = new Date(appointment.start).getTime();
         const end = new Date(appointment.end).getTime();
         return (end - start) > (30 * 60 * 1000);
+    }
+
+    // Obtiene la duración de la cita en minutos
+    getAppointmentDuration(appointment: Appointment): number {
+        if (appointment.durationMinutes) {
+            return Number(appointment.durationMinutes);
+        }
+        if (!appointment.start || !appointment.end) return 30;
+        const start = new Date(appointment.start).getTime();
+        const end = new Date(appointment.end).getTime();
+        return Math.round((end - start) / (60 * 1000));
+    }
+
+    // Devuelve 'short' para 30 min, 'long' para 60+ min
+    getAppointmentDurationClass(appointment: Appointment): 'short' | 'long' {
+        return this.getAppointmentDuration(appointment) > 30 ? 'long' : 'short';
     }
 
     openCreateAppointmentModal(date: Date, timeSlot: string) {
@@ -758,22 +780,43 @@ export class CalendarComponent implements OnInit {
     }
 
     deleteAppointment(appointmentId: string) {
-        if (!confirm('Â¿EstÃ¡s seguro de que deseas eliminar esta cita?')) {
-            return;
-        }
-        this.appointmentService.deleteAppointment(appointmentId).subscribe({
+        this.appointmentToDelete = appointmentId;
+        this.showDeleteConfirm = true;
+    }
+
+    confirmDeleteAppointment() {
+        if (!this.appointmentToDelete) return;
+
+        this.deleteLoading = true;
+        this.appointmentService.deleteAppointment(this.appointmentToDelete).subscribe({
             next: () => {
                 this.notificationService.showSuccess('Cita eliminada exitosamente');
-                // Cerrar modal de ediciÃ³n si estÃ¡ abierto y refrescar datos
+                // Cerrar modal de edición si está abierto y refrescar datos
                 this.closeModal();
+                this.cancelDeleteAppointment();
                 this.loadAppointments();
                 this.loadPatients();
             },
             error: (error) => {
                 this.notificationService.showError('Error al eliminar la cita');
                 console.error('Error deleting appointment:', error);
+                this.deleteLoading = false;
             }
         });
+    }
+
+    cancelDeleteAppointment() {
+        this.showDeleteConfirm = false;
+        this.appointmentToDelete = null;
+        this.deleteLoading = false;
+    }
+
+    // Obtener nombre del paciente de la cita a eliminar
+    getDeleteAppointmentPatientName(): string {
+        if (!this.appointmentToDelete) return '';
+        const appointment = this.appointments.find(a => a.id === this.appointmentToDelete);
+        if (!appointment) return '';
+        return this.getPatientName(appointment);
     }
 
     closeModal() {

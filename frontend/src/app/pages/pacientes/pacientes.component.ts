@@ -1,8 +1,9 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
+import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 import { CreateCreditPackRequest } from '../../models/credit.model';
 import { CreatePatientRequest, Patient, PatientListResponse } from '../../models/patient.model';
 import { CreditService } from '../../services/credit.service';
@@ -15,7 +16,8 @@ import { UtilsService } from '../../services/utils.service';
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ConfirmModalComponent
   ],
   templateUrl: './pacientes.component.html',
   styleUrl: './pacientes.component.scss'
@@ -68,6 +70,10 @@ export class PacientesComponent implements OnInit {
     notes: ''
   };
 
+  // Confirm modal states
+  showDeleteConfirm = false;
+  patientToDelete: Patient | null = null;
+  deleteLoading = false;
   constructor(
     private patientService: PatientService,
     private notificationService: NotificationService,
@@ -115,7 +121,7 @@ export class PacientesComponent implements OnInit {
 
     this.patientService.getPatients(params).subscribe({
       next: (response: PatientListResponse) => {
-        // El backend ya envía los pacientes ordenados por nombre, luego apellido
+        // El backend ya envÃ­a los pacientes ordenados por nombre, luego apellido
         this.patients = response.patients;
         this.filteredPatients = response.patients;
         this.totalPatients = response.pagination.total;
@@ -123,8 +129,8 @@ export class PacientesComponent implements OnInit {
         this.loading = false;
         this.cdr.detectChanges();
 
-        // Cargar una previsualización de precio para los pacientes actuales
-        this.filteredPatients.forEach(p => this.loadPricePreview(p));
+        // Cargar una previsualizaciÃ³n de precio para los pacientes actuales
+        this.loadBatchPricePreview();
       },
       error: (error: any) => {
         console.error('Error loading patients:', error);
@@ -138,6 +144,35 @@ export class PacientesComponent implements OnInit {
     if (!cents) return '';
     const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
     return euros.replace('.', ',') + ' €';
+  }
+
+  // Optimizado: carga créditos de todos los pacientes visibles en una sola petición
+  loadBatchPricePreview() {
+    const patientIds = this.filteredPatients.map(p => p.id);
+    if (patientIds.length === 0) return;
+
+    this.creditService.getBatchCredits(patientIds).subscribe({
+      next: (response) => {
+        this.filteredPatients.forEach(patient => {
+          const creditInfo = response.credits[patient.id];
+          if (creditInfo && creditInfo.totalPriceCents > 0) {
+            (patient as any)['pricePreview'] = this.formatPriceCents(creditInfo.totalPriceCents);
+            (patient as any)['activeCredits'] = creditInfo.activeCredits;
+          } else {
+            (patient as any)['pricePreview'] = '';
+            (patient as any)['activeCredits'] = 0;
+          }
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        console.warn('Error loading batch credits:', err);
+        // Fallback silencioso - no mostrar precios
+        this.filteredPatients.forEach(patient => {
+          (patient as any)['pricePreview'] = '';
+        });
+      }
+    });
   }
 
   loadPricePreview(patient: Patient) {
@@ -163,10 +198,10 @@ export class PacientesComponent implements OnInit {
   }
 
   loadPatientsAndEdit(patientId: string) {
-    // Primero cargar el paciente específico para editarlo
+    // Primero cargar el paciente especÃ­fico para editarlo
     this.patientService.getPatientById(patientId).subscribe({
       next: (patient: Patient) => {
-        // Abrir directamente el modal de edición con el paciente encontrado
+        // Abrir directamente el modal de ediciÃ³n con el paciente encontrado
         this.editPatient(patient);
         // Limpiar el query parameter
         this.router.navigate(['/pacientes']);
@@ -174,7 +209,7 @@ export class PacientesComponent implements OnInit {
       error: (error: any) => {
         console.error('Error loading patient for edit:', error);
         this.notificationService.showError('Error al cargar el paciente para editar');
-        // Si no se puede cargar el paciente específico, intentar buscarlo en la lista actual
+        // Si no se puede cargar el paciente especÃ­fico, intentar buscarlo en la lista actual
         const patientToEdit = this.patients.find(p => p.id === patientId);
         if (patientToEdit) {
           this.editPatient(patientToEdit);
@@ -185,7 +220,7 @@ export class PacientesComponent implements OnInit {
   }
 
   filterPatients() {
-    // La búsqueda ahora se maneja en el servidor
+    // La bÃºsqueda ahora se maneja en el servidor
     this.onSearchChange();
   }
 
@@ -201,13 +236,13 @@ export class PacientesComponent implements OnInit {
       return;
     }
 
-    console.log('📤 Enviando datos del paciente:', this.patientFormData);
+    console.log('ðŸ“¤ Enviando datos del paciente:', this.patientFormData);
 
     this.loading = true;
 
     if (this.selectedPatient) {
       // Actualizar paciente existente
-      console.log('📝 Actualizando paciente ID:', this.selectedPatient.id);
+      console.log('ðŸ“ Actualizando paciente ID:', this.selectedPatient.id);
       this.patientService.updatePatient(this.selectedPatient.id, this.patientFormData).subscribe({
         next: (updatedPatient: Patient) => {
           const index = this.patients.findIndex(p => p.id === updatedPatient.id);
@@ -217,7 +252,7 @@ export class PacientesComponent implements OnInit {
           }
           this.notificationService.showSuccess('Paciente actualizado exitosamente');
           this.cancelForm();
-          // Recargar todos los datos después de actualizar el paciente
+          // Recargar todos los datos despuÃ©s de actualizar el paciente
           this.loadPatients();
           this.loading = false;
         },
@@ -229,7 +264,7 @@ export class PacientesComponent implements OnInit {
       });
     } else {
       // Crear nuevo paciente
-      console.log('🆕 Creando nuevo paciente');
+      console.log('ðŸ†• Creando nuevo paciente');
       this.patientService.createPatient(this.patientFormData).subscribe({
         next: (newPatient: Patient) => {
           this.patients.push(newPatient);
@@ -257,19 +292,19 @@ export class PacientesComponent implements OnInit {
           if (res && res.province) {
             this.patientFormData.province = res.province;
             this.onProvinceChange(res.province || '');
-            // Si sólo hay una localidad, autoselect
+            // Si sÃ³lo hay una localidad, autoselect
             if (res.cities && res.cities.length === 1) {
               this.patientFormData.city = res.cities[0];
             }
           } else if (res && res.provinces && res.provinces.length === 1) {
-            // fallback si backend devuelve sólo provincias
+            // fallback si backend devuelve sÃ³lo provincias
             this.patientFormData.province = res.provinces[0].name;
             this.onProvinceChange(this.patientFormData.province || '');
           }
         },
         error: (err: any) => {
-          // No crítico; dejar que el usuario seleccione manualmente
-          console.debug('Lookup CP falló:', err?.message || err);
+          // No crÃ­tico; dejar que el usuario seleccione manualmente
+          console.debug('Lookup CP fallÃ³:', err?.message || err);
         }
       });
     }
@@ -283,10 +318,10 @@ export class PacientesComponent implements OnInit {
 
   toggleCreateForm() {
     if (this.showCreateForm) {
-      // Si el formulario está abierto, cancelar (mismo comportamiento que cancelForm)
+      // Si el formulario estÃ¡ abierto, cancelar (mismo comportamiento que cancelForm)
       this.cancelForm();
     } else {
-      // Si el formulario está cerrado, abrirlo
+      // Si el formulario estÃ¡ cerrado, abrirlo
       this.showCreateForm = true;
     }
   }
@@ -321,9 +356,9 @@ export class PacientesComponent implements OnInit {
   }
 
   editPatient(patient: Patient) {
-    console.log('🔍 Editando paciente:', patient);
-    console.log('🔍 DNI disponible:', patient.dni);
-    console.log('🔍 Datos completos:', {
+    console.log('ðŸ” Editando paciente:', patient);
+    console.log('ðŸ” DNI disponible:', patient.dni);
+    console.log('ðŸ” Datos completos:', {
       id: patient.id,
       firstName: patient.firstName,
       lastName: patient.lastName,
@@ -333,14 +368,14 @@ export class PacientesComponent implements OnInit {
       province: (patient as any).province
     });
 
-    // Si el paciente no tiene todos los datos necesarios (por ejemplo, viene de paginación),
+    // Si el paciente no tiene todos los datos necesarios (por ejemplo, viene de paginaciÃ³n),
     // necesitamos cargarlo completo desde el servidor
     if (!(patient as any).dni || (patient as any).dni === undefined) {
-      console.log('⚠️ Paciente no tiene DNI, cargando datos completos...');
+      console.log('âš ï¸ Paciente no tiene DNI, cargando datos completos...');
       this.loading = true;
       this.patientService.getPatientById(patient.id).subscribe({
         next: (fullPatient: Patient) => {
-          console.log('✅ Datos completos cargados:', fullPatient);
+          console.log('âœ… Datos completos cargados:', fullPatient);
           this.editPatientWithFullData(fullPatient);
           this.loading = false;
         },
@@ -352,7 +387,7 @@ export class PacientesComponent implements OnInit {
       });
     } else {
       // El paciente ya tiene todos los datos necesarios
-      console.log('✅ Paciente tiene todos los datos, editando directamente');
+      console.log('âœ… Paciente tiene todos los datos, editando directamente');
       this.editPatientWithFullData(patient);
     }
   }
@@ -390,9 +425,9 @@ export class PacientesComponent implements OnInit {
       notes: patient.notes || ''
     };
 
-    // Asegurar que las localidades se carguen según la provincia existente cuando se edita
+    // Asegurar que las localidades se carguen segÃºn la provincia existente cuando se edita
     if (this.patientFormData.province) {
-      // Llamada que poblará `locationCities`
+      // Llamada que poblarÃ¡ `locationCities`
       this.onProvinceChange(this.patientFormData.province);
     }
   }
@@ -411,7 +446,7 @@ export class PacientesComponent implements OnInit {
       next: (res: any) => {
         const loc = res.locations || res;
         this.locationCities = (loc.cities && loc.cities[prov]) ? loc.cities[prov] : [];
-        // Si la ciudad actual no está dentro de las ciudades disponibles, limpiarla
+        // Si la ciudad actual no estÃ¡ dentro de las ciudades disponibles, limpiarla
         if (this.patientFormData.city && !this.locationCities.includes(this.patientFormData.city)) {
           this.patientFormData.city = '';
         }
@@ -428,23 +463,37 @@ export class PacientesComponent implements OnInit {
     this.router.navigate(['/pacientes', patient.id]);
   }
 
+  // Mostrar modal de confirmación para eliminar paciente
   deletePatient(patient: Patient) {
-    if (confirm(`¿Está seguro de que desea eliminar al paciente ${this.getFullName(patient)}? Esta acción eliminará también todas sus citas, packs de créditos y archivos asociados.`)) {
-      this.loading = true;
-      this.patientService.deletePatient(patient.id).subscribe({
-        next: () => {
-          this.patients = this.patients.filter(p => p.id !== patient.id);
-          this.filterPatients();
-          this.notificationService.showSuccess('Paciente eliminado exitosamente');
-          this.loading = false;
-        },
-        error: (error: any) => {
-          console.error('Error deleting patient:', error);
-          this.notificationService.showError('Error al eliminar el paciente');
-          this.loading = false;
-        }
-      });
-    }
+    this.patientToDelete = patient;
+    this.showDeleteConfirm = true;
+  }
+
+  // Confirmar eliminación desde el modal
+  confirmDeletePatient() {
+    if (!this.patientToDelete) return;
+
+    this.deleteLoading = true;
+    this.patientService.deletePatient(this.patientToDelete.id).subscribe({
+      next: () => {
+        this.patients = this.patients.filter(p => p.id !== this.patientToDelete!.id);
+        this.filterPatients();
+        this.notificationService.showSuccess('Paciente eliminado exitosamente');
+        this.cancelDeletePatient();
+      },
+      error: (error: any) => {
+        console.error('Error deleting patient:', error);
+        this.notificationService.showError('Error al eliminar el paciente');
+        this.deleteLoading = false;
+      }
+    });
+  }
+
+  // Cancelar eliminación
+  cancelDeletePatient() {
+    this.showDeleteConfirm = false;
+    this.patientToDelete = null;
+    this.deleteLoading = false;
   }
 
   // Utility functions
@@ -475,21 +524,21 @@ export class PacientesComponent implements OnInit {
   }
 
   /**
-   * Busca el paciente por ID y abre el modal de edición
+   * Busca el paciente por ID y abre el modal de ediciÃ³n
    */
   openEditPatientModalById(patientId: string) {
     const patient = this.patients.find(p => String(p.id) === String(patientId));
     if (patient) {
       this.editPatient(patient);
     } else {
-      // Si no está en la lista actual, buscar el paciente por ID y cargarlo
+      // Si no estÃ¡ en la lista actual, buscar el paciente por ID y cargarlo
       this.patientService.getPatientById(patientId).subscribe({
         next: (foundPatient: Patient) => {
           this.editPatient(foundPatient);
         },
         error: (error: any) => {
           console.error('Error finding patient:', error);
-          this.notificationService.showError('No se encontró el paciente para editar');
+          this.notificationService.showError('No se encontrÃ³ el paciente para editar');
         }
       });
     }
@@ -526,7 +575,7 @@ export class PacientesComponent implements OnInit {
 
   onFormValueChange() {
     console.log('Form value changed:', this.creditFormData);
-    // Forzar la detección de cambios para asegurar que el getter se recalcule
+    // Forzar la detecciÃ³n de cambios para asegurar que el getter se recalcule
     this.cdr.detectChanges();
   }
 
@@ -560,7 +609,7 @@ export class PacientesComponent implements OnInit {
     return equivalentSessions;
   }
 
-  // Método legacy mantenido para compatibilidad
+  // MÃ©todo legacy mantenido para compatibilidad
   calculateEquivalentSessions(): number {
     return this.equivalentSessions;
   }
@@ -586,17 +635,17 @@ export class PacientesComponent implements OnInit {
     this.creditService.createCreditPack(creditData).subscribe({
       next: (credit: any) => {
         console.log('Credit pack created successfully:', credit);
-        this.notificationService.showSuccess('Sesiones añadidos correctamente');
+        this.notificationService.showSuccess('Sesiones aÃ±adidos correctamente');
         this.hideCreditForm();
         // Recargar la lista de pacientes para actualizar los totales
         this.loadPatients();
-        // Forzar la detección de cambios
+        // Forzar la detecciÃ³n de cambios
         this.cdr.detectChanges();
       },
       error: (error: any) => {
         console.error('Error adding credit (detailed):', error);
         const errMsg = (error && (error.error?.message || error.message || error.statusText || error.status)) || 'Error desconocido';
-        this.notificationService.showError(`Error al añadir Sesiones: ${errMsg}`);
+        this.notificationService.showError(`Error al aÃ±adir Sesiones: ${errMsg}`);
       }
     });
   }
@@ -609,9 +658,9 @@ export class PacientesComponent implements OnInit {
     return this.utils.getMinutesLabel(minutes);
   }
 
-  // Métodos de paginación
+  // MÃ©todos de paginaciÃ³n
   onPageSizeChange() {
-    this.currentPage = 1; // Reiniciar a la primera página
+    this.currentPage = 1; // Reiniciar a la primera pÃ¡gina
     this.loadPatients();
   }
 
@@ -636,13 +685,13 @@ export class PacientesComponent implements OnInit {
     }
   }
 
-  // Actualizar búsqueda para reiniciar paginación
+  // Actualizar bÃºsqueda para reiniciar paginaciÃ³n
   onSearchChange() {
     this.currentPage = 1;
     this.loadPatients();
   }
 
-  // Obtener rango de páginas para mostrar
+  // Obtener rango de pÃ¡ginas para mostrar
   getPageRange(): number[] {
     const range = [];
     const start = Math.max(1, this.currentPage - 2);
@@ -654,3 +703,4 @@ export class PacientesComponent implements OnInit {
     return range;
   }
 }
+

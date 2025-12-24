@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
+import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 import { ClinicInfo, Configuration } from '../../models/config.model';
 import { BackupFile, BackupsByDate, BackupService, BackupStats } from '../../services/backup.service';
 import { ClientConfigService } from '../../services/client-config.service';
@@ -16,7 +17,8 @@ import { UtilsService } from '../../services/utils.service';
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    ConfirmModalComponent
   ],
   templateUrl: './configuracion.component.html',
   styleUrls: ['./configuracion.component.scss']
@@ -39,7 +41,15 @@ export class ConfiguracionComponent implements OnInit {
   exportingPatients = false;
   viewMode: 'grouped' | 'list' = 'grouped';
 
-  // Pestañas de configuración visibles
+  // Delete/Restore confirmation modals
+  showDeleteBackupConfirm = false;
+  showRestoreBackupConfirm = false;
+  backupToDelete: BackupFile | null = null;
+  backupToRestore: BackupFile | null = null;
+  deleteBackupLoading = false;
+  restoreBackupLoading = false;
+
+  // Pesta�as de configuraci�n visibles
   activeTab: 'clinic' | 'prices' | 'backup' = 'clinic';
 
   configuration: Configuration | null = null;
@@ -350,62 +360,84 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   /**
-   * Confirmar y restaurar un backup
+   * Mostrar modal de confirmaci�n para restaurar backup
    */
   confirmRestore(backup: BackupFile): void {
-    if (confirm(`¿Estás seguro de que quieres restaurar el backup del ${this.formatDate(backup.created)}?\n\nEsta acción reemplazará todos los datos actuales.`)) {
-      this.restoreBackup(backup);
-    }
+    this.backupToRestore = backup;
+    this.showRestoreBackupConfirm = true;
   }
 
   /**
-   * Restaurar un backup específico
+   * Confirmar restauraci�n del backup
    */
-  private restoreBackup(backup: BackupFile): void {
-    this.backupService.restoreBackup(backup.fileName).subscribe({
+  executeRestoreBackup(): void {
+    if (!this.backupToRestore) return;
+
+    this.restoreBackupLoading = true;
+    this.backupService.restoreBackup(this.backupToRestore.fileName).subscribe({
       next: (response) => {
         if (response.success) {
           this.notificationService.showSuccess('Backup restaurado exitosamente');
-          // Recargar la página para reflejar los cambios
+          this.cancelRestoreBackup();
+          // Recargar la p�gina para reflejar los cambios
           window.location.reload();
         } else {
           this.notificationService.showError(response.message || 'Error al restaurar el backup');
+          this.restoreBackupLoading = false;
         }
       },
       error: (error) => {
         console.error('Error restoring backup:', error);
         this.notificationService.showError('Error al restaurar el backup');
+        this.restoreBackupLoading = false;
       }
     });
   }
 
-  /**
-   * Confirmar y eliminar un backup
-   */
-  confirmDelete(backup: BackupFile): void {
-    if (confirm(`¿Estás seguro de que quieres eliminar el backup del ${this.formatDate(backup.created)}?\n\nEsta acción no se puede deshacer.`)) {
-      this.deleteBackup(backup);
-    }
+  cancelRestoreBackup(): void {
+    this.showRestoreBackupConfirm = false;
+    this.backupToRestore = null;
+    this.restoreBackupLoading = false;
   }
 
   /**
-   * Eliminar un backup específico
+   * Mostrar modal de confirmaci�n para eliminar backup
    */
-  private deleteBackup(backup: BackupFile): void {
-    this.backupService.deleteBackup(backup.fileName).subscribe({
+  confirmDelete(backup: BackupFile): void {
+    this.backupToDelete = backup;
+    this.showDeleteBackupConfirm = true;
+  }
+
+  /**
+   * Confirmar eliminaci�n del backup
+   */
+  executeDeleteBackup(): void {
+    if (!this.backupToDelete) return;
+
+    this.deleteBackupLoading = true;
+    this.backupService.deleteBackup(this.backupToDelete.fileName).subscribe({
       next: (response) => {
         if (response.success) {
           this.notificationService.showSuccess('Backup eliminado exitosamente');
+          this.cancelDeleteBackup();
           this.loadBackupData(); // Recargar datos
         } else {
           this.notificationService.showError(response.message || 'Error al eliminar el backup');
+          this.deleteBackupLoading = false;
         }
       },
       error: (error) => {
         console.error('Error deleting backup:', error);
         this.notificationService.showError('Error al eliminar el backup');
+        this.deleteBackupLoading = false;
       }
     });
+  }
+
+  cancelDeleteBackup(): void {
+    this.showDeleteBackupConfirm = false;
+    this.backupToDelete = null;
+    this.deleteBackupLoading = false;
   }
 
   /**

@@ -8,6 +8,18 @@ import {
 } from '../models/credit.model';
 import { ClientConfigService } from './client-config.service';
 
+// Interfaz para el resultado del batch
+export interface BatchCreditResult {
+  totalCredits: number;
+  activeCredits: number;
+  totalPriceCents: number;
+  hasPendingPayment: boolean;
+}
+
+export interface BatchCreditsResponse {
+  credits: { [patientId: string]: BatchCreditResult };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -29,6 +41,15 @@ export class CreditService {
         ...this.clientConfig.getTenantHeader()
       })
     };
+  }
+
+  // Obtener créditos de múltiples pacientes en una sola petición (optimización)
+  getBatchCredits(patientIds: string[]): Observable<BatchCreditsResponse> {
+    return this.http.post<BatchCreditsResponse>(
+      `${this.apiUrl}/batch`, 
+      { patientIds }, 
+      this.httpOptions
+    );
   }
 
   // Obtener resumen de Sesiones de un paciente

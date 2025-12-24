@@ -15,6 +15,7 @@ const locationsRoutes = require('./routes/locations');
 const backupRoutes = require('./routes/backup');
 const filesRoutes = require('./routes/files');
 const reportsRoutes = require('./routes/reports');
+const statsRoutes = require('./routes/stats');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -78,6 +79,7 @@ app.use('/api/meta/locations', locationsRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/reports', reportsRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Health check
 app.get('/health', async (req, res) => {

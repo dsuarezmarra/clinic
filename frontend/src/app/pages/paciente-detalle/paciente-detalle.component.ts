@@ -107,6 +107,7 @@ export class PacienteDetalleComponent implements OnInit {
                         ...app,
                         date: app.start ? app.start.split('T')[0] : '',
                         time: app.start ? app.start.split('T')[1]?.substring(0, 5) : '',
+                        duration: app.durationMinutes || 30,
                         notes: app.notes || ''
                     };
                 });

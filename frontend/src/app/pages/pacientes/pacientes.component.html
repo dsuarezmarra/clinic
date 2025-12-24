@@ -536,7 +536,7 @@
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success" [disabled]="!creditForm.form.valid || loading">
                             <i class="bi bi-check-circle me-2"></i>
-                            AÃ±adir
+                            Añadir
                         </button>
                         <button type="button" class="btn btn-secondary" (click)="hideCreditForm()">
                             <i class="bi bi-x-circle me-2"></i>
@@ -548,3 +548,18 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de confirmación para eliminar paciente -->
+<app-confirm-modal
+    [isOpen]="showDeleteConfirm"
+    title="Eliminar Paciente"
+    message="¿Está seguro de que desea eliminar este paciente?"
+    details="Esta acción eliminará también todas sus citas, packs de sesiones y archivos asociados. Esta acción no se puede deshacer."
+    itemLabel="Paciente"
+    [itemName]="patientToDelete ? getFullName(patientToDelete) : ''"
+    confirmText="Eliminar"
+    type="danger"
+    [loading]="deleteLoading"
+    (confirm)="confirmDeletePatient()"
+    (cancel)="cancelDeletePatient()">
+</app-confirm-modal>

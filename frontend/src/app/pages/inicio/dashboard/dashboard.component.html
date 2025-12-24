@@ -1,3 +1,114 @@
+<!-- Panel de Estadísticas -->
+<div class="stats-panel mb-4" *ngIf="showStats">
+    <!-- Header con selector de período -->
+    <div class="stats-header d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">
+            <i class="bi bi-bar-chart-fill me-2"></i>Resumen
+        </h5>
+        <div class="btn-group btn-group-sm">
+            <button class="btn" [class.btn-primary]="statsPeriod === 'today'" [class.btn-outline-secondary]="statsPeriod !== 'today'" (click)="changeStatsPeriod('today')">Hoy</button>
+            <button class="btn" [class.btn-primary]="statsPeriod === 'week'" [class.btn-outline-secondary]="statsPeriod !== 'week'" (click)="changeStatsPeriod('week')">Semana</button>
+            <button class="btn" [class.btn-primary]="statsPeriod === 'month'" [class.btn-outline-secondary]="statsPeriod !== 'month'" (click)="changeStatsPeriod('month')">Mes</button>
+            <button class="btn" [class.btn-primary]="statsPeriod === 'year'" [class.btn-outline-secondary]="statsPeriod !== 'year'" (click)="changeStatsPeriod('year')">Año</button>
+        </div>
+    </div>
+
+    <!-- Tarjetas de estadísticas -->
+    <div class="row g-3" *ngIf="stats && !statsLoading">
+        <!-- Citas totales -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-total">
+                <div class="stat-icon">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.appointments.total }}</div>
+                    <div class="stat-label">Citas</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Completadas -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-completed">
+                <div class="stat-icon">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.appointments.completed }}</div>
+                    <div class="stat-label">Completadas</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ingresos -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-revenue">
+                <div class="stat-icon">
+                    <i class="bi bi-currency-euro"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.revenue.paidFormatted }}</div>
+                    <div class="stat-label">Cobrado</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pendiente -->
+        <div class="col-6 col-md-3">
+            <div class="stat-card stat-upcoming">
+                <div class="stat-icon">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-number">{{ stats.revenue.pendingFormatted }}</div>
+                    <div class="stat-label">Pendiente</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Información adicional -->
+    <div class="row g-3 mt-2" *ngIf="stats && !statsLoading">
+        <div class="col-12">
+            <div class="stats-summary d-flex flex-wrap gap-3 justify-content-center">
+                <span class="badge bg-light text-dark px-3 py-2">
+                    <i class="bi bi-people me-1"></i>
+                    {{ stats.patients.total }} pacientes totales
+                </span>
+                <span class="badge bg-success px-3 py-2" *ngIf="stats.patients.newInPeriod > 0">
+                    <i class="bi bi-person-plus me-1"></i>
+                    +{{ stats.patients.newInPeriod }} nuevos
+                </span>
+                <span class="badge bg-info px-3 py-2">
+                    <i class="bi bi-collection me-1"></i>
+                    {{ stats.creditPacks.active }} bonos activos
+                </span>
+                <span class="badge bg-warning text-dark px-3 py-2" *ngIf="stats.creditPacks.withUnpaidBalance > 0">
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    {{ stats.creditPacks.withUnpaidBalance }} sin pagar
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading state -->
+    <div class="text-center py-4" *ngIf="statsLoading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted mt-2 mb-0">Cargando estadísticas...</p>
+    </div>
+</div>
+
+<!-- Toggle estadísticas -->
+<div class="text-center mb-3">
+    <button class="btn btn-sm btn-link text-muted" (click)="toggleStats()">
+        <i class="bi" [class.bi-chevron-up]="showStats" [class.bi-chevron-down]="!showStats"></i>
+        {{ showStats ? 'Ocultar' : 'Mostrar' }} resumen
+    </button>
+</div>
+
 <div class="d-flex flex-column align-items-center mb-3">
     <h2 class="mb-0 text-center w-100">TablÃ³n Diario</h2>
     <div class="d-flex flex-column align-items-center mt-2 mb-2">

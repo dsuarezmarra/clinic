@@ -210,6 +210,69 @@ router.get('/', [
   }
 });
 
+// POST /api/credits/batch - Obtener crÈditos de m˙ltiples pacientes en una sola peticiÛn
+router.post('/batch', [
+  body('patientIds').isArray({ min: 1, max: 100 }).withMessage('Se requiere un array de IDs de pacientes (m·x 100)'),
+  body('patientIds.*').isUUID().withMessage('Cada ID debe ser un UUID v·lido')
+], validate, async (req, res, next) => {
+  try {
+    const { patientIds } = req.body;
+
+    console.log(`[credits/batch] Fetching credits for ${patientIds.length} patients`);
+
+    // Obtener todos los packs de crÈditos para los pacientes solicitados
+    const allPacks = await getDb(req).credit_packs.findMany({
+      where: { 
+        patientId: { in: patientIds }
+      },
+      select: {
+        id: true,
+        patientId: true,
+        unitsTotal: true,
+        unitsRemaining: true,
+        priceCents: true,
+        paid: true
+      }
+    });
+
+    // Agrupar por paciente y calcular resumen
+    const result = {};
+    patientIds.forEach(id => {
+      result[id] = { 
+        totalCredits: 0, 
+        activeCredits: 0,
+        totalPriceCents: 0,
+        hasPendingPayment: false
+      };
+    });
+
+    allPacks.forEach(pack => {
+      const pid = pack.patientId;
+      if (result[pid]) {
+        const unitsRemaining = Number(pack.unitsRemaining) || 0;
+        const priceCents = Number(pack.priceCents) || 0;
+        
+        result[pid].totalCredits += Number(pack.unitsTotal) || 0;
+        result[pid].activeCredits += unitsRemaining;
+        
+        // Solo sumar precio de packs con crÈditos restantes
+        if (unitsRemaining > 0) {
+          result[pid].totalPriceCents += priceCents;
+          if (!pack.paid) {
+            result[pid].hasPendingPayment = true;
+          }
+        }
+      }
+    });
+
+    console.log(`[credits/batch] Processed ${allPacks.length} packs for ${patientIds.length} patients`);
+
+    res.json({ credits: result });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/credits/packs - Crear nuevo pack de cr√©ditos (sesi√≥n o bono)
 router.post('/packs', [
   body('patientId').notEmpty().isUUID().withMessage('ID de paciente es requerido'),
