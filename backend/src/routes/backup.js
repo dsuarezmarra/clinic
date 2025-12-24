@@ -1,7 +1,26 @@
 const express = require('express');
+const path = require('path');
 const { DatabaseBackup } = require('../../scripts/backup');
 
 const router = express.Router();
+
+/**
+ * Valida que el nombre de archivo sea seguro (sin path traversal)
+ * Solo permite: letras, números, guiones, guiones bajos, puntos
+ */
+function isValidFileName(fileName) {
+    if (!fileName || typeof fileName !== 'string') return false;
+    // Solo permitir caracteres seguros
+    const safePattern = /^[a-zA-Z0-9_\-\.]+$/;
+    if (!safePattern.test(fileName)) return false;
+    // No permitir path traversal
+    if (fileName.includes('..') || fileName.includes('/') || fileName.includes('\\')) return false;
+    // Debe terminar en .json o .sql
+    if (!fileName.endsWith('.json') && !fileName.endsWith('.sql')) return false;
+    // Longitud razonable
+    if (fileName.length > 100) return false;
+    return true;
+}
 
 // GET /api/backup/list - Listar todos los backups
 router.get('/list', async (req, res, next) => {
@@ -62,6 +81,16 @@ router.get('/stats', async (req, res, next) => {
 router.post('/restore/:fileName', async (req, res, next) => {
     try {
         const { fileName } = req.params;
+        
+        // Validar nombre de archivo para prevenir path traversal
+        if (!isValidFileName(fileName)) {
+            console.warn(`?? Intento de restore con fileName inválido: ${fileName}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Nombre de archivo inválido'
+            });
+        }
+        
         const backup = new DatabaseBackup();
     // Allow force via query (?force=true), JSON body { force: true }, or header X-Force-Restore: true
     const q = req.query && (req.query.force === 'true' || req.query.force === '1');
@@ -109,6 +138,16 @@ router.post('/restore/:fileName', async (req, res, next) => {
 router.get('/download/:fileName', async (req, res, next) => {
     try {
         const { fileName } = req.params;
+        
+        // Validar nombre de archivo para prevenir path traversal
+        if (!isValidFileName(fileName)) {
+            console.warn(`?? Intento de download con fileName inválido: ${fileName}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Nombre de archivo inválido'
+            });
+        }
+        
         const backup = new DatabaseBackup();
         const backupPath = backup.getBackupPath(fileName);
 
@@ -120,9 +159,21 @@ router.get('/download/:fileName', async (req, res, next) => {
                 message: 'Archivo de backup no encontrado'
             });
         }
+        
+        // Verificar que el path resuelto está dentro del directorio de backups
+        const backupsDir = path.resolve(__dirname, '../../backups');
+        const resolvedPath = path.resolve(backupPath);
+        if (!resolvedPath.startsWith(backupsDir)) {
+            console.warn(`?? Path traversal detectado en download: ${resolvedPath}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Ruta de archivo inválida'
+            });
+        }
 
-        // Configurar headers para descarga
-        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+        // Sanitizar nombre en header para prevenir header injection
+        const safeName = path.basename(fileName).replace(/["\n\r]/g, '_');
+        res.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
         res.setHeader('Content-Type', 'application/octet-stream');
 
         // Enviar el archivo
@@ -136,6 +187,16 @@ router.get('/download/:fileName', async (req, res, next) => {
 router.delete('/delete/:fileName', async (req, res, next) => {
     try {
         const { fileName } = req.params;
+        
+        // Validar nombre de archivo para prevenir path traversal
+        if (!isValidFileName(fileName)) {
+            console.warn(`?? Intento de delete con fileName inválido: ${fileName}`);
+            return res.status(400).json({
+                success: false,
+                message: 'Nombre de archivo inválido'
+            });
+        }
+        
         const backup = new DatabaseBackup();
         const result = backup.deleteBackup(fileName);
 
