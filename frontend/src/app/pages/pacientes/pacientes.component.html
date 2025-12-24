@@ -161,8 +161,9 @@
 
     <!-- Barra de búsqueda -->
     <!-- Barra de búsqueda y controles de paginación -->
-    <div class="row mb-3">
-        <div class="col-md-4">
+    <div class="row mb-3 g-2 align-items-center">
+        <!-- Búsqueda -->
+        <div class="col-12 col-lg-4 mb-2 mb-lg-0">
             <div class="input-group">
                 <span class="input-group-text">
                     <i class="bi bi-search"></i>
@@ -171,23 +172,29 @@
                     [(ngModel)]="searchTerm" (input)="filterPatients()" autofocus tabindex="0" style="z-index: 1060;">
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="input-group">
+        
+        <!-- Mostrar por página -->
+        <div class="col-6 col-sm-auto mb-2 mb-lg-0">
+            <div class="input-group input-group-sm flex-nowrap">
                 <span class="input-group-text">Mostrar</span>
-                <select class="form-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+                <select class="form-select" [(ngModel)]="pageSize" (change)="onPageSizeChange()" style="width: auto;">
                     <option *ngFor="let size of pageSizeOptions" [value]="size">{{size}}</option>
                 </select>
-                <span class="input-group-text">por página</span>
+                <span class="input-group-text text-nowrap">por página</span>
             </div>
         </div>
-        <div class="col-md-5 text-end d-flex align-items-center justify-content-end">
-            <span class="text-muted me-3">
-                {{ totalPatients }} pacientes total
+        
+        <!-- Total pacientes -->
+        <div class="col-6 col-sm-auto mb-2 mb-lg-0 text-end text-sm-start">
+            <span class="badge bg-secondary fs-6 text-nowrap">
+                {{ totalPatients }} pacientes
             </span>
-            
-            <!-- Controles de paginación -->
+        </div>
+        
+        <!-- Paginación -->
+        <div class="col-12 col-lg-auto ms-lg-auto">
             <nav *ngIf="totalPages > 1">
-                <ul class="pagination pagination-sm mb-0">
+                <ul class="pagination pagination-sm mb-0 justify-content-center justify-content-lg-end flex-wrap">
                     <li class="page-item" [class.disabled]="currentPage <= 1">
                         <button class="page-link d-flex align-items-center justify-content-center" (click)="previousPage()" [disabled]="currentPage <= 1">
                             <i class="bi bi-chevron-left"></i>

@@ -107,6 +107,13 @@
     color: #6c757d;
 }
 
+.legend-divider {
+    width: 1px;
+    height: 20px;
+    background: #dee2e6;
+    margin: 0 4px;
+}
+
 .legend-color {
     width: 20px;
     height: 14px;
@@ -141,9 +148,13 @@
 }
 
 .paid-indicator {
-    background: rgba(76, 175, 80, 0.15);
-    color: #4caf50;
-    border: 1px solid #4caf50;
+    background: #4caf50;
+    color: #fff;
+}
+
+.unpaid-indicator {
+    background: #e53935;
+    color: #fff;
 }
 
 .calendar-header {
@@ -505,7 +516,7 @@
     color: #6d4c41 !important;
 }
 
-/* Pagado - Verde sutil para confirmar */
+/* Pagado - Check verde en esquina inferior izquierda */
 .appointment-block.status-paid,
 .appointment-block-continued.status-paid,
 .appointment-card.status-paid {
@@ -516,37 +527,41 @@
 .appointment-card.status-paid::after {
     content: '?';
     position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 12px;
-    color: #4caf50;
-    background: rgba(255, 255, 255, 0.9);
+    bottom: 2px;
+    left: 4px;
+    font-size: 10px;
+    color: #fff;
+    background: #4caf50;
     border-radius: 50%;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
+    line-height: 1;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-/* Indicador de pendiente más visible */
+/* Indicador de pendiente - Aspa roja en esquina inferior izquierda */
 .appointment-block.status-pending::before,
 .appointment-card.status-pending::before {
     content: '?';
     position: absolute;
-    top: 4px;
-    right: 6px;
-    font-size: 11px;
-    color: #e65100;
-    background: rgba(255, 255, 255, 0.9);
+    bottom: 2px;
+    left: 4px;
+    font-size: 10px;
+    color: #fff;
+    background: #e53935;
     border-radius: 50%;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
+    line-height: 1;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 /* Origen de la cita: texto pequeño en esquina inferior derecha dentro del bloque */
