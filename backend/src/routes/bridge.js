@@ -2499,7 +2499,7 @@ function getAppointmentType(appointment, tableSuffix) {
 router.get('/stats/dashboard', loadTenant, async (req, res) => {
   try {
     const { period = 'month' } = req.query;
-    const tableSuffix = req.tenantSlug;
+    const tableSuffix = req.tableSuffix; // From loadTenant middleware
     
     // Calcular fechas según el período
     const now = new Date();
