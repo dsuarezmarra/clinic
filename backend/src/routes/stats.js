@@ -7,6 +7,62 @@ const getDb = (req) => req.prisma || prisma;
 
 const router = express.Router();
 
+// Precios por defecto
+const DEFAULT_PRICE_30 = 3000; // 30?
+const DEFAULT_PRICE_60 = 5500; // 55?
+
+/**
+ * Calcula el precio de una cita basándose en:
+ * 1. priceCents de la cita (si existe)
+ * 2. Proporcional del creditPack (si tiene redemptions)
+ * 3. Precio por defecto según duración
+ */
+function calculateAppointmentPrice(appointment) {
+  if (!appointment) return 0;
+  
+  // 1. Si tiene priceCents directamente
+  if (appointment.priceCents && appointment.priceCents > 0) {
+    return Number(appointment.priceCents);
+  }
+  
+  // 2. Si tiene creditRedemptions, calcular proporcional del pack
+  const redemptions = appointment.creditRedemptions || [];
+  if (redemptions.length > 0) {
+    const r = redemptions[0];
+    const pack = r.creditPack || {};
+    const priceCents = Number(pack.priceCents) || 0;
+    const unitsTotal = Number(pack.unitsTotal) || 0;
+    const unitsUsed = Number(r.unitsUsed) || 0;
+    
+    if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
+      return Math.round(unitsUsed * (priceCents / unitsTotal));
+    }
+  }
+  
+  // 3. Fallback: precio según duración
+  const mins = Number(appointment.durationMinutes || 0);
+  return mins >= 60 ? DEFAULT_PRICE_60 : DEFAULT_PRICE_30;
+}
+
+/**
+ * Determina si una cita está pagada basándose en:
+ * 1. Si tiene creditRedemptions y TODOS los packs están pagados
+ * 2. Si tiene priceCents sin redemptions (sesión suelta pagada directamente)
+ */
+function isAppointmentPaid(appointment) {
+  if (!appointment) return false;
+  
+  const redemptions = appointment.creditRedemptions || [];
+  if (redemptions.length > 0) {
+    // Verificar que TODOS los packs estén pagados
+    return redemptions.every(r => r.creditPack?.paid === true);
+  }
+  
+  // Si tiene priceCents sin redemptions, consideramos pendiente
+  // (una sesión suelta sin pack asociado está pendiente hasta que se pague)
+  return false;
+}
+
 /**
  * GET /api/stats/dashboard
  * Obtiene estadísticas generales para el dashboard
@@ -71,28 +127,18 @@ router.get('/dashboard', async (req, res, next) => {
       moment(a.start).isAfter(now)
     ).length;
 
-    // 3. Ingresos del período (sumando priceCents de citas)
-    const totalRevenueCents = appointments.reduce((sum, apt) => {
-      return sum + (Number(apt.priceCents) || 0);
-    }, 0);
-
-    // 4. Ingresos por estado de pago
+    // 3. Calcular ingresos usando las funciones helper
+    let totalRevenueCents = 0;
     let paidRevenueCents = 0;
     let pendingRevenueCents = 0;
     
     appointments.forEach(apt => {
-      const priceCents = Number(apt.priceCents) || 0;
+      // Calcular el precio real de la cita (puede venir del pack)
+      const priceCents = calculateAppointmentPrice(apt);
+      totalRevenueCents += priceCents;
       
-      // Verificar si la cita está pagada a través del creditPack
-      let isPaid = false;
-      if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
-        isPaid = apt.creditRedemptions.some(cr => cr.creditPack?.paid);
-      } else if (priceCents > 0) {
-        // Si no tiene creditRedemptions pero tiene precio, asumimos pagada
-        isPaid = true;
-      }
-      
-      if (isPaid) {
+      // Determinar si está pagada
+      if (isAppointmentPaid(apt)) {
         paidRevenueCents += priceCents;
       } else {
         pendingRevenueCents += priceCents;
@@ -143,7 +189,7 @@ router.get('/dashboard', async (req, res, next) => {
     appointments.forEach(apt => {
       const weekOfMonth = Math.ceil(moment(apt.start).date() / 7) - 1;
       if (weekOfMonth >= 0 && weekOfMonth < 5) {
-        revenueByWeek[weekOfMonth] += Number(apt.priceCents) || 0;
+        revenueByWeek[weekOfMonth] += calculateAppointmentPrice(apt);
       }
     });
 
@@ -196,8 +242,9 @@ router.get('/dashboard', async (req, res, next) => {
         paidCents: paidRevenueCents,
         pendingCents: pendingRevenueCents,
         total: formatCurrency(totalRevenueCents),
-        paid: formatCurrency(paidRevenueCents),
-        pendingPayment: formatCurrency(pendingRevenueCents)
+        totalFormatted: formatCurrency(totalRevenueCents),
+        paidFormatted: formatCurrency(paidRevenueCents),
+        pendingFormatted: formatCurrency(pendingRevenueCents)
       },
       patients: {
         total: totalPatients,
@@ -227,8 +274,11 @@ router.get('/dashboard', async (req, res, next) => {
 
 // Helper: formatear moneda
 function formatCurrency(cents) {
-  const euros = (cents / 100).toFixed(2);
-  return euros.replace('.', ',') + ' ?';
+  if (cents === null || cents === undefined) {
+    return '0 \u20ac';
+  }
+  const euros = (Number(cents) / 100).toFixed(2);
+  return euros.replace('.', ',') + ' \u20ac';
 }
 
 // Helper: etiqueta del período
