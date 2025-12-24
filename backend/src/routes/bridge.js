@@ -2486,4 +2486,133 @@ function getAppointmentType(appointment, tableSuffix) {
   return mins >= 60 ? 'Sesión 60m' : `Sesión ${mins}m`;
 }
 
+// ============================================================
+// STATS / DASHBOARD ENDPOINT (Bridge version - Vercel compatible)
+// ============================================================
+
+/**
+ * GET /stats/dashboard
+ * Obtiene estadísticas del dashboard para el período seleccionado
+ * Query params:
+ *   - period: 'today' | 'week' | 'month' | 'year' (default: 'month')
+ */
+router.get('/stats/dashboard', loadTenant, async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+    const tableSuffix = req.tenantSlug;
+    
+    // Calcular fechas según el período
+    const now = new Date();
+    let startDate, endDate;
+    
+    switch (period) {
+      case 'today':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+        break;
+      case 'week':
+        const dayOfWeek = now.getDay();
+        const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday);
+        endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000 + 59 * 60 * 1000 + 59 * 1000 + 999);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999);
+        break;
+      case 'month':
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+        break;
+    }
+    
+    const startISO = startDate.toISOString();
+    const endISO = endDate.toISOString();
+    
+    // Obtener tabla de appointments con tenant suffix
+    const appointmentsTable = tableSuffix ? `appointments_${tableSuffix}` : 'appointments';
+    const redemptionsTable = tableSuffix ? `credit_redemptions_${tableSuffix}` : 'credit_redemptions';
+    const creditPacksTable = tableSuffix ? `credit_packs_${tableSuffix}` : 'credit_packs';
+    const patientsTable = tableSuffix ? `patients_${tableSuffix}` : 'patients';
+    
+    // 1. Obtener citas del período con redemptions
+    const selectFields = `id,start,end,durationMinutes,priceCents,patientId,${redemptionsTable}(id,unitsUsed,${creditPacksTable}(id,priceCents,unitsTotal,paid,label))`;
+    const { data: appointments } = await supabaseFetch(
+      `${appointmentsTable}?select=${encodeURIComponent(selectFields)}&start=gte.${startISO}&start=lte.${endISO}`,
+      { method: 'GET' }
+    );
+    
+    // 2. Contar pacientes nuevos del período
+    const { data: newPatients } = await supabaseFetch(
+      `${patientsTable}?select=id&createdAt=gte.${startISO}&createdAt=lte.${endISO}`,
+      { method: 'GET', headers: { 'Prefer': 'count=exact' } }
+    );
+    
+    // 3. Contar credit packs comprados en el período
+    const { data: newCreditPacks } = await supabaseFetch(
+      `${creditPacksTable}?select=id,priceCents,paid&purchaseDate=gte.${startISO}&purchaseDate=lte.${endISO}`,
+      { method: 'GET' }
+    );
+    
+    // Procesar estadísticas
+    const totalAppointments = appointments?.length || 0;
+    const completedAppointments = appointments?.filter(a => new Date(a.start) < now).length || 0;
+    const pendingAppointments = totalAppointments - completedAppointments;
+    
+    // Calcular ingresos
+    let paidRevenueCents = 0;
+    let pendingRevenueCents = 0;
+    
+    appointments?.forEach(apt => {
+      const priceCents = calculateAppointmentPrice(apt, tableSuffix);
+      const isPaid = getAppointmentPaidStatus(apt, tableSuffix);
+      
+      if (isPaid) {
+        paidRevenueCents += priceCents;
+      } else {
+        pendingRevenueCents += priceCents;
+      }
+    });
+    
+    // Credit packs vendidos en el período
+    const creditPacksSold = newCreditPacks?.length || 0;
+    const creditPacksRevenueCents = newCreditPacks?.reduce((sum, pack) => {
+      return sum + (pack.paid ? (Number(pack.priceCents) || 0) : 0);
+    }, 0) || 0;
+    
+    res.json({
+      period,
+      dateRange: {
+        start: startISO,
+        end: endISO
+      },
+      appointments: {
+        total: totalAppointments,
+        completed: completedAppointments,
+        pending: pendingAppointments
+      },
+      revenue: {
+        totalCents: paidRevenueCents + pendingRevenueCents,
+        paidCents: paidRevenueCents,
+        pendingCents: pendingRevenueCents,
+        totalEuros: ((paidRevenueCents + pendingRevenueCents) / 100).toFixed(2),
+        paidEuros: (paidRevenueCents / 100).toFixed(2),
+        pendingEuros: (pendingRevenueCents / 100).toFixed(2)
+      },
+      patients: {
+        newInPeriod: newPatients?.length || 0
+      },
+      creditPacks: {
+        soldInPeriod: creditPacksSold,
+        revenueCents: creditPacksRevenueCents,
+        revenueEuros: (creditPacksRevenueCents / 100).toFixed(2)
+      }
+    });
+  } catch (error) {
+    console.error('Error getting dashboard stats:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
