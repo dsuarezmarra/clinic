@@ -1,6 +1,6 @@
 # ?? INFORME DE SEGURIDAD COMPLETO
 
-**Fecha:** $(Get-Date -Format "dd/MM/yyyy")  
+**Fecha:** 24/12/2025  
 **Proyecto:** Clinic Multi-tenant  
 **Analista:** GitHub Copilot
 
@@ -8,13 +8,37 @@
 
 ## ?? RESUMEN EJECUTIVO
 
-| Área         | Críticas  | Altas | Medias | Bajas | Estado                  |
-| ------------ | --------- | ----- | ------ | ----- | ----------------------- |
-| **Frontend** | 2         | 4     | 6      | 5     | ?? Requiere atención    |
-| **Backend**  | 5 ? **2** | 7     | 8      | 5     | ? 3 críticas resueltas |
-| **Supabase** | 0         | 1     | 2      | 1     | ? Bien configurado     |
-| **Vercel**   | 1 ? **0** | 0     | 1      | 0     | ? CORS corregido       |
-| **TOTAL**    | **4**     | 12    | 17     | 11    | **44 hallazgos**        |
+| Área         | Críticas  | Altas     | Medias | Bajas | Estado                  |
+| ------------ | --------- | --------- | ------ | ----- | ----------------------- |
+| **Frontend** | 0         | 2         | 6      | 5     | ?? Mejoras pendientes   |
+| **Backend**  | 0         | 3         | 8      | 5     | ? Críticas resueltas   |
+| **Supabase** | 0         | 0         | 2      | 1     | ? Bien configurado     |
+| **Vercel**   | 0         | 0         | 1      | 0     | ? CORS corregido       |
+| **TOTAL**    | **0** ?  | 5         | 17     | 11    | **33 hallazgos**        |
+
+---
+
+## ? VULNERABILIDADES CORREGIDAS (24 Dic 2025)
+
+### CRÍTICAS RESUELTAS (6/6) ?
+
+| # | Vulnerabilidad | Archivo | Estado |
+|---|----------------|---------|--------|
+| 1 | SSL/TLS Bypass Global | `api/index.js` | ? Resuelto |
+| 2 | CORS Permite Cualquier Origen | `api/index.js` | ? Resuelto |
+| 3 | Endpoint Expone Variables | `api/index.js` | ? Resuelto |
+| 4 | vercel.json CORS Wildcard | `vercel.json` | ? Resuelto |
+| 5 | **SQL/PostgREST Injection** | `routes/patients.js` | ? **RESUELTO HOY** |
+| 6 | **Path Traversal en Files** | `routes/files.js` | ? **RESUELTO HOY** |
+
+### ALTAS RESUELTAS (4)
+
+| # | Vulnerabilidad | Archivo | Estado |
+|---|----------------|---------|--------|
+| 1 | Sin Rate Limiting | `api/index.js` | ? **IMPLEMENTADO HOY** |
+| 2 | Path Traversal en Backups | `routes/backup.js` | ? **RESUELTO HOY** |
+| 3 | UUID no validado en DELETE | `routes/files.js` | ? **RESUELTO HOY** |
+| 4 | Header Injection | `routes/files.js`, `routes/backup.js` | ? **RESUELTO HOY** |
 
 ---
 
