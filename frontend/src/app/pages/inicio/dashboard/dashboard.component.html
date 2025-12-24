@@ -1,6 +1,6 @@
-<!-- Panel de EstadÌsticas -->
+Ôªø<!-- Panel de Estadisticas -->
 <div class="stats-panel mb-4" *ngIf="showStats">
-    <!-- Header con selector de perÌodo -->
+    <!-- Header con selector de periodo -->
     <div class="stats-header d-flex justify-content-between align-items-center mb-3">
         <h5 class="mb-0">
             <i class="bi bi-bar-chart-fill me-2"></i>Resumen
@@ -9,11 +9,11 @@
             <button class="btn" [class.btn-primary]="statsPeriod === 'today'" [class.btn-outline-secondary]="statsPeriod !== 'today'" (click)="changeStatsPeriod('today')">Hoy</button>
             <button class="btn" [class.btn-primary]="statsPeriod === 'week'" [class.btn-outline-secondary]="statsPeriod !== 'week'" (click)="changeStatsPeriod('week')">Semana</button>
             <button class="btn" [class.btn-primary]="statsPeriod === 'month'" [class.btn-outline-secondary]="statsPeriod !== 'month'" (click)="changeStatsPeriod('month')">Mes</button>
-            <button class="btn" [class.btn-primary]="statsPeriod === 'year'" [class.btn-outline-secondary]="statsPeriod !== 'year'" (click)="changeStatsPeriod('year')">AÒo</button>
+            <button class="btn" [class.btn-primary]="statsPeriod === 'year'" [class.btn-outline-secondary]="statsPeriod !== 'year'" (click)="changeStatsPeriod('year')">Anual</button>
         </div>
     </div>
 
-    <!-- Tarjetas de estadÌsticas -->
+    <!-- Tarjetas de estadisticas -->
     <div class="row g-3" *ngIf="stats && !statsLoading">
         <!-- Citas totales -->
         <div class="col-6 col-md-3">
@@ -68,7 +68,7 @@
         </div>
     </div>
 
-    <!-- InformaciÛn adicional -->
+    <!-- Informacion adicional -->
     <div class="row g-3 mt-2" *ngIf="stats && !statsLoading">
         <div class="col-12">
             <div class="stats-summary d-flex flex-wrap gap-3 justify-content-center">
@@ -97,11 +97,11 @@
         <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
-        <p class="text-muted mt-2 mb-0">Cargando estadÌsticas...</p>
+        <p class="text-muted mt-2 mb-0">Cargando estadisticas...</p>
     </div>
 </div>
 
-<!-- Toggle estadÌsticas -->
+<!-- Toggle estadisticas -->
 <div class="text-center mb-3">
     <button class="btn btn-sm btn-link text-muted" (click)="toggleStats()">
         <i class="bi" [class.bi-chevron-up]="showStats" [class.bi-chevron-down]="!showStats"></i>
@@ -110,10 +110,10 @@
 </div>
 
 <div class="d-flex flex-column align-items-center mb-3">
-    <h2 class="mb-0 text-center w-100">Tabl√≥n Diario</h2>
+    <h2 class="mb-0 text-center w-100">Tablon Diario</h2>
     <div class="d-flex flex-column align-items-center mt-2 mb-2">
         <h4 class="mb-2">{{ calendarComponent?.currentDate | date:'EEEE, d MMMM yyyy' : 'es-ES' }}
-            <small class="text-muted ms-2">(Total d√≠a: {{ formatPriceCents(getDayTotalCents()) }})</small>
+            <small class="text-muted ms-2">(Total dia: {{ formatPriceCents(getDayTotalCents()) }})</small>
         </h4>
         <div class="d-flex gap-2 justify-content-center">
             <button class="btn btn-outline-secondary" (click)="previousDay()">
@@ -125,8 +125,6 @@
             </button>
         </div>
     </div>
-
-    <!-- Export removed from dashboard - use monthly agenda export in Calendar view -->
 </div>
 <app-calendar [viewModeInput]="'day'" [hideHeader]="true"></app-calendar>
 
@@ -149,7 +147,7 @@
                         <input type="text" 
                                class="form-control"
                                #patientSearchInput
-                               placeholder="Buscar paciente por nombre, tel√©fono o email..."
+                               placeholder="Buscar paciente por nombre, telefono o email..."
                                [(ngModel)]="patientSearchTerm" 
                                (input)="filterPatients()"
                                autofocus
@@ -181,18 +179,17 @@
 
                 <!-- Paciente seleccionado -->
                 <div *ngIf="selectedPatient" class="alert alert-info mt-3">
-                    <strong>Paciente seleccionado:</strong> {{ selectedPatient.firstName }} {{ selectedPatient.lastName
-                    }}
+                    <strong>Paciente seleccionado:</strong> {{ selectedPatient.firstName }} {{ selectedPatient.lastName }}
                     <br>
                     <small>Sesiones activas: {{ selectedPatient.activeSessions || 0 }}</small>
                 </div>
 
-                <!-- Informaci√≥n de la cita -->
+                <!-- Informacion de la cita -->
                 <div class="mt-3 p-3 bg-light rounded">
                     <h6>Detalles de la cita:</h6>
                     <p class="mb-1"><strong>Fecha:</strong> {{ formatDate(selectedDate) }}</p>
                     <p class="mb-1"><strong>Hora:</strong> {{ selectedTimeSlot }}</p>
-                    <p class="mb-0"><strong>Duraci√≥n:</strong> 30 minutos</p>
+                    <p class="mb-0"><strong>Duracion:</strong> 30 minutos</p>
                 </div>
             </div>
             <div class="modal-footer">
@@ -248,7 +245,7 @@
                             [(ngModel)]="editingAppointment.consumesCredit"
                             tabindex="0" style="z-index: 1060;">
                         <label class="form-check-label" for="consumesCredit">
-                            Consume cr√©dito/sesi√≥n
+                            Consume credito/sesion
                         </label>
                     </div>
                 </form>
