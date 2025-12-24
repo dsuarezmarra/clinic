@@ -2549,9 +2549,21 @@ router.get('/stats/dashboard', loadTenant, async (req, res) => {
       { method: 'GET', headers: { 'Prefer': 'count=exact' } }
     );
     
+    // 2b. Contar total de pacientes
+    const { data: allPatients, total: totalPatientsCount } = await supabaseFetch(
+      `${patientsTable}?select=id`,
+      { method: 'GET', headers: { 'Prefer': 'count=exact' } }
+    );
+    
     // 3. Contar credit packs comprados en el período
     const { data: newCreditPacks } = await supabaseFetch(
       `${creditPacksTable}?select=id,priceCents,paid&purchaseDate=gte.${startISO}&purchaseDate=lte.${endISO}`,
+      { method: 'GET' }
+    );
+    
+    // 3b. Obtener credit packs activos (unitsRemaining > 0)
+    const { data: activeCreditPacks } = await supabaseFetch(
+      `${creditPacksTable}?select=id,paid,unitsRemaining&unitsRemaining=gt.0`,
       { method: 'GET' }
     );
     
@@ -2581,6 +2593,10 @@ router.get('/stats/dashboard', loadTenant, async (req, res) => {
       return sum + (pack.paid ? (Number(pack.priceCents) || 0) : 0);
     }, 0) || 0;
     
+    // Credit packs activos y sin pagar
+    const activePacksCount = activeCreditPacks?.length || 0;
+    const unpaidPacksCount = activeCreditPacks?.filter(p => !p.paid).length || 0;
+    
     res.json({
       period,
       dateRange: {
@@ -2590,23 +2606,27 @@ router.get('/stats/dashboard', loadTenant, async (req, res) => {
       appointments: {
         total: totalAppointments,
         completed: completedAppointments,
-        pending: pendingAppointments
+        pending: pendingAppointments,
+        cancelled: 0
       },
       revenue: {
         totalCents: paidRevenueCents + pendingRevenueCents,
         paidCents: paidRevenueCents,
         pendingCents: pendingRevenueCents,
-        totalEuros: ((paidRevenueCents + pendingRevenueCents) / 100).toFixed(2),
-        paidEuros: (paidRevenueCents / 100).toFixed(2),
-        pendingEuros: (pendingRevenueCents / 100).toFixed(2)
+        totalFormatted: ((paidRevenueCents + pendingRevenueCents) / 100).toFixed(2) + ' €',
+        paidFormatted: (paidRevenueCents / 100).toFixed(2) + ' €',
+        pendingFormatted: (pendingRevenueCents / 100).toFixed(2) + ' €'
       },
       patients: {
+        total: totalPatientsCount || allPatients?.length || 0,
         newInPeriod: newPatients?.length || 0
       },
       creditPacks: {
+        active: activePacksCount,
+        withUnpaidBalance: unpaidPacksCount,
         soldInPeriod: creditPacksSold,
         revenueCents: creditPacksRevenueCents,
-        revenueEuros: (creditPacksRevenueCents / 100).toFixed(2)
+        revenueFormatted: (creditPacksRevenueCents / 100).toFixed(2) + ' €'
       }
     });
   } catch (error) {
