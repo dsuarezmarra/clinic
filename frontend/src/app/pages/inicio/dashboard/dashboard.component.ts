@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+Ôªøimport { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -94,7 +94,7 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    // Cargar estadÌsticas del dashboard
+    // Cargar estadÔøΩsticas del dashboard
     loadStats() {
         this.statsLoading = true;
         this.statsService.getDashboardStats(this.statsPeriod).subscribe({
@@ -109,13 +109,13 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    // Cambiar perÌodo de estadÌsticas
+    // Cambiar perÔøΩodo de estadÔøΩsticas
     changeStatsPeriod(period: StatsPeriod) {
         this.statsPeriod = period;
         this.loadStats();
     }
 
-    // Toggle mostrar/ocultar estadÌsticas
+    // Toggle mostrar/ocultar estadÔøΩsticas
     toggleStats() {
         this.showStats = !this.showStats;
     }
@@ -428,11 +428,11 @@ export class DashboardComponent implements OnInit {
         return `${startTime} - ${endTime}`;
     }
 
-    // Formatear cÈntimos a cadena legible (ej: 5500 -> "55 ?")
+    // Formatear cÔøΩntimos a cadena legible (ej: 5500 -> "55 ?")
     formatPriceCents(cents: number): string {
-        if (cents === null || cents === undefined || !cents) return '0 ?';
+        if (cents === null || cents === undefined || !cents) return '0 ‚Ç¨';
         const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
-        return euros.replace('.', ',') + ' ?';
+        return euros.replace('.', ',') + ' ‚Ç¨';
     }
 
     // Obtener total del d√≠a consultando el CalendarComponent

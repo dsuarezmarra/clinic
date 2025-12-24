@@ -975,11 +975,11 @@ export class CalendarComponent implements OnInit {
         return total;
     }
 
-    // Formatear cÃ©ntimos a cadena legible (ej: 5500 -> "55 â‚¬")
+    // Formatear céntimos a cadena legible (ej: 5500 -> "55 €")
     formatPriceCents(cents: number): string {
         if (cents === null || cents === undefined || !cents) return '0 €';
         const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
-        return euros.replace('.', ',') + ' â‚¬';
+        return euros.replace('.', ',') + ' €';
     }
 
     getMinForDate(dateTime: string): string {
