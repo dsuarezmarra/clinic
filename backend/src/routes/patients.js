@@ -23,6 +23,23 @@ function sanitizePhone(phone) {
   return hasPlus ? `+${digits}` : digits;
 }
 
+/**
+ * Sanitiza entrada de búsqueda para prevenir SQL/PostgREST injection
+ * - Escapa caracteres especiales de LIKE (%_)
+ * - Limita longitud máxima
+ * - Elimina caracteres potencialmente peligrosos
+ */
+function sanitizeSearchInput(input) {
+  if (!input || typeof input !== 'string') return '';
+  // Limitar longitud
+  let sanitized = input.slice(0, 100);
+  // Escapar caracteres especiales de LIKE en PostgreSQL
+  sanitized = sanitized.replace(/[%_\\]/g, '\\$&');
+  // Eliminar caracteres de control y null bytes
+  sanitized = sanitized.replace(/[\x00-\x1F\x7F]/g, '');
+  return sanitized.trim();
+}
+
 // Middleware para eliminar email si es cadena vacÃ­a antes de validar en PUT
 router.use('/:id', (req, res, next) => {
   if (req.method === 'PUT' && req.body && req.body.email === '') {
@@ -89,11 +106,15 @@ router.get('/', [
 
     const where = {};
     if (search) {
-      where.OR = [
-        { firstName: { contains: search, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
-        { lastName: { contains: search, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
-        { phone: { contains: search } }
-      ];
+      // Sanitizar entrada para prevenir SQL injection
+      const safeSearch = sanitizeSearchInput(search);
+      if (safeSearch) {
+        where.OR = [
+          { firstName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
+          { lastName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
+          { phone: { contains: safeSearch } }
+        ];
+      }
     }
 
     const queryOptions = {
