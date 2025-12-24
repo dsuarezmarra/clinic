@@ -1,10 +1,44 @@
 /**
  * Middleware de Tenant
  * 
- * Este middleware detecta el tenant desde los headers de la peticiÃ³n,
- * busca su configuraciÃ³n en la tabla tenants, y prepara helpers
+ * Este middleware detecta el tenant desde los headers de la petición,
+ * busca su configuración en la tabla tenants, y prepara helpers
  * para usar las tablas con el sufijo correcto.
  */
+
+// Whitelist de tenants válidos (previene IDOR)
+const VALID_TENANT_SLUGS = [
+  'masajecorporaldeportivo',
+  'actifisio'
+];
+
+/**
+ * Valida y sanitiza el slug del tenant
+ * - Solo permite caracteres alfanuméricos y guiones
+ * - Verifica contra whitelist
+ */
+function validateTenantSlug(slug) {
+  if (!slug || typeof slug !== 'string') return { valid: false, reason: 'Slug vacío o inválido' };
+  
+  // Sanitizar: solo letras minúsculas, números y guiones
+  const sanitized = slug.toLowerCase().trim();
+  if (!/^[a-z0-9-]+$/.test(sanitized)) {
+    return { valid: false, reason: 'Slug contiene caracteres no permitidos' };
+  }
+  
+  // Verificar longitud
+  if (sanitized.length < 3 || sanitized.length > 50) {
+    return { valid: false, reason: 'Longitud de slug inválida' };
+  }
+  
+  // Verificar contra whitelist
+  if (!VALID_TENANT_SLUGS.includes(sanitized)) {
+    console.warn(`?? Intento de acceso con tenant no autorizado: ${sanitized}`);
+    return { valid: false, reason: 'Tenant no autorizado' };
+  }
+  
+  return { valid: true, sanitized };
+}
 
 // Helper para hacer peticiones a Supabase
 async function supabaseFetch(endpoint) {
@@ -36,7 +70,7 @@ async function supabaseFetch(endpoint) {
  */
 async function loadTenant(req, res, next) {
   try {
-    // 1. Obtener slug del tenant desde header
+    // 1. Obtener y validar slug del tenant desde header
     const tenantSlug = req.headers['x-tenant-slug'];
     
     if (!tenantSlug) {
@@ -46,9 +80,18 @@ async function loadTenant(req, res, next) {
       });
     }
     
-    // 2. Buscar tenant en base de datos
+    // 2. Validar slug contra whitelist (previene IDOR)
+    const validation = validateTenantSlug(tenantSlug);
+    if (!validation.valid) {
+      return res.status(403).json({ 
+        error: 'Tenant no válido',
+        message: validation.reason
+      });
+    }
+    
+    // 3. Buscar tenant en base de datos (usando slug sanitizado)
     const { data: tenants, error } = await supabaseFetch(
-      `tenants?select=*&slug=eq.${tenantSlug}&active=eq.true&limit=1`
+      `tenants?select=*&slug=eq.${validation.sanitized}&active=eq.true&limit=1`
     );
     
     if (error) {

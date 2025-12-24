@@ -142,10 +142,26 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Middleware de seguridad (despuÃ©s de CORS)
+// Middleware de seguridad con Helmet configurado correctamente
 app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
+  // CSP configurado para API REST (sin contenido HTML)
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"]
+    }
+  },
+  // Headers de seguridad adicionales
+  crossOriginEmbedderPolicy: false,  // Necesario para CORS
+  crossOriginResourcePolicy: { policy: "cross-origin" },  // Permitir recursos cross-origin
+  hsts: {
+    maxAge: 31536000,  // 1 año
+    includeSubDomains: true,
+    preload: true
+  },
+  noSniff: true,
+  xssFilter: true,
+  referrerPolicy: { policy: "strict-origin-when-cross-origin" }
 }));
 app.use(compression());
 

@@ -1,7 +1,15 @@
 const errorHandler = (err, req, res, next) => {
-  console.error('ðŸš¨ Error Handler - MÃ©todo:', req.method, 'Ruta:', req.path);
-  console.error('ðŸš¨ Error Details:', err);
-  console.error('ðŸš¨ Error Stack:', err.stack);
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // En producción, log mínimo sin datos sensibles
+  if (isProduction) {
+    console.error(`[ERROR] ${req.method} ${req.path} - ${err.code || err.name || 'Error'}: ${err.message}`);
+  } else {
+    // En desarrollo, log completo
+    console.error('?? Error Handler - Método:', req.method, 'Ruta:', req.path);
+    console.error('?? Error Details:', err);
+    console.error('?? Error Stack:', err.stack);
+  }
 
   // Error de validaciÃ³n de Prisma
   if (err.code === 'P2002') {
@@ -67,11 +75,25 @@ const errorHandler = (err, req, res, next) => {
 
   // Error por defecto
   const statusCode = err.statusCode || err.status || 500;
-  const message = err.message || 'Error interno del servidor';
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // En producción, nunca exponer mensajes internos para errores 500
+  let message;
+  if (statusCode === 500) {
+    message = 'Error interno del servidor';
+  } else if (isProduction && statusCode >= 500) {
+    message = 'Error del servidor';
+  } else {
+    message = err.message || 'Error del servidor';
+  }
 
   res.status(statusCode).json({
-    error: statusCode === 500 ? 'Error interno del servidor' : message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    error: message,
+    // Solo incluir detalles en desarrollo
+    ...((!isProduction) && { 
+      stack: err.stack,
+      details: err.details || undefined
+    })
   });
 };
 
