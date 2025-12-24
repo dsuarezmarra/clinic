@@ -1,9 +1,14 @@
 /* Bootstrap CSS */
 @import 'bootstrap/dist/css/bootstrap.min.css';
 
-/* Bootstrap Icons - configurar ruta de fuentes */
-$bootstrap-icons-font-dir: '/fonts';
-@import 'bootstrap-icons/font/bootstrap-icons.scss';
+/* Bootstrap Icons - usar CSS con fuentes en /fonts */
+@font-face {
+  font-display: block;
+  font-family: "bootstrap-icons";
+  src: url("/fonts/bootstrap-icons.woff2") format("woff2"),
+       url("/fonts/bootstrap-icons.woff") format("woff");
+}
+@import 'bootstrap-icons/font/bootstrap-icons.css';
 
 /* ========================================
    CSS VARIABLES - MULTI-CLIENTE
