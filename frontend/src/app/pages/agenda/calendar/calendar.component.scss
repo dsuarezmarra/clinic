@@ -41,11 +41,12 @@
     font-size: 10px;
     text-align: center;
     border-radius: 3px;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .calendar-day-compact:hover {
     background: #e3f2fd;
+    transform: scale(1.05);
 }
 
 .calendar-day-compact.weekend-compact {
@@ -239,11 +240,13 @@
     border-radius: 3px;
     font-size: 11px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.2s ease;
 }
 
 .appointment-item:hover {
     background: var(--button-hover);
+    transform: translateX(2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 /* Vista Semanal */
@@ -328,7 +331,7 @@
     background: white;
     min-height: 40px;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: all 0.15s ease;
     position: relative;
     display: flex;
     align-items: flex-start;
@@ -337,7 +340,8 @@
 }
 
 .time-slot:hover {
-    background: #f8f9fa;
+    background: #f0f7ff;
+    box-shadow: inset 0 0 0 1px rgba(102, 126, 234, 0.3);
 }
 
 .time-slot.weekend {

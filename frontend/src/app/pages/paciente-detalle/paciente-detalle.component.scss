@@ -2,6 +2,18 @@
     display: flex;
     align-items: baseline;
     gap: 1rem;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .patient-name {
@@ -24,10 +36,12 @@
 .session-item {
     border: 1px solid #e9ecef;
     transition: all 0.2s ease;
+    animation: fadeInUp 0.3s ease-out both;
 
     &:hover {
-        border-color: #dee2e6;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-color, #667eea);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+        transform: translateX(4px);
     }
 
     &.bg-success-subtle {
@@ -35,9 +49,21 @@
     }
 }
 
-// AnimaciÃ³n para el toggle de packs
+// Stagger animation para sesiones
+.sessions-grid .session-item:nth-child(1) { animation-delay: 0ms; }
+.sessions-grid .session-item:nth-child(2) { animation-delay: 30ms; }
+.sessions-grid .session-item:nth-child(3) { animation-delay: 60ms; }
+.sessions-grid .session-item:nth-child(4) { animation-delay: 90ms; }
+.sessions-grid .session-item:nth-child(5) { animation-delay: 120ms; }
+
+// Animación para el toggle de packs
 .card-body {
     transition: all 0.3s ease;
+}
+
+// Cards con animación de entrada
+.card {
+    animation: fadeInUp 0.3s ease-out;
 }
 
 // Mejorar los badges
