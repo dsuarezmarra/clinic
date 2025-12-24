@@ -295,18 +295,21 @@
                                         </div>
                                     </td>
                                     <td class="text-center">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <button type="button" class="btn btn-outline-primary"
-                                                (click)="viewPatient(patient)" title="Ver detalles">
+                                        <div class="btn-group action-buttons" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary action-btn"
+                                                (click)="viewPatient(patient)" title="Ver detalles del paciente">
                                                 <i class="bi bi-eye"></i>
+                                                <span class="btn-text">Ver</span>
                                             </button>
-                                            <button type="button" class="btn btn-outline-warning"
-                                                (click)="editPatient(patient)" title="Editar">
+                                            <button type="button" class="btn btn-sm btn-outline-warning action-btn"
+                                                (click)="editPatient(patient)" title="Editar información del paciente">
                                                 <i class="bi bi-pencil"></i>
+                                                <span class="btn-text">Editar</span>
                                             </button>
-                                            <button type="button" class="btn btn-outline-danger"
-                                                (click)="deletePatient(patient)" title="Eliminar">
+                                            <button type="button" class="btn btn-sm btn-outline-danger action-btn"
+                                                (click)="deletePatient(patient)" title="Eliminar paciente">
                                                 <i class="bi bi-trash"></i>
+                                                <span class="btn-text">Borrar</span>
                                             </button>
                                         </div>
                                     </td>

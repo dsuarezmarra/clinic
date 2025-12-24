@@ -428,12 +428,11 @@ export class DashboardComponent implements OnInit {
         return `${startTime} - ${endTime}`;
     }
 
-    // Formatear céntimos a cadena legible (ej: 5500 -> "55 €")
+    // Formatear c�ntimos a cadena legible (ej: 5500 -> "55 ?")
     formatPriceCents(cents: number): string {
-        if (cents === null || cents === undefined) return '';
-        if (!cents) return '0 €';
+        if (cents === null || cents === undefined || !cents) return '0 ?';
         const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
-        return euros.replace('.', ',') + ' €';
+        return euros.replace('.', ',') + ' ?';
     }
 
     // Obtener total del día consultando el CalendarComponent

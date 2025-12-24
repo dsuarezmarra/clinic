@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -21,10 +21,10 @@ import { PatientService } from '../../../services/patient.service';
     styleUrls: ['./calendar.component.scss']
 })
 export class CalendarComponent implements OnInit {
-    // Devuelve true si el día es festivo (puedes personalizar la lista de festivos)
+    // Devuelve true si el dÃ­a es festivo (puedes personalizar la lista de festivos)
     isHoliday(day: Date): boolean {
         const holidays = [
-            // Formato: 'MM-DD', ejemplo: '01-01' para Año Nuevo
+            // Formato: 'MM-DD', ejemplo: '01-01' para AÃ±o Nuevo
             '01-01', '12-25', '08-15', '05-01', '10-12', '11-01', '12-06', '12-08'
         ];
         const month = (day.getMonth() + 1).toString().padStart(2, '0');
@@ -41,7 +41,7 @@ export class CalendarComponent implements OnInit {
         this.currentYear++;
     }
 
-    // Devuelve los días de un mes específico de un año
+    // Devuelve los dÃ­as de un mes especÃ­fico de un aÃ±o
     getMonthDaysOfYear(year: number, monthIdx: number): Date[] {
         const days: Date[] = [];
         const firstDay = new Date(year, monthIdx, 1);
@@ -57,11 +57,11 @@ export class CalendarComponent implements OnInit {
         return days;
     }
 
-    // Verifica si el día pertenece al mes actual mostrado
+    // Verifica si el dÃ­a pertenece al mes actual mostrado
     isCurrentMonth(day: Date, monthIdx: number): boolean {
         return day.getMonth() === monthIdx;
     }
-    // Devuelve 'paid', 'pending' o null según el estado de pago del pack asociado a la cita
+    // Devuelve 'paid', 'pending' o null segÃºn el estado de pago del pack asociado a la cita
     getAppointmentPaymentStatus(appointment: Appointment): 'paid' | 'pending' | null {
         // Si tiene creditRedemptions, usar el estado del pack
         if (appointment.creditRedemptions && appointment.creditRedemptions.length > 0) {
@@ -107,9 +107,9 @@ export class CalendarComponent implements OnInit {
     editingTimeLocal: string = '';
     // Nuevo: bandera para marcar la cita como pagada en el modal
     editingPaid: boolean = false;
-    // Flag para evitar creaci�n duplicada de citas (race condition)
+    // Flag para evitar creación duplicada de citas (race condition)
     isCreatingAppointment: boolean = false;
-    // Flag para evitar actualizaci�n duplicada de citas (race condition con click + touchstart)
+    // Flag para evitar actualización duplicada de citas (race condition con click + touchstart)
     isUpdatingAppointment: boolean = false;
 
     // Delete confirmation modal
@@ -118,7 +118,7 @@ export class CalendarComponent implements OnInit {
     deleteLoading = false;
 
     timeSlots: string[] = [];
-    weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    weekDays = ['Lun', 'Mar', 'MiÃ©', 'Jue', 'Vie', 'SÃ¡b', 'Dom'];
     months = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -148,7 +148,7 @@ export class CalendarComponent implements OnInit {
             const tenantSlug = this.clientConfigService.getTenantSlug();
             const url = `${apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
             
-            console.log(`📊 Exportando CSV para ${tenantSlug}: ${url}`);
+            console.log(`ðŸ“Š Exportando CSV para ${tenantSlug}: ${url}`);
             
             const resp = await fetch(url, { 
                 headers: { 
@@ -165,7 +165,7 @@ export class CalendarComponent implements OnInit {
                 const text = await resp.text();
                 const preview = text.slice(0, 1000);
                 console.error('CSV export returned unexpected Content-Type:', contentType, '\nPreview:', preview);
-                this.notificationService.showError('La exportación no devolvió CSV. Revisa la consola para detalles.');
+                this.notificationService.showError('La exportaciÃ³n no devolviÃ³ CSV. Revisa la consola para detalles.');
                 return;
             }
 
@@ -231,7 +231,7 @@ export class CalendarComponent implements OnInit {
         });
     }
 
-    // Actualizar el estado de pago de las citas que usan un pack específico
+    // Actualizar el estado de pago de las citas que usan un pack especÃ­fico
     updateAppointmentPaymentStatus(packId: string, paid: boolean) {
         console.log(`Updating payment status for pack ${packId} to ${paid}`);
         
@@ -252,7 +252,7 @@ export class CalendarComponent implements OnInit {
         // Cargar todos los pacientes para el selector del calendario
         this.patientService.getPatients({ limit: 1000 }).subscribe({
             next: (response) => {
-                // El backend ya envía los pacientes ordenados por nombre, luego apellido
+                // El backend ya envÃ­a los pacientes ordenados por nombre, luego apellido
                 this.patients = response.patients;
                 this.filteredPatients = response.patients;
             },
@@ -376,7 +376,7 @@ export class CalendarComponent implements OnInit {
         return slotDate.getTime() === aptStart.getTime();
     }
 
-    // Devuelve true si la cita dura m�s de 30 minutos (ocupar� al menos dos slots)
+    // Devuelve true si la cita dura más de 30 minutos (ocupará al menos dos slots)
     appointmentSpansMultipleSlots(appointment: Appointment): boolean {
         if (!appointment || !appointment.start || !appointment.end) return false;
         const start = new Date(appointment.start).getTime();
@@ -384,7 +384,7 @@ export class CalendarComponent implements OnInit {
         return (end - start) > (30 * 60 * 1000);
     }
 
-    // Obtiene la duraci�n de la cita en minutos
+    // Obtiene la duración de la cita en minutos
     getAppointmentDuration(appointment: Appointment): number {
         if (appointment.durationMinutes) {
             return Number(appointment.durationMinutes);
@@ -409,7 +409,7 @@ export class CalendarComponent implements OnInit {
         this.filteredPatients = [...this.patients];
         this.showPatientModal = true;
         
-        // Enfocar el input de búsqueda después de que el modal se muestre
+        // Enfocar el input de bÃºsqueda despuÃ©s de que el modal se muestre
         setTimeout(() => {
             if (this.patientSearchInput && this.patientSearchInput.nativeElement) {
                 this.patientSearchInput.nativeElement.focus();
@@ -419,46 +419,46 @@ export class CalendarComponent implements OnInit {
     }
 
     selectPatient(patient: Patient) {
-        // Solo selecciona el paciente, no agenda ni consume sesión
+        // Solo selecciona el paciente, no agenda ni consume sesiÃ³n
         this.selectedPatient = patient;
         this.proposedDuration = 30; // default
         // Consultar packs del paciente para proponer 60min si corresponde
         if (patient && patient.id) {
             this.creditService.getPatientCredits(patient.id).subscribe({
                 next: (res: any) => {
-                    console.log('📦 Credits received:', res);
+                    console.log('ðŸ“¦ Credits received:', res);
                     const packs = res.creditPacks || [];
                     
                     // ACTUALIZAR activeSessions del paciente seleccionado con el total de unidades restantes
                     const totalUnitsRemaining = packs.reduce((sum: number, p: any) => sum + (Number(p.unitsRemaining) || 0), 0);
                     if (this.selectedPatient) {
                         this.selectedPatient.activeSessions = totalUnitsRemaining;
-                        console.log(`✅ activeSessions actualizado a ${totalUnitsRemaining} para ${this.selectedPatient.firstName}`);
+                        console.log(`âœ… activeSessions actualizado a ${totalUnitsRemaining} para ${this.selectedPatient.firstName}`);
                     }
                     
                     // PRIORIDAD 1: Buscar packs PAGADOS
                     const paidPacks = packs.filter((p: any) => p.paid === true && p.unitsRemaining > 0);
-                    console.log(`📦 Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
+                    console.log(`ðŸ“¦ Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
                     
                     // PRIORIDAD 2: Si no hay pagados, buscar packs PENDIENTES
                     const pendingPacks = packs.filter((p: any) => p.paid === false && p.unitsRemaining > 0);
-                    console.log(`📦 Packs PENDIENTES disponibles: ${pendingPacks.length}`, pendingPacks);
+                    console.log(`ðŸ“¦ Packs PENDIENTES disponibles: ${pendingPacks.length}`, pendingPacks);
                     
-                    // Determinar qué pack usar para proponer duración
+                    // Determinar quÃ© pack usar para proponer duraciÃ³n
                     let packToUse = null;
                     let isPaid = false;
                     
                     if (paidPacks.length > 0) {
-                        packToUse = paidPacks[0]; // Más antiguo pagado
+                        packToUse = paidPacks[0]; // MÃ¡s antiguo pagado
                         isPaid = true;
                     } else if (pendingPacks.length > 0) {
-                        packToUse = pendingPacks[0]; // Más antiguo pendiente
+                        packToUse = pendingPacks[0]; // MÃ¡s antiguo pendiente
                         isPaid = false;
                     }
                     
                     if (!packToUse) {
                         this.proposedDuration = 30;
-                        console.log('⚠️ No hay packs disponibles, proponiendo 30min por defecto');
+                        console.log('âš ï¸ No hay packs disponibles, proponiendo 30min por defecto');
                         return;
                     }
                     
@@ -466,19 +466,19 @@ export class CalendarComponent implements OnInit {
                     const unitsRem = Number(packToUse.unitsRemaining);
                     const paidLabel = isPaid ? 'PAGADO' : 'PENDIENTE';
                     
-                    console.log(`✅ Pack ${paidLabel} más antiguo: ${packToUse.label}, ${unitMin}min, ${unitsRem} units disponibles`);
+                    console.log(`âœ… Pack ${paidLabel} mÃ¡s antiguo: ${packToUse.label}, ${unitMin}min, ${unitsRem} units disponibles`);
                     
-                    // Proponer duración según el pack disponible
+                    // Proponer duraciÃ³n segÃºn el pack disponible
                     if (unitMin === 60 && unitsRem >= 2) {
                         this.proposedDuration = 60;
-                        console.log(`✅ Proponiendo 60min (pack ${paidLabel} de 60min con 2+ units)`);
+                        console.log(`âœ… Proponiendo 60min (pack ${paidLabel} de 60min con 2+ units)`);
                     } else {
                         this.proposedDuration = 30;
-                        console.log(`✅ Proponiendo 30min (pack ${paidLabel} de 30min o <2 units)`);
+                        console.log(`âœ… Proponiendo 30min (pack ${paidLabel} de 30min o <2 units)`);
                     }
                 },
                 error: (err) => {
-                    console.error('❌ Error getting credits:', err);
+                    console.error('âŒ Error getting credits:', err);
                     this.proposedDuration = 30;
                 }
             });
@@ -511,25 +511,25 @@ export class CalendarComponent implements OnInit {
     }
 
     createAppointment() {
-        // EVITAR CREACIÓN DUPLICADA (race condition con click + touchstart)
+        // EVITAR CREACIÃ“N DUPLICADA (race condition con click + touchstart)
         if (this.isCreatingAppointment) {
-            console.warn('⚠️ Ya se está creando una cita, ignorando clic duplicado');
+            console.warn('âš ï¸ Ya se estÃ¡ creando una cita, ignorando clic duplicado');
             return;
         }
 
-        // ⚡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
+        // âš¡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
         this.isCreatingAppointment = true;
 
         if (!this.selectedPatient) {
             this.notificationService.showError('Selecciona un paciente');
-            this.isCreatingAppointment = false; // Reset si falla validación
+            this.isCreatingAppointment = false; // Reset si falla validaciÃ³n
             return;
         }
         const requiredUnits = 1;
         const availableUnits = this.selectedPatient.activeSessions || 0;
         if (availableUnits < requiredUnits) {
             const createCredit = confirm(
-                `${this.selectedPatient.firstName} no tiene sesiones disponibles para agendar. ¿Deseas crear un nuevo bono/sesión?`
+                `${this.selectedPatient.firstName} no tiene sesiones disponibles para agendar. Â¿Deseas crear un nuevo bono/sesiÃ³n?`
             );
             this.isCreatingAppointment = false; // Reset flag antes de salir
             if (createCredit) {
@@ -547,7 +547,7 @@ export class CalendarComponent implements OnInit {
         const startDateTime = new Date(this.selectedDate);
         startDateTime.setHours(hours, minutes, 0, 0);
         const duration = this.proposedDuration || 30;
-        console.log(`🕐 Creating appointment with duration: ${duration}min (proposedDuration=${this.proposedDuration})`);
+        console.log(`ðŸ• Creating appointment with duration: ${duration}min (proposedDuration=${this.proposedDuration})`);
         const endDateTime = new Date(startDateTime);
         endDateTime.setMinutes(endDateTime.getMinutes() + duration);
         
@@ -560,7 +560,7 @@ export class CalendarComponent implements OnInit {
             this.notificationService.showError(
                 `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
             );
-            this.isCreatingAppointment = false; // Reset flag si falla validación
+            this.isCreatingAppointment = false; // Reset flag si falla validaciÃ³n
             return;
         }
 
@@ -571,31 +571,31 @@ export class CalendarComponent implements OnInit {
             durationMinutes: duration,
             consumesCredit: true
         };
-        console.log('📋 Appointment data:', appointmentData);
+        console.log('ðŸ“‹ Appointment data:', appointmentData);
         this.appointmentService.createAppointment(appointmentData).subscribe({
             next: (appointment) => {
                 this.notificationService.showSuccess('Cita creada exitosamente');
                 this.closeModal();
                 this.loadPatients();
                 
-                // ⚡ ESPERAR a que loadAppointments() termine antes de resetear flag
-                // Esto previene errores de validación si el usuario crea otra cita inmediatamente
+                // âš¡ ESPERAR a que loadAppointments() termine antes de resetear flag
+                // Esto previene errores de validaciÃ³n si el usuario crea otra cita inmediatamente
                 this.appointmentService.getAllAppointments().subscribe({
                     next: (appointments) => {
                         this.appointments = appointments;
-                        this.isCreatingAppointment = false; // ← RESET FLAG después de recargar
-                        console.log('✅ Appointments reloaded, flag reset');
+                        this.isCreatingAppointment = false; // â† RESET FLAG despuÃ©s de recargar
+                        console.log('âœ… Appointments reloaded, flag reset');
                     },
                     error: (error) => {
                         console.error('Error reloading appointments:', error);
-                        this.isCreatingAppointment = false; // ← RESET FLAG incluso si falla recarga
+                        this.isCreatingAppointment = false; // â† RESET FLAG incluso si falla recarga
                     }
                 });
             },
             error: (error) => {
                 this.notificationService.showError('Error al crear la cita');
                 console.error('Error creating appointment:', error);
-                this.isCreatingAppointment = false; // ← RESET FLAG TAMBIÉN EN ERROR
+                this.isCreatingAppointment = false; // â† RESET FLAG TAMBIÃ‰N EN ERROR
             }
         });
     }
@@ -615,7 +615,7 @@ export class CalendarComponent implements OnInit {
             this.editingStartLocal = '';
         }
         this.showEditModal = true;
-        // Inicializar flag de pago según si alguna redención vinculada esté marcada como pagada
+        // Inicializar flag de pago segÃºn si alguna redenciÃ³n vinculada estÃ© marcada como pagada
         const status = this.getAppointmentPaymentStatus(appointment);
         this.editingPaid = (status === 'paid');
     }
@@ -637,26 +637,26 @@ export class CalendarComponent implements OnInit {
     updateAppointment() {
         if (!this.editingAppointment) return;
 
-        // EVITAR ACTUALIZACIÓN DUPLICADA (race condition con click + touchstart)
+        // EVITAR ACTUALIZACIÃ“N DUPLICADA (race condition con click + touchstart)
         if (this.isUpdatingAppointment) {
-            console.warn('⚠️ Ya se está actualizando la cita, ignorando clic duplicado');
+            console.warn('âš ï¸ Ya se estÃ¡ actualizando la cita, ignorando clic duplicado');
             return;
         }
 
-        // ⚡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
+        // âš¡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
         this.isUpdatingAppointment = true;
 
-        // Detectar si cambió el estado de pago comparando con el original
+        // Detectar si cambiÃ³ el estado de pago comparando con el original
         const originalPaymentStatus = this.getAppointmentPaymentStatus(this.editingAppointment);
         const originalPaid = (originalPaymentStatus === 'paid');
         const paymentStatusChanged = (this.editingPaid !== originalPaid);
 
-        // Detectar si SOLO cambió el estado de pago (checkbox)
+        // Detectar si SOLO cambiÃ³ el estado de pago (checkbox)
         const originalStart = this.formatDateTimeLocal(this.editingAppointment.start);
         const currentDateTime = `${this.editingDateLocal}T${this.editingTimeLocal}`;
         const dateTimeChanged = originalStart !== currentDateTime;
 
-        // Si SOLO cambió el checkbox de pago, actualizar directamente el pack
+        // Si SOLO cambiÃ³ el checkbox de pago, actualizar directamente el pack
         if (!dateTimeChanged && paymentStatusChanged && this.editingAppointment?.creditRedemptions?.length) {
             const packId = this.editingAppointment.creditRedemptions[0].creditPackId;
             console.log(`[DEBUG] ONLY payment status changed. Updating pack ${packId} to ${this.editingPaid}`);
@@ -667,18 +667,18 @@ export class CalendarComponent implements OnInit {
                     this.closeModal();
                     this.loadAppointments();
                     this.loadPatients();
-                    this.isUpdatingAppointment = false; // ← RESET FLAG en success
+                    this.isUpdatingAppointment = false; // â† RESET FLAG en success
                 },
                 error: (error) => {
                     console.error('Error updating payment status:', error);
                     this.notificationService.showError('Error al actualizar estado de pago');
-                    this.isUpdatingAppointment = false; // ← RESET FLAG en error
+                    this.isUpdatingAppointment = false; // â† RESET FLAG en error
                 }
             });
-            return; // ← IMPORTANTE: Salir aquí sin actualizar la cita
+            return; // â† IMPORTANTE: Salir aquÃ­ sin actualizar la cita
         }
 
-        // Si cambió fecha/hora, continuar con actualización de cita
+        // Si cambiÃ³ fecha/hora, continuar con actualizaciÃ³n de cita
         const payload: any = {};
 
         // If user edited the datetime in the modal, use editingDateLocal + editingTimeLocal; otherwise keep existing
@@ -694,7 +694,7 @@ export class CalendarComponent implements OnInit {
             const maxAllowedStart = 21 * 60 + 30; // 21:30
             if (minutesFromMidnight < minAllowed || minutesFromMidnight > maxAllowedStart || (minute % 30) !== 0) {
                 this.notificationService.showError('La hora debe estar entre 09:00 y 22:00 en pasos de 30 minutos');
-                this.isUpdatingAppointment = false; // ← RESET FLAG si falla validación
+                this.isUpdatingAppointment = false; // â† RESET FLAG si falla validaciÃ³n
                 return;
             }
 
@@ -707,7 +707,7 @@ export class CalendarComponent implements OnInit {
             payload.end = endDt.toISOString();
             payload.durationMinutes = mins;
 
-            // Validar solapamiento SOLO si se cambió el horario
+            // Validar solapamiento SOLO si se cambiÃ³ el horario
             const newStart = new Date(payload.start);
             const newEnd = new Date(payload.end);
             const overlappingApt = this.checkAppointmentOverlap(newStart, newEnd, this.editingAppointment.id);
@@ -718,7 +718,7 @@ export class CalendarComponent implements OnInit {
                 this.notificationService.showError(
                     `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
                 );
-                this.isUpdatingAppointment = false; // ← RESET FLAG si falla validación
+                this.isUpdatingAppointment = false; // â† RESET FLAG si falla validaciÃ³n
                 return;
             }
         }
@@ -733,25 +733,25 @@ export class CalendarComponent implements OnInit {
         // Update the appointment only if there are changes
         if (Object.keys(payload).length === 0) {
             this.notificationService.showInfo('No hay cambios para guardar');
-            this.isUpdatingAppointment = false; // ← RESET FLAG si no hay cambios
+            this.isUpdatingAppointment = false; // â† RESET FLAG si no hay cambios
             return;
         }
 
         this.appointmentService.updateAppointment(this.editingAppointment.id, payload).subscribe({
             next: (appointment) => {
-                // Si el pago CAMBIÓ (además del datetime), actualizar el pack
+                // Si el pago CAMBIÃ“ (ademÃ¡s del datetime), actualizar el pack
                 if (paymentStatusChanged && this.editingAppointment?.creditRedemptions?.length) {
                     const packId = this.editingAppointment.creditRedemptions[0].creditPackId;
                     console.log(`[DEBUG] Payment status also changed. Updating pack ${packId} to ${this.editingPaid}`);
                     this.creditService.updatePackPaymentStatus(packId, this.editingPaid).subscribe({
                         next: () => {
                             console.log(`[DEBUG] Pack payment status updated successfully`);
-                            // ✅ UN SOLO MENSAJE: Cita actualizada (incluye cambio de pago si hubo)
+                            // âœ… UN SOLO MENSAJE: Cita actualizada (incluye cambio de pago si hubo)
                             this.notificationService.showSuccess('Cita actualizada exitosamente');
                             this.closeModal();
                             this.loadAppointments();
                             this.loadPatients();
-                            this.isUpdatingAppointment = false; // ← RESET FLAG en success
+                            this.isUpdatingAppointment = false; // â† RESET FLAG en success
                         },
                         error: (error) => {
                             console.error('Error updating payment status:', error);
@@ -759,22 +759,22 @@ export class CalendarComponent implements OnInit {
                             this.closeModal();
                             this.loadAppointments();
                             this.loadPatients();
-                            this.isUpdatingAppointment = false; // ← RESET FLAG en error
+                            this.isUpdatingAppointment = false; // â† RESET FLAG en error
                         }
                     });
                 } else {
-                    // ✅ UN SOLO MENSAJE: Cita actualizada (pago NO cambió)
+                    // âœ… UN SOLO MENSAJE: Cita actualizada (pago NO cambiÃ³)
                     this.notificationService.showSuccess('Cita actualizada exitosamente');
                     this.closeModal();
                     this.loadAppointments();
                     this.loadPatients();
-                    this.isUpdatingAppointment = false; // ← RESET FLAG en success
+                    this.isUpdatingAppointment = false; // â† RESET FLAG en success
                 }
             },
             error: (error) => {
                 console.error('Error updating appointment:', error);
                 this.notificationService.showError('Error al actualizar la cita');
-                this.isUpdatingAppointment = false; // ← RESET FLAG en error
+                this.isUpdatingAppointment = false; // â† RESET FLAG en error
             }
         });
     }
@@ -791,7 +791,7 @@ export class CalendarComponent implements OnInit {
         this.appointmentService.deleteAppointment(this.appointmentToDelete).subscribe({
             next: () => {
                 this.notificationService.showSuccess('Cita eliminada exitosamente');
-                // Cerrar modal de edici�n si est� abierto y refrescar datos
+                // Cerrar modal de edición si está abierto y refrescar datos
                 this.closeModal();
                 this.cancelDeleteAppointment();
                 this.loadAppointments();
@@ -825,8 +825,8 @@ export class CalendarComponent implements OnInit {
         this.selectedPatient = null;
         this.editingAppointment = null;
         this.patientSearchTerm = '';
-        this.isCreatingAppointment = false; // ← RESET FLAG al cerrar modal
-        this.isUpdatingAppointment = false; // ← RESET FLAG al cerrar modal
+        this.isCreatingAppointment = false; // â† RESET FLAG al cerrar modal
+        this.isUpdatingAppointment = false; // â† RESET FLAG al cerrar modal
     }
 
     getPatientName(appointment: Appointment): string {
@@ -855,7 +855,7 @@ export class CalendarComponent implements OnInit {
         return `${startTime} - ${endTime}`;
     }
 
-    // Devuelve un texto corto indicando el origen de la cita: 'Bono 5×60m' o 'Sesión 30m'
+    // Devuelve un texto corto indicando el origen de la cita: 'Bono 5Ã—60m' o 'SesiÃ³n 30m'
     getAppointmentOrigin(appointment: Appointment): string {
         if (!appointment) return '';
         const redemptions = appointment.creditRedemptions || [];
@@ -863,33 +863,33 @@ export class CalendarComponent implements OnInit {
             const r = redemptions[0] as any;
             const pack = r.creditPack || {};
             if (pack && pack.label) {
-                // Normalizar etiquetas comunes: si el label ya contiene 'Bono' o 'Sesión', devolver tal cual.
+                // Normalizar etiquetas comunes: si el label ya contiene 'Bono' o 'SesiÃ³n', devolver tal cual.
                 const lbl: string = String(pack.label || '').trim();
                 if (lbl) return lbl;
             }
             // Si no hay label, intentar construirlo a partir de unitsTotal y unitMinutes
             const unitsTotal = Number(pack.unitsTotal ?? pack.units_total ?? 0);
-            // Determinar duración por unidad de forma segura: preferir campos camelCase o snake_case
+            // Determinar duraciÃ³n por unidad de forma segura: preferir campos camelCase o snake_case
             const rawUnitMinutes = pack.unitMinutes ?? pack.unit_minutes ?? null;
             let unitMinutes = Number(rawUnitMinutes || 0);
-            // Si no tenemos un valor válido (30 o 60), usar la duración de la cita como fallback y, por defecto, 30
+            // Si no tenemos un valor vÃ¡lido (30 o 60), usar la duraciÃ³n de la cita como fallback y, por defecto, 30
             if (unitMinutes !== 30 && unitMinutes !== 60) {
                 const dur = Number(appointment.durationMinutes || 0);
                 unitMinutes = (dur >= 60) ? 60 : 30;
             }
             if (unitsTotal > 0) {
-                if (unitsTotal === 1) return `Sesión ${unitMinutes}m`;
-                if (unitsTotal === 2) return `Sesión ${unitMinutes}m`;
-                // Bonos: mostrar como "Bono X×Ym" donde X es número de sesiones y Ym la duración
+                if (unitsTotal === 1) return `SesiÃ³n ${unitMinutes}m`;
+                if (unitsTotal === 2) return `SesiÃ³n ${unitMinutes}m`;
+                // Bonos: mostrar como "Bono XÃ—Ym" donde X es nÃºmero de sesiones y Ym la duraciÃ³n
                 const sessions = unitMinutes === 60 ? Math.round(unitsTotal / 2) : unitsTotal;
-                return `Bono ${sessions}×${unitMinutes}m`;
+                return `Bono ${sessions}Ã—${unitMinutes}m`;
             }
         }
 
-        // Fallback: basar en duración de la cita
+        // Fallback: basar en duraciÃ³n de la cita
         const mins = Number(appointment.durationMinutes || 0);
-        if (mins >= 60) return 'Sesión 60m';
-        if (mins > 0) return `Sesión ${mins}m`;
+        if (mins >= 60) return 'SesiÃ³n 60m';
+        if (mins > 0) return `SesiÃ³n ${mins}m`;
         return '';
     }
 
@@ -905,14 +905,14 @@ export class CalendarComponent implements OnInit {
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
-    // Precio por duración por defecto (en céntimos)
-    private DEFAULT_PRICE_30 = 3000; // 30€
-    private DEFAULT_PRICE_60 = 5500; // 55€
+    // Precio por duraciÃ³n por defecto (en cÃ©ntimos)
+    private DEFAULT_PRICE_30 = 3000; // 30â‚¬
+    private DEFAULT_PRICE_60 = 5500; // 55â‚¬
 
-    // Calcula el precio (en céntimos) estimado para una cita
+    // Calcula el precio (en cÃ©ntimos) estimado para una cita
     appointmentPriceCents(appointment: Appointment): number {
         if (!appointment) return 0;
-        // Sólo contabilizamos citas pagadas
+        // SÃ³lo contabilizamos citas pagadas
         const status = this.getAppointmentPaymentStatus(appointment);
         if (status !== 'paid') return 0;
 
@@ -921,8 +921,8 @@ export class CalendarComponent implements OnInit {
             return appointment.priceCents;
         }
 
-        // Si existe una redención de pack/bono, calcular el precio proporcional
-        // basándose en el precio del pack en el momento de su creación
+        // Si existe una redenciÃ³n de pack/bono, calcular el precio proporcional
+        // basÃ¡ndose en el precio del pack en el momento de su creaciÃ³n
         const redemptions = appointment.creditRedemptions || [];
         if (redemptions.length > 0) {
             const r = redemptions[0];
@@ -932,27 +932,27 @@ export class CalendarComponent implements OnInit {
             const unitsUsed = Number(r.unitsUsed || 0);
             
             // Si el pack tiene precio y unidades, calcular proporcionalmente
-            // Ejemplo: Bono 5x30min por 135€ = 27€ por sesión
+            // Ejemplo: Bono 5x30min por 135â‚¬ = 27â‚¬ por sesiÃ³n
             if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
                 return Math.round(unitsUsed * (priceCents / unitsTotal));
             }
         }
 
-        // Fallback: usar precio de sesión individual según duración
+        // Fallback: usar precio de sesiÃ³n individual segÃºn duraciÃ³n
         // (esto se aplica cuando se paga sin bono)
         const mins = Number(appointment.durationMinutes || 0);
         if (mins >= 60) return this.DEFAULT_PRICE_60;
         return this.DEFAULT_PRICE_30;
     }
 
-    // Suma total de precios (en céntimos) para un día
+    // Suma total de precios (en cÃ©ntimos) para un dÃ­a
     getDayTotal(date: Date): number {
         if (!date) return 0;
         const apts = this.getAppointmentsForDate(date) || [];
         return apts.reduce((sum, ap) => sum + this.appointmentPriceCents(ap), 0);
     }
 
-    // Suma total de precios (en céntimos) para la semana actual (según getWeekDays)
+    // Suma total de precios (en cÃ©ntimos) para la semana actual (segÃºn getWeekDays)
     getWeekTotal(): number {
         const days = this.getWeekDays();
         let total = 0;
@@ -962,7 +962,7 @@ export class CalendarComponent implements OnInit {
         return total;
     }
 
-    // Suma total de precios (en céntimos) para un mes y año dados
+    // Suma total de precios (en cÃ©ntimos) para un mes y aÃ±o dados
     getMonthTotal(year: number, monthIdx: number): number {
         let total = 0;
         this.appointments.forEach(ap => {
@@ -975,11 +975,11 @@ export class CalendarComponent implements OnInit {
         return total;
     }
 
-    // Formatear céntimos a cadena legible (ej: 5500 -> "55 €")
+    // Formatear cÃ©ntimos a cadena legible (ej: 5500 -> "55 â‚¬")
     formatPriceCents(cents: number): string {
-        if (!cents) return '';
+        if (cents === null || cents === undefined || !cents) return '0 €';
         const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
-        return euros.replace('.', ',') + ' €';
+        return euros.replace('.', ',') + ' â‚¬';
     }
 
     getMinForDate(dateTime: string): string {
@@ -1011,5 +1011,6 @@ export class CalendarComponent implements OnInit {
         }
     }
 }
+
 
 

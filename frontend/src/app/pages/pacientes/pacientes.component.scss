@@ -135,6 +135,48 @@
   margin-top: 16px;
 }
 
+// Estilos para botones de acción mejorados
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    min-width: auto;
+    
+    i {
+      font-size: 14px;
+    }
+    
+    .btn-text {
+      display: none;
+    }
+    
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+      
+      .btn-text {
+        display: inline;
+      }
+    }
+  }
+}
+
+// En pantallas más grandes, mostrar texto siempre
+@media (min-width: 1200px) {
+  .action-buttons .action-btn .btn-text {
+    display: inline;
+  }
+}
+
 // Responsive design
 @media (max-width: 768px) {
   .pacientes-container {
@@ -184,47 +226,62 @@
   }
 }
 
-// Estilos para paginaciÃ³n
+// Estilos para paginación - botones más grandes y accesibles
 .pagination {
+  gap: 4px;
+  
+  .page-item {
+    margin: 0 2px;
+  }
+  
   .page-link {
-    min-width: 40px !important;
-    max-width: 40px !important;
-    width: 40px !important;
-    height: 40px !important;
+    min-width: 44px !important;
+    height: 44px !important;
     padding: 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    font-size: 14px !important;
-    font-weight: 500 !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
     line-height: 1 !important;
-    border: 1px solid #dee2e6 !important;
+    border: 2px solid #dee2e6 !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    
+    &:hover {
+      background-color: var(--primary-color, #667eea) !important;
+      border-color: var(--primary-color, #667eea) !important;
+      color: white !important;
+      transform: translateY(-1px);
+    }
     
     i {
-      font-size: 14px !important;
+      font-size: 16px !important;
       line-height: 1 !important;
-      width: 14px !important;
-      height: 14px !important;
-      text-align: center !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
     }
   }
   
-  // PaginaciÃ³n pequeÃ±a en la parte superior
+  .page-item.active .page-link {
+    background-color: var(--primary-color, #667eea) !important;
+    border-color: var(--primary-color, #667eea) !important;
+    color: white !important;
+  }
+  
+  .page-item.disabled .page-link {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  // Paginación superior (más compacta pero accesible)
   &.pagination-sm {
     .page-link {
-      min-width: 32px !important;
-      max-width: 32px !important;
-      width: 32px !important;
-      height: 32px !important;
-      font-size: 13px !important;
+      min-width: 38px !important;
+      height: 38px !important;
+      font-size: 14px !important;
+      border-radius: 6px !important;
       
       i {
-        font-size: 12px !important;
-        width: 12px !important;
-        height: 12px !important;
+        font-size: 14px !important;
       }
     }
   }

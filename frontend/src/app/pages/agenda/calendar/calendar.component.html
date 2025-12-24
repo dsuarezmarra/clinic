@@ -39,8 +39,8 @@
         <!-- NavegaciÃ³n de fechas solo si no se oculta el header -->
         <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="!hideHeader && viewMode !== 'month'">
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary" (click)="previousPeriod()">
-                    <i class="fas fa-chevron-left"></i>
+                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Período anterior">
+                    <i class="bi bi-chevron-left"></i>
                 </button>
             </div>
 
@@ -57,8 +57,8 @@
 
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-primary" (click)="goToToday()">Hoy</button>
-                <button class="btn btn-outline-secondary" (click)="nextPeriod()">
-                    <i class="fas fa-chevron-right"></i>
+                <button class="btn btn-outline-secondary btn-nav" (click)="nextPeriod()" title="Período siguiente">
+                    <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
         </div>
@@ -67,12 +67,12 @@
     <!-- Vista Mensual -->
     <div *ngIf="viewMode === 'month'" class="year-view">
         <div class="d-flex justify-content-center align-items-center mb-3">
-            <button class="btn btn-outline-secondary me-2" (click)="previousYear()">
-                <i class="fas fa-chevron-left"></i>
+            <button class="btn btn-outline-secondary btn-nav me-2" (click)="previousYear()" title="Año anterior">
+                <i class="bi bi-chevron-left"></i>
             </button>
             <h4 class="mb-0">{{ currentYear }}</h4>
-            <button class="btn btn-outline-secondary ms-2" (click)="nextYear()">
-                <i class="fas fa-chevron-right"></i>
+            <button class="btn btn-outline-secondary btn-nav ms-2" (click)="nextYear()" title="Año siguiente">
+                <i class="bi bi-chevron-right"></i>
             </button>
         </div>
         <div class="year-months-grid-compact">

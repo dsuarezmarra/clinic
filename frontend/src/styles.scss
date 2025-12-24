@@ -126,6 +126,43 @@ body {
     box-shadow: 0 0 0 0.2rem var(--focus-shadow);
 }
 
+/* ========================================
+   BOTONES DE NAVEGACIÓN GLOBALES
+   ======================================== */
+.btn-nav {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    
+    i {
+        font-size: 18px;
+        line-height: 1;
+    }
+    
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+}
+
+/* Zebra striping para tablas */
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.08);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .clinic-header {
