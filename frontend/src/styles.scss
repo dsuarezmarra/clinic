@@ -32,12 +32,7 @@
   --focus-shadow: rgba(102, 126, 234, 0.25);
 }
 
-/* Reset global styles and eliminate pseudo-elements */
-*,
-*::before,
-*::after {
-    content: none !important;
-}
+/* Reset global - NO eliminar content de pseudo-elements (rompe iconos) */
 
 html,
 body {
