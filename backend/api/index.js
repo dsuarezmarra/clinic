@@ -13,6 +13,93 @@ const helmet = require('helmet');
 const compression = require('compression');
 const path = require('path');
 
+// ============================================
+// RATE LIMITING - Protecci�n contra brute force
+// ============================================
+const rateLimitStore = new Map();
+
+/**
+ * Rate limiter simple sin dependencias externas
+ * Limpia entradas antiguas cada 5 minutos
+ */
+const createRateLimiter = (options = {}) => {
+  const {
+    windowMs = 60 * 1000,        // 1 minuto por defecto
+    max = 100,                    // 100 requests por ventana
+    message = 'Demasiadas solicitudes, intente m�s tarde',
+    skipInDevelopment = false
+  } = options;
+
+  return (req, res, next) => {
+    // Opcionalmente saltar en desarrollo
+    if (skipInDevelopment && process.env.NODE_ENV === 'development') {
+      return next();
+    }
+
+    const ip = req.headers['x-forwarded-for']?.split(',')[0] || 
+               req.headers['x-real-ip'] || 
+               req.connection?.remoteAddress || 
+               'unknown';
+    
+    const key = `${ip}:${req.path}`;
+    const now = Date.now();
+    
+    // Obtener o crear registro
+    let record = rateLimitStore.get(key);
+    if (!record || now - record.windowStart > windowMs) {
+      record = { count: 0, windowStart: now };
+    }
+    
+    record.count++;
+    rateLimitStore.set(key, record);
+    
+    // Headers informativos
+    res.setHeader('X-RateLimit-Limit', max);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, max - record.count));
+    res.setHeader('X-RateLimit-Reset', new Date(record.windowStart + windowMs).toISOString());
+    
+    if (record.count > max) {
+      console.warn(`?? Rate limit excedido para IP: ${ip}, path: ${req.path}`);
+      return res.status(429).json({ 
+        error: message,
+        retryAfter: Math.ceil((record.windowStart + windowMs - now) / 1000)
+      });
+    }
+    
+    next();
+  };
+};
+
+// Limpiar store cada 5 minutos para evitar memory leaks
+setInterval(() => {
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minuto
+  for (const [key, record] of rateLimitStore.entries()) {
+    if (now - record.windowStart > windowMs * 2) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+// Rate limiters configurados para diferentes endpoints
+const generalLimiter = createRateLimiter({ 
+  windowMs: 60 * 1000,  // 1 minuto
+  max: 100,             // 100 req/min general
+  skipInDevelopment: true
+});
+
+const strictLimiter = createRateLimiter({ 
+  windowMs: 60 * 1000,  // 1 minuto
+  max: 10,              // 10 req/min para endpoints sensibles
+  message: 'Demasiados intentos, espere un minuto'
+});
+
+const backupLimiter = createRateLimiter({ 
+  windowMs: 60 * 60 * 1000,  // 1 hora
+  max: 5,                     // 5 backups por hora
+  message: 'L�mite de backups alcanzado, intente en una hora'
+});
+
 // Cargar variables de entorno
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
@@ -225,8 +312,8 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     
     // 🌉 BRIDGE ROUTES: Usar fetch directo (funciona en Vercel)
     const bridgeRoutes = require('../src/routes/bridge');
-    app.use('/api', bridgeRoutes);
-    console.log('✅ Bridge routes (fetch directo) cargadas');
+    app.use('/api', generalLimiter, bridgeRoutes);
+    console.log('Bridge routes con rate limiting cargadas');
     
     // ⚠️ IMPORTANTE: Aplicar middleware de database ANTES de las rutas legacy
     const databaseMiddleware = require('../src/middleware/database-middleware');
@@ -240,14 +327,14 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     const filesRoutes = require('../src/routes/files');
     const reportsRoutes = require('../src/routes/reports');
 
-    // Registrar rutas legacy
-    app.use('/api/config', configRoutes);
-    app.use('/api/locations', locationsRoutes);
-    app.use('/api/backup', backupRoutes);
-    app.use('/api/files', filesRoutes);
-    app.use('/api/reports', reportsRoutes);
+// Registrar rutas legacy con rate limiting
+    app.use('/api/config', generalLimiter, configRoutes);
+    app.use('/api/locations', generalLimiter, locationsRoutes);
+    app.use('/api/backup', backupLimiter, backupRoutes);  // 5 req/hora max
+    app.use('/api/files', generalLimiter, filesRoutes);
+    app.use('/api/reports', generalLimiter, reportsRoutes);
 
-    console.log('✅ Todas las rutas cargadas correctamente');
+    console.log('Todas las rutas cargadas con rate limiting');
   } catch (error) {
     console.error('⚠️  Error cargando rutas:', error.message);
     console.error('Las rutas de API no estarán disponibles hasta configurar las variables de entorno');
