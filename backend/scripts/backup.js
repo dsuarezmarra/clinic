@@ -688,7 +688,7 @@ DatabaseBackup.prototype._exportViaSupabase = async function (backupPath) {
             // Guardar backup en tabla backups_storage
             const backupRecord = {
                 filename: path.basename(backupPath),
-                type: backupPath.includes('daily') ? 'daily' : backupPath.includes('weekly') ? 'weekly' : 'manual',
+                backup_type: backupPath.includes('daily') ? 'daily' : backupPath.includes('weekly') ? 'weekly' : 'manual',
                 created_at: new Date().toISOString(),
                 size_bytes: JSON.stringify(fullBackup).length,
                 tenants_count: tenants.length,
