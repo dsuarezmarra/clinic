@@ -10,11 +10,11 @@
 
 | Área         | Críticas  | Altas     | Medias | Bajas | Estado                  |
 | ------------ | --------- | --------- | ------ | ----- | ----------------------- |
-| **Frontend** | 0         | 2         | 6      | 5     | ?? Mejoras pendientes   |
-| **Backend**  | 0         | 3         | 8      | 5     | ? Críticas resueltas   |
-| **Supabase** | 0         | 0         | 2      | 1     | ? Bien configurado     |
-| **Vercel**   | 0         | 0         | 1      | 0     | ? CORS corregido       |
-| **TOTAL**    | **0** ?  | 5         | 17     | 11    | **33 hallazgos**        |
+| **Frontend** | 0         | 0         | 1      | 3     | ? Seguro               |
+| **Backend**  | 0         | 0         | 7      | 2     | ? Seguro               |
+| **Supabase** | 0         | 0         | 0      | 0     | ? Bien configurado     |
+| **Vercel**   | 0         | 0         | 0      | 0     | ? Seguro               |
+| **TOTAL**    | **0** ?  | **0** ?  | 8      | 5     | **13 hallazgos menores**|
 
 ---
 
@@ -39,6 +39,33 @@
 | 2 | Path Traversal en Backups | `routes/backup.js` | ? **RESUELTO HOY** |
 | 3 | UUID no validado en DELETE | `routes/files.js` | ? **RESUELTO HOY** |
 | 4 | Header Injection | `routes/files.js`, `routes/backup.js` | ? **RESUELTO HOY** |
+| 5 | Helmet CSP débil | `api/index.js` | ? **RESUELTO HOY** |
+| 6 | Tenant slug sin validar (IDOR) | `middleware/tenant.js` | ? **RESUELTO HOY** |
+| 7 | Stack traces en errores | `middleware/errorHandler.js` | ? **RESUELTO HOY** |
+| 8 | console.log con datos sensibles | Frontend (múltiples) | ? **RESUELTO HOY** |
+
+---
+
+## ?? VULNERABILIDADES PENDIENTES
+
+### MEDIAS (8)
+
+- [ ] Memory leaks frontend (sin takeUntilDestroyed)
+- [ ] No hay validación de Content-Type en uploads
+- [ ] Tamaño máximo de upload muy alto (10MB)
+- [ ] Sin timeout en conexiones DB
+- [ ] Logs no estructurados (dificulta auditoría)
+- [ ] Sin health check de DB
+- [ ] CORS preflight no cacheado
+- [ ] Sin compresión de respuestas grandes
+
+### BAJAS (5)
+
+- [ ] Dependencias desactualizadas
+- [ ] Sin HSTS preload en frontend
+- [ ] Favicon genérico
+- [ ] Bundle size elevado
+- [ ] Sin service worker para offline
 
 ---
 
