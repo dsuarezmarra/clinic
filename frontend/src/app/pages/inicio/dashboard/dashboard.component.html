@@ -14,13 +14,10 @@
     </div>
 
     <!-- Tarjetas de estadisticas -->
-    <div class="row g-3" *ngIf="stats && !statsLoading">
+    <div class="row g-2" *ngIf="stats && !statsLoading">
         <!-- Citas totales -->
         <div class="col-6 col-md-3">
             <div class="stat-card stat-total">
-                <div class="stat-icon">
-                    <i class="bi bi-calendar-check"></i>
-                </div>
                 <div class="stat-info">
                     <div class="stat-number">{{ stats.appointments.total }}</div>
                     <div class="stat-label">Citas</div>
@@ -31,9 +28,6 @@
         <!-- Completadas -->
         <div class="col-6 col-md-3">
             <div class="stat-card stat-completed">
-                <div class="stat-icon">
-                    <i class="bi bi-check-circle"></i>
-                </div>
                 <div class="stat-info">
                     <div class="stat-number">{{ stats.appointments.completed }}</div>
                     <div class="stat-label">Completadas</div>
@@ -44,9 +38,6 @@
         <!-- Ingresos -->
         <div class="col-6 col-md-3">
             <div class="stat-card stat-revenue">
-                <div class="stat-icon">
-                    <i class="bi bi-currency-euro"></i>
-                </div>
                 <div class="stat-info">
                     <div class="stat-number">{{ stats.revenue.paidFormatted }}</div>
                     <div class="stat-label">Cobrado</div>
@@ -57,9 +48,6 @@
         <!-- Pendiente -->
         <div class="col-6 col-md-3">
             <div class="stat-card stat-upcoming">
-                <div class="stat-icon">
-                    <i class="bi bi-hourglass-split"></i>
-                </div>
                 <div class="stat-info">
                     <div class="stat-number">{{ stats.revenue.pendingFormatted }}</div>
                     <div class="stat-label">Pendiente</div>

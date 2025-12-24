@@ -331,8 +331,9 @@
     transition: background-color 0.2s;
     position: relative;
     display: flex;
-    align-items: center;
-    padding: 5px;
+    align-items: flex-start;
+    padding: 4px;
+    overflow: hidden;
 }
 
 .time-slot:hover {
@@ -355,34 +356,39 @@
 .appointment-block {
     background: var(--primary-color);
     color: white;
-    padding: 5px 8px;
+    padding: 4px 6px;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 11px;
     width: 100%;
     text-align: center;
     cursor: pointer;
     transition: background-color 0.2s;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
-/* Position appointment blocks absolutely inside the slot so multi-slot blocks can overlap the next slot cleanly */
+/* Position appointment blocks to fit within the slot */
 .time-slot {
     position: relative;
+    overflow: hidden;
 }
 
 
 .appointment-block {
-    position: absolute;
-    left: 6px;
-    right: 6px;
-    top: 6px;
+    position: relative;
+    width: 100%;
     box-sizing: border-box;
     z-index: 2;
-    height: calc(100% - 12px);
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 6px;
+    padding: 2px 4px;
+    max-height: 100%;
+    overflow: hidden;
 }
 
 /* For simplicity render each slot's block independently but with identical visuals
@@ -426,22 +432,19 @@
 }
 
 
-/* Continuation slot: render a block that visually matches the start slot's content
-   but with bottom corners rounded and top corners flattened to create a single
-   continuous appearance across two slots. */
+/* Continuation slot: render a block that visually matches the start slot's content */
 .appointment-block-continued {
-    position: absolute;
-    left: 6px;
-    right: 6px;
-    top: 6px;
+    position: relative;
+    width: 100%;
     box-sizing: border-box;
     z-index: 2;
-    height: calc(100% - 12px);
     border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 6px;
+    padding: 2px 4px;
+    max-height: 100%;
+    overflow: hidden;
 }
 
 .appointment-continued-content {
