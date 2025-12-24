@@ -1,7 +1,7 @@
+import { isDevMode } from '@angular/core';
 import { ClientConfig } from './client-config.interface';
 import { actifisioConfig } from './clients/actifisio.config';
 import { masajecorporaldeportivoConfig } from './clients/masajecorporaldeportivo.config';
-import { isDevMode } from '@angular/core';
 
 /**
  * Logging condicional (solo en desarrollo)
@@ -45,6 +45,19 @@ function isBrowser(): boolean {
 }
 
 /**
+ * Detecta si estamos en entorno de desarrollo local
+ */
+function isLocalDevelopment(): boolean {
+  if (!isBrowser()) return false;
+  try {
+    const hostname = window.location.hostname;
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Obtiene el CLIENT_ID del entorno
  * Solo accede a window si estamos en browser
  */
@@ -54,7 +67,14 @@ function getClientIdFromEnvironment(): string {
     return 'masajecorporaldeportivo';
   }
   
-  // En browser, intentar obtener el CLIENT_ID inyectado
+  // En desarrollo local, siempre usar el cliente por defecto
+  // (ng serve no inyecta __CLIENT_ID)
+  if (isLocalDevelopment()) {
+    devLog('[Config] Desarrollo local detectado, usando cliente: masajecorporaldeportivo');
+    return 'masajecorporaldeportivo';
+  }
+  
+  // En producción, intentar obtener el CLIENT_ID inyectado
   try {
     const windowClientId = (window as any).__CLIENT_ID;
     if (typeof windowClientId === 'string' && windowClientId.length > 0) {

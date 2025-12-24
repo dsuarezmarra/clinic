@@ -1,4 +1,4 @@
-<div class="container-fluid">
+ï»¿<div class="container-fluid">
     <!-- Header con tÃ­tulo y botÃ³n para agregar -->
     <div class="row mb-4">
         <div class="col-md-8">
@@ -342,7 +342,7 @@
                                                 <span class="btn-text">Ver</span>
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-warning action-btn"
-                                                (click)="editPatient(patient)" title="Editar información del paciente">
+                                                (click)="editPatient(patient)" title="Editar informaciÃ³n del paciente">
                                                 <i class="bi bi-pencil"></i>
                                                 <span class="btn-text">Editar</span>
                                             </button>
@@ -488,7 +488,7 @@
             {{ searchTerm ? 'No se encontraron pacientes' : 'No hay pacientes registrados' }}
         </h4>
         <p class="empty-state-description">
-            {{ searchTerm ? 'Intenta con otros términos de búsqueda' : 'Comienza agregando tu primer paciente para gestionar sus citas y sesiones' }}
+            {{ searchTerm ? 'Intenta con otros tÃ©rminos de bÃºsqueda' : 'Comienza agregando tu primer paciente para gestionar sus citas y sesiones' }}
         </p>
         <button type="button" class="btn btn-primary btn-ripple" (click)="showCreateForm = true" *ngIf="!searchTerm">
             <i class="bi bi-plus-circle me-2"></i>
@@ -496,7 +496,7 @@
         </button>
         <button type="button" class="btn btn-outline-secondary" (click)="searchTerm = ''; filterPatients()" *ngIf="searchTerm">
             <i class="bi bi-x-circle me-2"></i>
-            Limpiar búsqueda
+            Limpiar bÃºsqueda
         </button>
     </div>
 </div>
@@ -585,7 +585,7 @@
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success" [disabled]="!creditForm.form.valid || loading">
                             <i class="bi bi-check-circle me-2"></i>
-                            Añadir
+                            AÃ±adir
                         </button>
                         <button type="button" class="btn btn-secondary" (click)="hideCreditForm()">
                             <i class="bi bi-x-circle me-2"></i>
@@ -598,12 +598,12 @@
     </div>
 </div>
 
-<!-- Modal de confirmación para eliminar paciente -->
+<!-- Modal de confirmaciÃ³n para eliminar paciente -->
 <app-confirm-modal
     [isOpen]="showDeleteConfirm"
     title="Eliminar Paciente"
-    message="¿Está seguro de que desea eliminar este paciente?"
-    details="Esta acción eliminará también todas sus citas, packs de sesiones y archivos asociados. Esta acción no se puede deshacer."
+    message="Â¿EstÃ¡ seguro de que desea eliminar este paciente?"
+    details="Esta acciÃ³n eliminarÃ¡ tambiÃ©n todas sus citas, packs de sesiones y archivos asociados. Esta acciÃ³n no se puede deshacer."
     itemLabel="Paciente"
     [itemName]="patientToDelete ? getFullName(patientToDelete) : ''"
     confirmText="Eliminar"

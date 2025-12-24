@@ -32,14 +32,14 @@
                 <button type="button" class="btn btn-outline-primary" [class.active]="viewMode === 'week'"
                     (click)="setViewMode('week')">Semana</button>
                 <button type="button" class="btn btn-outline-primary" [class.active]="viewMode === 'day'"
-                    (click)="setViewMode('day')">DÃ­a</button>
+                    (click)="setViewMode('day')">Día</button>
             </div>
         </div>
 
-        <!-- NavegaciÃ³n de fechas solo si no se oculta el header -->
+        <!-- Navegación de fechas solo si no se oculta el header -->
         <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="!hideHeader && viewMode !== 'month'">
             <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Período anterior">
+                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Per?odo anterior">
                     <i class="bi bi-chevron-left"></i>
                 </button>
             </div>
@@ -51,13 +51,13 @@
                 </span>
                 <span *ngIf="viewMode === 'day'">
                     {{ formatDate(currentDate) }}
-                    <small class="text-muted ms-2">(Total dÃ­a: {{ formatPriceCents(getDayTotal(currentDate)) }})</small>
+                    <small class="text-muted ms-2">(Total día: {{ formatPriceCents(getDayTotal(currentDate)) }})</small>
                 </span>
             </h3>
 
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-primary" (click)="goToToday()">Hoy</button>
-                <button class="btn btn-outline-secondary btn-nav" (click)="nextPeriod()" title="Período siguiente">
+                <button class="btn btn-outline-secondary btn-nav" (click)="nextPeriod()" title="Per?odo siguiente">
                     <i class="bi bi-chevron-right"></i>
                 </button>
             </div>
@@ -67,11 +67,11 @@
     <!-- Vista Mensual -->
     <div *ngIf="viewMode === 'month'" class="year-view">
         <div class="d-flex justify-content-center align-items-center mb-3">
-            <button class="btn btn-outline-secondary btn-nav me-2" (click)="previousYear()" title="Año anterior">
+            <button class="btn btn-outline-secondary btn-nav me-2" (click)="previousYear()" title="A?o anterior">
                 <i class="bi bi-chevron-left"></i>
             </button>
             <h4 class="mb-0">{{ currentYear }}</h4>
-            <button class="btn btn-outline-secondary btn-nav ms-2" (click)="nextYear()" title="Año siguiente">
+            <button class="btn btn-outline-secondary btn-nav ms-2" (click)="nextYear()" title="A?o siguiente">
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
@@ -122,7 +122,7 @@
     <!-- Vista Semanal -->
     <div *ngIf="viewMode === 'week'" class="week-view">
         <div class="week-grid">
-            <!-- Encabezados de dÃ­as -->
+            <!-- Encabezados de días -->
             <div class="time-column"></div>
             <div *ngFor="let day of getWeekDays()" class="day-column-header" [class.weekend]="isWeekend(day)"
                 [class.today]="isToday(day)">
@@ -150,7 +150,7 @@
                                 <strong class="appointment-name">{{ getPatientName(appointment) }}</strong>
                                 <div class="small text-muted appointment-time">{{ formatTimeRange(appointment.start,
                                     appointment.end) }}</div>
-                                <!-- Origen/Tipo de la cita (ej: Bono 5Ã—60m, SesiÃ³n 30m) -->
+                                <!-- Origen/Tipo de la cita (ej: Bono 5×60m, Sesión 30m) -->
                                 <div class="appointment-origin">{{ getAppointmentOrigin(appointment) }}</div>
                             </div>
                         </ng-container>
@@ -244,7 +244,7 @@
                     <input type="text" 
                            class="form-control"
                            #patientSearchInput
-                           placeholder="Buscar paciente por nombre, telÃ©fono o email..." 
+                           placeholder="Buscar paciente por nombre, teléfono o email..." 
                            [(ngModel)]="patientSearchTerm"
                            (input)="filterPatients()"
                            autofocus
@@ -330,7 +330,7 @@
                 <!-- Campo de notas/observaciones -->
                 <div class="mb-3">
                     <label class="form-label">
-                        <i class="bi bi-journal-text me-1"></i>Notas de la sesión
+                        <i class="bi bi-journal-text me-1"></i>Notas de la sesi?n
                     </label>
                     <textarea class="form-control" 
                               [(ngModel)]="editingAppointment.notes" 
@@ -338,7 +338,7 @@
                               placeholder="Observaciones, tratamiento realizado, estado del paciente..."
                               tabindex="0"
                               style="min-height: 80px;"></textarea>
-                    <div class="form-text">Estas notas quedan asociadas a esta cita específica</div>
+                    <div class="form-text">Estas notas quedan asociadas a esta cita espec?fica</div>
                 </div>
 
                 <div class="mb-3">
@@ -375,12 +375,12 @@
 <!-- Backdrop para modales -->
 <div class="modal-backdrop fade show" *ngIf="showPatientModal || showEditModal"></div>
 
-<!-- Modal de confirmación para eliminar cita -->
+<!-- Modal de confirmaci?n para eliminar cita -->
 <app-confirm-modal
     [isOpen]="showDeleteConfirm"
     title="Eliminar Cita"
-    message="¿Está seguro de que desea eliminar esta cita?"
-    details="Esta acción no se puede deshacer."
+    message="?Est? seguro de que desea eliminar esta cita?"
+    details="Esta acci?n no se puede deshacer."
     itemLabel="Paciente"
     [itemName]="getDeleteAppointmentPatientName()"
     confirmText="Eliminar"

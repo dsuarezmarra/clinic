@@ -125,7 +125,7 @@ router.use('/patients*', loadTenant);
 router.use('/appointments*', loadTenant);
 router.use('/credits*', loadTenant);
 router.use('/reports*', loadTenant);
-// Backup: solo aplicar loadTenant a rutas espec�ficas que lo necesiten (create, restore)
+// Backup: solo aplicar loadTenant a rutas específicas que lo necesiten (create, restore)
 router.use('/backup/create', loadTenant);
 router.use('/backup/restore*', loadTenant);
 router.use('/backup/download*', loadTenant);
@@ -1622,16 +1622,16 @@ router.get('/meta/locations/by-cp/:cp', async (req, res) => {
 // BACKUP ENDPOINTS (simplificados)
 // ============================================================
 
-// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup autom�tico multi-tenant)
-// Este endpoint es llamado autom�ticamente por Vercel Cron seg�n la configuraci�n en vercel.json
+// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automático multi-tenant)
+// Este endpoint es llamado automáticamente por Vercel Cron según la configuración en vercel.json
 router.get('/backup/cron', async (req, res) => {
   try {
     // Verificar que la llamada viene de Vercel Cron o tiene la clave correcta
     const authHeader = req.headers['authorization'];
     const cronSecret = process.env.CRON_SECRET;
     
-    // Vercel env�a el header Authorization con el valor Bearer <CRON_SECRET>
-    // Si no hay CRON_SECRET configurado, permitimos la ejecuci�n (para desarrollo)
+    // Vercel envía el header Authorization con el valor Bearer <CRON_SECRET>
+    // Si no hay CRON_SECRET configurado, permitimos la ejecución (para desarrollo)
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       console.log('[CRON] Acceso no autorizado al endpoint de cron');
       return res.status(401).json({
@@ -1640,7 +1640,7 @@ router.get('/backup/cron', async (req, res) => {
       });
     }
 
-    console.log('[CRON] Ejecutando backup autom�tico multi-tenant...');
+    console.log('[CRON] Ejecutando backup automático multi-tenant...');
     
     // Usar el script de backup multi-tenant
     const { DatabaseBackup } = require('../../scripts/backup');
@@ -1651,16 +1651,16 @@ router.get('/backup/cron', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Backup autom�tico multi-tenant completado',
+      message: 'Backup automático multi-tenant completado',
       type: 'daily',
       timestamp: new Date().toISOString(),
       ...result
     });
   } catch (error) {
-    console.error('[CRON] Error en backup autom�tico:', error.message);
+    console.error('[CRON] Error en backup automático:', error.message);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error al crear backup autom�tico'
+      message: error.message || 'Error al crear backup automático'
     });
   }
 });
@@ -1682,7 +1682,7 @@ router.get('/backup/list', async (req, res) => {
     
     if (error) {
       console.error('Error fetching backups from database:', error);
-      return res.json([]); // Devolver array vac�o si hay error
+      return res.json([]); // Devolver array vacío si hay error
     }
     
     // Formatear backups para el frontend
@@ -1720,7 +1720,7 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
-// GET /api/backup/stats - Estad�sticas de backups
+// GET /api/backup/stats - Estadísticas de backups
 router.get('/backup/stats', async (req, res) => {
   try {
     // Obtener tenant del header (opcional)

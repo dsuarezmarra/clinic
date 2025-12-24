@@ -1,5 +1,9 @@
 import { ClientConfig } from '../client-config.interface';
 
+// Detectar si estamos en desarrollo local
+const isLocalDev = typeof window !== 'undefined' && 
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
 /**
  * ConfiguraciÃ³n del Cliente: Actifisio
  * Tema: Naranja/Amarillo
@@ -42,8 +46,9 @@ export const actifisioConfig: ClientConfig = {
   },
   
   // Configuración de backend (API compartida multi-tenant)
+  // En desarrollo local usa localhost, en producción usa Vercel
   backend: {
-    apiUrl: 'https://api-clinic-personal.vercel.app/api'
+    apiUrl: isLocalDev ? 'http://localhost:3000/api' : 'https://api-clinic-personal.vercel.app/api'
   },
   
   // ConfiguraciÃ³n de PWA

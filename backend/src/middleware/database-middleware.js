@@ -31,14 +31,28 @@ function injectDatabaseMiddleware(req, res, next) {
   const shouldBypassTenant = bypassTenantRoutes.some(route => req.originalUrl.startsWith(route));
   
   // ?? Obtener tenant slug del header
-  const tenantSlug = req.headers['x-tenant-slug'];
+  // En desarrollo local (sin header), usar tenant por defecto
+  const DEFAULT_LOCAL_TENANT = process.env.DEFAULT_TENANT || 'masajecorporaldeportivo';
+  let tenantSlug = req.headers['x-tenant-slug'];
+  
+  // Detectar placeholder sin resolver (error de build)
+  if (tenantSlug && tenantSlug.includes('__VITE_CLIENT_ID__')) {
+    console.warn('?? [Warning] Se detectó placeholder sin resolver: __VITE_CLIENT_ID__');
+    tenantSlug = null;
+  }
+  
+  // Si no hay tenant y estamos en desarrollo, usar el por defecto
+  if (!tenantSlug && process.env.NODE_ENV !== 'production' && !shouldBypassTenant) {
+    tenantSlug = DEFAULT_LOCAL_TENANT;
+    console.log(`?? [Local Dev] Usando tenant por defecto: ${tenantSlug}`);
+  }
   
   if (tenantSlug) {
-    console.log(`?? [Multi-Tenant] Tenant detectado: ${tenantSlug}`);
+    console.log(`?? [Multi-Tenant] Tenant activo: ${tenantSlug}`);
   } else if (shouldBypassTenant) {
     console.log(`?? [Bypass] Ruta sin requerimiento de tenant: ${req.originalUrl}`);
   } else {
-    console.log('?? [Legacy] Sin tenant slug - modo compatibilidad');
+    console.log('?? [Warning] Sin tenant slug en producción - petición denegada');
   }
   
   // Para rutas bypass, simplemente pasar sin requerir DB manager

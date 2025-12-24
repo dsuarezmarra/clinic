@@ -109,26 +109,73 @@ router.get('/patient/:id', [
 
 // GET /api/appointments - Obtener citas por rango de fechas
 router.get('/', [
-  query('from').notEmpty().isISO8601().withMessage('Fecha desde es requerida y debe ser vÃ¡lida'),
-  query('to').notEmpty().isISO8601().withMessage('Fecha hasta es requerida y debe ser vÃ¡lida'),
-  query('status').optional().isIn(['BOOKED', 'CANCELLED', 'NO_SHOW']).withMessage('Estado no vÃ¡lido')
+  query('from').notEmpty().isISO8601().withMessage('Fecha desde es requerida y debe ser válida'),
+  query('to').notEmpty().isISO8601().withMessage('Fecha hasta es requerida y debe ser válida'),
+  query('status').optional().isIn(['BOOKED', 'CANCELLED', 'NO_SHOW']).withMessage('Estado no válido')
 ], validate, async (req, res, next) => {
   try {
     const { from, to, status } = req.query;
 
-    let appointments = await appointmentService.getAppointmentsByRange(from, to);
+    // Convertir fechas a UTC para la consulta
+    const fromUTC = moment.tz(from, 'Europe/Madrid').utc().toDate();
+    const toUTC = moment.tz(to, 'Europe/Madrid').utc().toDate();
+
+    // Usar getDb(req) para obtener el cliente multi-tenant correcto
+    let appointments = await getDb(req).appointments.findMany({
+      where: {
+        start: { gte: fromUTC },
+        end: { lte: toUTC }
+      },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            phone: true
+          }
+        },
+        creditRedemptions: {
+          include: {
+            creditPack: true
+          }
+        }
+      },
+      orderBy: { start: 'asc' }
+    });
 
     // Filtrar por estado si se especifica
     if (status) {
       appointments = appointments.filter(apt => apt.status === status);
     }
 
-    // Convertir fechas a zona horaria local para el frontend
-    const appointmentsWithLocalTime = appointments.map(apt => ({
-      ...apt,
-      start: moment.utc(apt.start).tz('Europe/Madrid').format(),
-      end: moment.utc(apt.end).tz('Europe/Madrid').format()
-    }));
+    // Convertir fechas a zona horaria local y agregar estado de pago
+    const appointmentsWithLocalTime = appointments.map(apt => {
+      const isPaid = apt.creditRedemptions?.length > 0 && 
+                     apt.creditRedemptions.every(r => r.creditPack?.paid === true);
+      return {
+        ...apt,
+        start: moment.utc(apt.start).tz('Europe/Madrid').format(),
+        end: moment.utc(apt.end).tz('Europe/Madrid').format(),
+        paid: isPaid,
+        creditRedemptions: Array.isArray(apt.creditRedemptions)
+          ? apt.creditRedemptions.map(cr => ({
+              ...cr,
+              creditPack: cr.creditPack
+                ? {
+                    ...cr.creditPack,
+                    unitsRemaining: Number(cr.creditPack.unitsRemaining) || 0,
+                    unitsTotal: Number(cr.creditPack.unitsTotal) || 0,
+                    unitMinutes: Number(cr.creditPack.unitMinutes) || 30,
+                    paid: !!cr.creditPack.paid,
+                    createdAt: cr.creditPack.createdAt ? new Date(cr.creditPack.createdAt).toISOString() : null,
+                    updatedAt: cr.creditPack.updatedAt ? new Date(cr.creditPack.updatedAt).toISOString() : null
+                  }
+                : null
+            }))
+          : apt.creditRedemptions
+      };
+    });
 
     res.json(appointmentsWithLocalTime);
   } catch (error) {

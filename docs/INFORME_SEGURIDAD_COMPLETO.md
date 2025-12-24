@@ -8,13 +8,13 @@
 
 ## ?? RESUMEN EJECUTIVO
 
-| Área         | Críticas  | Altas     | Medias | Bajas | Estado                  |
-| ------------ | --------- | --------- | ------ | ----- | ----------------------- |
-| **Frontend** | 0         | 0         | 1      | 3     | ? Seguro               |
-| **Backend**  | 0         | 0         | 7      | 2     | ? Seguro               |
-| **Supabase** | 0         | 0         | 0      | 0     | ? Bien configurado     |
-| **Vercel**   | 0         | 0         | 0      | 0     | ? Seguro               |
-| **TOTAL**    | **0** ?  | **0** ?  | 8      | 5     | **13 hallazgos menores**|
+| Área         | Críticas | Altas    | Medias | Bajas | Estado                   |
+| ------------ | -------- | -------- | ------ | ----- | ------------------------ |
+| **Frontend** | 0        | 0        | 1      | 3     | ? Seguro                |
+| **Backend**  | 0        | 0        | 7      | 2     | ? Seguro                |
+| **Supabase** | 0        | 0        | 0      | 0     | ? Bien configurado      |
+| **Vercel**   | 0        | 0        | 0      | 0     | ? Seguro                |
+| **TOTAL**    | **0** ? | **0** ? | 8      | 5     | **13 hallazgos menores** |
 
 ---
 
@@ -22,27 +22,27 @@
 
 ### CRÍTICAS RESUELTAS (6/6) ?
 
-| # | Vulnerabilidad | Archivo | Estado |
-|---|----------------|---------|--------|
-| 1 | SSL/TLS Bypass Global | `api/index.js` | ? Resuelto |
-| 2 | CORS Permite Cualquier Origen | `api/index.js` | ? Resuelto |
-| 3 | Endpoint Expone Variables | `api/index.js` | ? Resuelto |
-| 4 | vercel.json CORS Wildcard | `vercel.json` | ? Resuelto |
-| 5 | **SQL/PostgREST Injection** | `routes/patients.js` | ? **RESUELTO HOY** |
-| 6 | **Path Traversal en Files** | `routes/files.js` | ? **RESUELTO HOY** |
+| #   | Vulnerabilidad                | Archivo              | Estado              |
+| --- | ----------------------------- | -------------------- | ------------------- |
+| 1   | SSL/TLS Bypass Global         | `api/index.js`       | ? Resuelto         |
+| 2   | CORS Permite Cualquier Origen | `api/index.js`       | ? Resuelto         |
+| 3   | Endpoint Expone Variables     | `api/index.js`       | ? Resuelto         |
+| 4   | vercel.json CORS Wildcard     | `vercel.json`        | ? Resuelto         |
+| 5   | **SQL/PostgREST Injection**   | `routes/patients.js` | ? **RESUELTO HOY** |
+| 6   | **Path Traversal en Files**   | `routes/files.js`    | ? **RESUELTO HOY** |
 
 ### ALTAS RESUELTAS (4)
 
-| # | Vulnerabilidad | Archivo | Estado |
-|---|----------------|---------|--------|
-| 1 | Sin Rate Limiting | `api/index.js` | ? **IMPLEMENTADO HOY** |
-| 2 | Path Traversal en Backups | `routes/backup.js` | ? **RESUELTO HOY** |
-| 3 | UUID no validado en DELETE | `routes/files.js` | ? **RESUELTO HOY** |
-| 4 | Header Injection | `routes/files.js`, `routes/backup.js` | ? **RESUELTO HOY** |
-| 5 | Helmet CSP débil | `api/index.js` | ? **RESUELTO HOY** |
-| 6 | Tenant slug sin validar (IDOR) | `middleware/tenant.js` | ? **RESUELTO HOY** |
-| 7 | Stack traces en errores | `middleware/errorHandler.js` | ? **RESUELTO HOY** |
-| 8 | console.log con datos sensibles | Frontend (múltiples) | ? **RESUELTO HOY** |
+| #   | Vulnerabilidad                  | Archivo                               | Estado                  |
+| --- | ------------------------------- | ------------------------------------- | ----------------------- |
+| 1   | Sin Rate Limiting               | `api/index.js`                        | ? **IMPLEMENTADO HOY** |
+| 2   | Path Traversal en Backups       | `routes/backup.js`                    | ? **RESUELTO HOY**     |
+| 3   | UUID no validado en DELETE      | `routes/files.js`                     | ? **RESUELTO HOY**     |
+| 4   | Header Injection                | `routes/files.js`, `routes/backup.js` | ? **RESUELTO HOY**     |
+| 5   | Helmet CSP débil                | `api/index.js`                        | ? **RESUELTO HOY**     |
+| 6   | Tenant slug sin validar (IDOR)  | `middleware/tenant.js`                | ? **RESUELTO HOY**     |
+| 7   | Stack traces en errores         | `middleware/errorHandler.js`          | ? **RESUELTO HOY**     |
+| 8   | console.log con datos sensibles | Frontend (múltiples)                  | ? **RESUELTO HOY**     |
 
 ---
 
@@ -358,17 +358,17 @@ FOR ALL USING (auth.role() = 'service_role');
 
 ### Frontend (masajecorporaldeportivo)
 
-| Configuración         | Estado                |
-| --------------------- | --------------------- |
+| Configuración         | Estado               |
+| --------------------- | -------------------- |
 | Build Logs Protection | ? Habilitado         |
 | Git Fork Protection   | ? Habilitado         |
-| Deployment Protection | ?? Verificar          |
+| Deployment Protection | ?? Verificar         |
 | Environment Variables | ? API_URL, CLIENT_ID |
 
 ### Backend (api-clinic-personal)
 
-| Configuración         | Estado           |
-| --------------------- | ---------------- |
+| Configuración         | Estado          |
+| --------------------- | --------------- |
 | Environment Variables | ? Configuradas  |
 | CORS en vercel.json   | ? CORREGIDO     |
 | Cron Jobs             | ? Backup diario |

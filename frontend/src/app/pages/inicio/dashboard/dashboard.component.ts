@@ -9,7 +9,7 @@ import { CreditService } from '../../../services/credit.service';
 import { EventBusService } from '../../../services/event-bus.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PatientService } from '../../../services/patient.service';
-import { StatsService, DashboardStats, StatsPeriod } from '../../../services/stats.service';
+import { DashboardStats, StatsPeriod, StatsService } from '../../../services/stats.service';
 import { CalendarComponent } from '../../agenda/calendar/calendar.component';
 
 @Component({
@@ -94,7 +94,7 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    // Cargar estad�sticas del dashboard
+    // Cargar estadísticas del dashboard
     loadStats() {
         this.statsLoading = true;
         this.statsService.getDashboardStats(this.statsPeriod).subscribe({
@@ -109,13 +109,13 @@ export class DashboardComponent implements OnInit {
         });
     }
 
-    // Cambiar per�odo de estad�sticas
+    // Cambiar período de estadísticas
     changeStatsPeriod(period: StatsPeriod) {
         this.statsPeriod = period;
         this.loadStats();
     }
 
-    // Toggle mostrar/ocultar estad�sticas
+    // Toggle mostrar/ocultar estadísticas
     toggleStats() {
         this.showStats = !this.showStats;
     }
@@ -428,7 +428,7 @@ export class DashboardComponent implements OnInit {
         return `${startTime} - ${endTime}`;
     }
 
-    // Formatear c�ntimos a cadena legible (ej: 5500 -> "55 ?")
+    // Formatear céntimos a cadena legible (ej: 5500 -> "55 €")
     formatPriceCents(cents: number): string {
         if (cents === null || cents === undefined || !cents) return '0 €';
         const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);

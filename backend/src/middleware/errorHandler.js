@@ -75,7 +75,6 @@ const errorHandler = (err, req, res, next) => {
 
   // Error por defecto
   const statusCode = err.statusCode || err.status || 500;
-  const isProduction = process.env.NODE_ENV === 'production';
   
   // En producción, nunca exponer mensajes internos para errores 500
   let message;
