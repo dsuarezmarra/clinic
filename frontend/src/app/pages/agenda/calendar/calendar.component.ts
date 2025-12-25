@@ -921,9 +921,89 @@ export class CalendarComponent implements OnInit {
         this.isUpdatingAppointment = false; // ← RESET FLAG al cerrar modal
     }
 
+    /**
+     * Abre el formulario de nuevo paciente en una nueva pestaña/ruta
+     * Conserva la fecha/hora seleccionada para crear la cita después
+     */
+    openNewPatientModal() {
+        // Guardamos el estado actual para retomar después de crear el paciente
+        const pendingAppointment = {
+            date: this.selectedDate?.toISOString(),
+            time: this.selectedTimeSlot
+        };
+        sessionStorage.setItem('pendingAppointment', JSON.stringify(pendingAppointment));
+        
+        // Navegamos a la página de nuevo paciente
+        this.router.navigate(['/pacientes/nuevo']);
+    }
+
     getPatientName(appointment: Appointment): string {
         const patient = this.patients.find(p => p.id === appointment.patientId);
         return patient ? `${patient.firstName} ${patient.lastName}` : 'Paciente no encontrado';
+    }
+
+    /**
+     * Obtiene el paciente asociado a una cita
+     */
+    getPatientByAppointment(appointment: Appointment): Patient | undefined {
+        return this.patients.find(p => p.id === appointment.patientId);
+    }
+
+    /**
+     * Genera un enlace de WhatsApp para enviar recordatorio de cita
+     * Usa el número de la clínica para WhatsApp Business
+     */
+    getWhatsAppReminderLink(appointment: Appointment): string {
+        const patient = this.getPatientByAppointment(appointment);
+        if (!patient?.phone) return '';
+        
+        // Limpiar número de teléfono (quitar espacios, guiones, etc.)
+        let phone = patient.phone.replace(/[\s\-\(\)\.]/g, '');
+        
+        // Si empieza con 0, quitar el 0 y añadir +34
+        if (phone.startsWith('0')) {
+            phone = '+34' + phone.substring(1);
+        }
+        // Si no tiene prefijo internacional, añadir +34 (España)
+        if (!phone.startsWith('+')) {
+            phone = '+34' + phone;
+        }
+        
+        // Formatear fecha y hora de la cita
+        const appointmentDate = new Date(appointment.start);
+        const dateStr = appointmentDate.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long'
+        });
+        const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        // Mensaje de recordatorio
+        const config = this.clientConfigService.getConfig();
+        const clinicName = config.info?.name || config.info?.shortName || 'la clínica';
+        const message = `¡Hola ${patient.firstName}! 👋
+
+Te recordamos tu cita en ${clinicName}:
+
+📅 *${dateStr}*
+🕐 *${timeStr}*
+
+¿Te viene bien? Confirma respondiendo a este mensaje.
+
+Un saludo 😊`;
+        
+        return `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+    }
+
+    /**
+     * Comprueba si el paciente de la cita tiene teléfono configurado
+     */
+    hasPatientPhone(appointment: Appointment): boolean {
+        const patient = this.getPatientByAppointment(appointment);
+        return !!patient?.phone && patient.phone.trim().length > 0;
     }
 
     formatDate(date: Date): string {

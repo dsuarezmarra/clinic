@@ -112,6 +112,7 @@
                         [class.has-appointments-compact]="day && getAppointmentsForDate(day).length > 0"
                         [class.holiday-compact]="day && isHoliday(day) && getAppointmentsForDate(day).length === 0"
                         [class.weekend-compact]="day && !isHoliday(day) && (day.getDay() === 0 || day.getDay() === 6)"
+                        [class.today-compact]="day && isToday(day)"
                         (click)="day && setViewMode('day'); currentDate = day">
                         <div class="day-number-compact">{{ day ? day.getDate() : '' }}</div>
                     </div>
@@ -229,6 +230,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Seleccionar Paciente</h5>
+                <div class="ms-auto me-2">
+                    <button type="button" class="btn btn-success btn-sm" (click)="openNewPatientModal()">
+                        <i class="bi bi-plus-lg"></i> Nuevo Paciente
+                    </button>
+                </div>
                 <button type="button" class="btn-close" (click)="closeModal()"></button>
             </div>
             <div class="modal-body">
@@ -266,7 +272,7 @@
                             <div class="text-end">
                                 <span class="badge" [class.bg-success]="(patient.activeSessions || 0) > 0"
                                     [class.bg-danger]="(patient.activeSessions || 0) === 0">
-                                    {{ patient.activeSessions || 0 }} sesiones
+                                    {{ patient.activeSessions || 0 }} {{ (patient.activeSessions === 1) ? 'sesión' : 'sesiones' }}
                                 </span>
                             </div>
                         </div>
@@ -422,6 +428,17 @@
                         style="touch-action: manipulation; min-height: 44px;">
                     Eliminar
                 </button>
+                
+                <!-- Botón WhatsApp recordatorio -->
+                <a *ngIf="hasPatientPhone(editingAppointment)" 
+                   [href]="getWhatsAppReminderLink(editingAppointment)"
+                   target="_blank"
+                   class="btn btn-success"
+                   style="touch-action: manipulation; min-height: 44px;"
+                   title="Enviar recordatorio por WhatsApp">
+                    <i class="bi bi-whatsapp me-1"></i>Recordar
+                </a>
+                
                 <button type="button" class="btn btn-secondary" 
                         (click)="closeModal()"
                         style="touch-action: manipulation; min-height: 44px;">

@@ -59,6 +59,19 @@
     color: #1565c0;
 }
 
+/* Día actual destacado en el calendario anual */
+.calendar-day-compact.today-compact {
+    background: #4caf50 !important;
+    color: white !important;
+    font-weight: bold;
+    border: 2px solid #2e7d32 !important;
+    box-shadow: 0 0 4px rgba(76, 175, 80, 0.5);
+}
+
+.calendar-day-compact.today-compact.has-appointments-compact {
+    background: linear-gradient(135deg, #4caf50 50%, #2196f3 50%) !important;
+}
+
 .day-number-compact {
     font-weight: 500;
 }
