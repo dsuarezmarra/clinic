@@ -49,7 +49,7 @@ export class ConfiguracionComponent implements OnInit {
   deleteBackupLoading = false;
   restoreBackupLoading = false;
 
-  // Pesta�as de configuraci�n visibles
+  // Pestañas de configuración visibles
   activeTab: 'clinic' | 'prices' | 'backup' = 'clinic';
 
   configuration: Configuration | null = null;
@@ -94,7 +94,7 @@ export class ConfiguracionComponent implements OnInit {
    * Cambiar a la pestaña de precios y cargar datos
    */
   switchToPricesTab() {
-    console.log('🏷️ Cambiando a pestaña de Precios');
+    console.log('ð·️ Cambiando a pestaña de Precios');
     this.activeTab = 'prices';
     // Siempre cargar los precios actuales para mostrar los valores vigentes
     this.loadPrices();
@@ -360,7 +360,7 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   /**
-   * Mostrar modal de confirmaci�n para restaurar backup
+   * Mostrar modal de confirmación para restaurar backup
    */
   confirmRestore(backup: BackupFile): void {
     this.backupToRestore = backup;
@@ -368,7 +368,7 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   /**
-   * Confirmar restauraci�n del backup
+   * Confirmar restauración del backup
    */
   executeRestoreBackup(): void {
     if (!this.backupToRestore) return;
@@ -379,7 +379,7 @@ export class ConfiguracionComponent implements OnInit {
         if (response.success) {
           this.notificationService.showSuccess('Backup restaurado exitosamente');
           this.cancelRestoreBackup();
-          // Recargar la p�gina para reflejar los cambios
+          // Recargar la página para reflejar los cambios
           window.location.reload();
         } else {
           this.notificationService.showError(response.message || 'Error al restaurar el backup');
@@ -401,7 +401,7 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   /**
-   * Mostrar modal de confirmaci�n para eliminar backup
+   * Mostrar modal de confirmación para eliminar backup
    */
   confirmDelete(backup: BackupFile): void {
     this.backupToDelete = backup;
@@ -409,7 +409,7 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   /**
-   * Confirmar eliminaci�n del backup
+   * Confirmar eliminación del backup
    */
   executeDeleteBackup(): void {
     if (!this.backupToDelete) return;
@@ -463,7 +463,7 @@ export class ConfiguracionComponent implements OnInit {
 
   /**
    * Formatear fecha para mostrar
-   * Maneja casos donde el valor no es una fecha v�lida (ej: "Manual")
+   * Maneja casos donde el valor no es una fecha válida (ej: "Manual")
    */
   formatDate(dateString: string): string {
     if (!dateString) return '-';
@@ -761,7 +761,7 @@ export class ConfiguracionComponent implements OnInit {
    * Cargar precios actuales del sistema
    */
   loadPrices() {
-    console.log('🔄 Cargando precios...');
+    console.log('ð Cargando precios...');
     this.loadingPrices = true;
     this.configService.getPrices().subscribe({
       next: (prices: any) => {
@@ -772,7 +772,7 @@ export class ConfiguracionComponent implements OnInit {
           bonoPrice30: prices.bonoPrice30 ?? 100,
           bonoPrice60: prices.bonoPrice60 ?? 180
         };
-        console.log('📝 Aplicando valores al formulario:', formValues);
+        console.log('ð Aplicando valores al formulario:', formValues);
         this.pricesForm.patchValue(formValues);
         this.loadingPrices = false;
       },
@@ -795,7 +795,7 @@ export class ConfiguracionComponent implements OnInit {
 
     // Validaciones de negocio
     const prices = this.pricesForm.value;
-    console.log('💾 Guardando precios:', prices);
+    console.log('ð¾ Guardando precios:', prices);
 
     // Validar que precio 60min > precio 30min
     if (prices.sessionPrice60 <= prices.sessionPrice30) {

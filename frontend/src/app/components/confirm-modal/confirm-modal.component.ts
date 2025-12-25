@@ -133,8 +133,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 })
 export class ConfirmModalComponent {
   @Input() isOpen = false;
-  @Input() title = 'Confirmar acción';
-  @Input() message = '¿Está seguro de que desea continuar?';
+  @Input() title = 'Confirmar acciÃ³n';
+  @Input() message = 'Â¿EstÃ¡ seguro de que desea continuar?';
   @Input() details = '';
   @Input() itemLabel = 'Elemento';
   @Input() itemName = '';

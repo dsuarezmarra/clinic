@@ -1,7 +1,7 @@
 import { Injectable, isDevMode } from '@angular/core';
 
 /**
- * Servicio de logging que se desactiva autom醫icamente en producci髇
+ * Servicio de logging que se desactiva autom谩ticamente en producci贸n
  * Uso: this.logger.log('mensaje'), this.logger.warn('aviso'), etc.
  */
 @Injectable({
@@ -25,7 +25,7 @@ export class LoggerService {
   }
 
   /**
-   * Log de informaci髇
+   * Log de informaci贸n
    */
   info(...args: unknown[]): void {
     if (this.isEnabled) {
@@ -43,7 +43,7 @@ export class LoggerService {
   }
 
   /**
-   * Log de error - siempre se muestra (incluso en producci髇)
+   * Log de error - siempre se muestra (incluso en producci贸n)
    * pero sin stack traces sensibles
    */
   error(message: string, error?: unknown): void {
@@ -51,7 +51,7 @@ export class LoggerService {
       // En desarrollo, mostrar todo
       console.error(message, error);
     } else {
-      // En producci髇, solo mostrar el mensaje, sin detalles
+      // En producci贸n, solo mostrar el mensaje, sin detalles
       console.error(`[Error] ${message}`);
     }
   }

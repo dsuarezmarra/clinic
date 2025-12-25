@@ -45,8 +45,8 @@ export const actifisioConfig: ClientConfig = {
     appleTouchIcon: 'assets/clients/actifisio/logo.png'
   },
   
-  // Configuración de backend (API compartida multi-tenant)
-  // En desarrollo local usa localhost, en producción usa Vercel
+  // ConfiguraciÃ³n de backend (API compartida multi-tenant)
+  // En desarrollo local usa localhost, en producciÃ³n usa Vercel
   backend: {
     apiUrl: isLocalDev ? 'http://localhost:3000/api' : 'https://api-clinic-personal.vercel.app/api'
   },

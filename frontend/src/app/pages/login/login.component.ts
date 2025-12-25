@@ -28,7 +28,7 @@ export class LoginComponent implements OnInit {
   showPassword = false;
   currentYear = new Date().getFullYear();
 
-  // ReturnUrl para redirigir después del login
+  // ReturnUrl para redirigir despuÃ©s del login
   private returnUrl = '/inicio';
 
   constructor(
@@ -46,14 +46,14 @@ export class LoginComponent implements OnInit {
     // Obtener returnUrl de los query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/inicio';
 
-    // Mostrar mensaje si la sesión expiró
+    // Mostrar mensaje si la sesiÃ³n expirÃ³
     if (this.route.snapshot.queryParams['sessionExpired'] === 'true') {
-      this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
+      this.errorMessage = 'Tu sesiÃ³n ha expirado. Por favor, inicia sesiÃ³n nuevamente.';
     }
   }
 
   /**
-   * Iniciar sesión
+   * Iniciar sesiÃ³n
    */
   async onLogin(): Promise<void> {
     // Validar campos
@@ -77,24 +77,24 @@ export class LoginComponent implements OnInit {
       }
     } catch (error: any) {
       console.error('[LoginComponent] Login error:', error);
-      this.errorMessage = 'Error al iniciar sesión. Inténtalo de nuevo.';
+      this.errorMessage = 'Error al iniciar sesiÃ³n. IntÃ©ntalo de nuevo.';
     } finally {
       this.isLoading = false;
     }
   }
 
   /**
-   * Mostrar formulario de recuperar contraseña
+   * Mostrar formulario de recuperar contraseÃ±a
    */
   toggleForgotPassword(): void {
     this.showForgotPassword = !this.showForgotPassword;
     this.errorMessage = '';
     this.successMessage = '';
-    this.forgotPasswordEmail = this.credentials.email; // Pre-rellenar con el email si ya lo escribió
+    this.forgotPasswordEmail = this.credentials.email; // Pre-rellenar con el email si ya lo escribiÃ³
   }
 
   /**
-   * Solicitar recuperación de contraseña
+   * Solicitar recuperaciÃ³n de contraseÃ±a
    */
   async onForgotPassword(): Promise<void> {
     if (!this.forgotPasswordEmail) {
@@ -111,7 +111,7 @@ export class LoginComponent implements OnInit {
 
       if (response.success) {
         this.successMessage = response.message;
-        // Volver al formulario de login después de unos segundos
+        // Volver al formulario de login despuÃ©s de unos segundos
         setTimeout(() => {
           this.showForgotPassword = false;
           this.successMessage = '';
@@ -121,14 +121,14 @@ export class LoginComponent implements OnInit {
       }
     } catch (error) {
       console.error('[LoginComponent] Forgot password error:', error);
-      this.errorMessage = 'Error al solicitar recuperación de contraseña';
+      this.errorMessage = 'Error al solicitar recuperaciÃ³n de contraseÃ±a';
     } finally {
       this.isLoading = false;
     }
   }
 
   /**
-   * Alternar visibilidad de la contraseña
+   * Alternar visibilidad de la contraseÃ±a
    */
   togglePasswordVisibility(): void {
     this.showPassword = !this.showPassword;

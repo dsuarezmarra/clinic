@@ -481,8 +481,8 @@
     width: 100%;
 }
 
-/* ===== ESTILOS POR DURACI”N ===== */
-/* Citas de 30 minutos - Color m·s claro */
+/* ===== ESTILOS POR DURACI√ìN ===== */
+/* Citas de 30 minutos - Color m√°s claro */
 .appointment-block.duration-short,
 .appointment-block-continued.duration-short,
 .appointment-card.duration-short {
@@ -491,7 +491,7 @@
     border-left: 4px solid #1976d2;
 }
 
-/* Citas de 60+ minutos - Color m·s intenso */
+/* Citas de 60+ minutos - Color m√°s intenso */
 .appointment-block.duration-long,
 .appointment-block-continued.duration-long,
 .appointment-card.duration-long {
@@ -570,7 +570,7 @@
     font-family: Arial, sans-serif;
 }
 
-/* Origen de la cita: texto pequeÒo en esquina inferior derecha dentro del bloque */
+/* Origen de la cita: texto peque√±o en esquina inferior derecha dentro del bloque */
 .appointment-origin {
     position: absolute;
     right: 6px;
@@ -590,7 +590,7 @@
     opacity: 1;
 }
 
-/* TambiÈn para slots continuados */
+/* Tambi√©n para slots continuados */
 .appointment-block:hover .appointment-continued-content .appointment-origin {
     opacity: 1;
 }

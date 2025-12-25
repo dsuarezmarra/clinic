@@ -43,7 +43,7 @@ export class CreditService {
     };
   }
 
-  // Obtener créditos de múltiples pacientes en una sola petición (optimización)
+  // Obtener crÃ©ditos de mÃºltiples pacientes en una sola peticiÃ³n (optimizaciÃ³n)
   getBatchCredits(patientIds: string[]): Observable<BatchCreditsResponse> {
     return this.http.post<BatchCreditsResponse>(
       `${this.apiUrl}/batch`, 

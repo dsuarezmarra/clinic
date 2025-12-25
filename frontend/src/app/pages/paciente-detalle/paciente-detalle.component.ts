@@ -95,11 +95,11 @@ export class PacienteDetalleComponent implements OnInit {
     }
 
     loadAppointments(patientId: string) {
-        console.log('🔍 Loading appointments for patient:', patientId);
+        console.log('ð Loading appointments for patient:', patientId);
         this.loadingAppointments = true;
         this.appointmentService.getAppointmentsByPatient(patientId).subscribe({
             next: (appointments: any[]) => {
-                console.log('📅 Appointments received:', appointments.length, 'appointments');
+                console.log('ð Appointments received:', appointments.length, 'appointments');
                 
                 // Mapear los datos para asegurar formato correcto
                 const mapped = appointments.map(app => {
@@ -193,7 +193,7 @@ export class PacienteDetalleComponent implements OnInit {
     }
 
     loadPricesForForm() {
-        console.log('🔄 Cargando precios de configuración...');
+        console.log('ð Cargando precios de configuración...');
         this.configService.getPrices().subscribe({
             next: (prices: any) => {
                 console.log('✅ Precios cargados:', prices);
@@ -263,7 +263,7 @@ export class PacienteDetalleComponent implements OnInit {
         };
 
         console.log('createCreditPack request (normalized):', request);
-        console.log('💰 Precio calculado:', priceCents, 'céntimos (', (priceCents/100).toFixed(2), '€)');
+        console.log('ð° Precio calculado:', priceCents, 'céntimos (', (priceCents/100).toFixed(2), '€)');
 
         this.creditService.createCreditPack(request).subscribe({
             next: (res: any) => {

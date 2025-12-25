@@ -74,7 +74,7 @@ function getClientIdFromEnvironment(): string {
     return 'masajecorporaldeportivo';
   }
   
-  // En producción, intentar obtener el CLIENT_ID inyectado
+  // En producciÃ³n, intentar obtener el CLIENT_ID inyectado
   try {
     const windowClientId = (window as any).__CLIENT_ID;
     if (typeof windowClientId === 'string' && windowClientId.length > 0) {

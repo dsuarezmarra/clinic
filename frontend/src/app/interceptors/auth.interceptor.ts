@@ -21,13 +21,13 @@ export const authInterceptor: HttpInterceptorFn = (
     return next(req);
   }
 
-  // Obtener el token de forma asíncrona
+  // Obtener el token de forma asÃ­ncrona
   return from(authService.getAccessToken()).pipe(
     switchMap(token => {
       let clonedRequest = req;
 
       if (token) {
-        // Clonar la petición y agregar el header Authorization
+        // Clonar la peticiÃ³n y agregar el header Authorization
         clonedRequest = req.clone({
           setHeaders: {
             'Authorization': `Bearer ${token}`
@@ -41,7 +41,7 @@ export const authInterceptor: HttpInterceptorFn = (
       return next(clonedRequest);
     }),
     catchError((error: HttpErrorResponse) => {
-      // Si el servidor responde con 401, cerrar sesión y redirigir a login
+      // Si el servidor responde con 401, cerrar sesiÃ³n y redirigir a login
       if (error.status === 401) {
         console.log('[AuthInterceptor] 401 Unauthorized - logging out');
         authService.logout();

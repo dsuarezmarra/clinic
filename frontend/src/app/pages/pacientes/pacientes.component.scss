@@ -140,7 +140,7 @@
   margin-top: 16px;
 }
 
-// Estilos para botones de acción mejorados
+// Estilos para botones de acciÃ³n mejorados
 .action-buttons {
   display: flex;
   gap: 4px;
@@ -175,7 +175,7 @@
   }
 }
 
-// En pantallas más grandes, mostrar texto siempre
+// En pantallas mÃ¡s grandes, mostrar texto siempre
 @media (min-width: 1200px) {
   .action-buttons .action-btn .btn-text {
     display: inline;
@@ -231,7 +231,7 @@
   }
 }
 
-// Estilos para paginación - botones más grandes y accesibles
+// Estilos para paginaciÃ³n - botones mÃ¡s grandes y accesibles
 .pagination {
   gap: 4px;
   
@@ -277,7 +277,7 @@
     cursor: not-allowed;
   }
   
-  // Paginación superior (más compacta pero accesible)
+  // PaginaciÃ³n superior (mÃ¡s compacta pero accesible)
   &.pagination-sm {
     .page-link {
       min-width: 38px !important;

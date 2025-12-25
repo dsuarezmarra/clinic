@@ -86,7 +86,7 @@ export class PatientService {
     return this.http.get<any>(`${this.clientConfig.getApiUrl()}/meta/locations`, this.httpOptions);
   }
 
-  // Buscar provincia/localidades por código postal
+  // Buscar provincia/localidades por cÃ³digo postal
   lookupByCp(cp: string): Observable<any> {
     return this.http.get<any>(`${this.clientConfig.getApiUrl()}/meta/locations/by-cp/${encodeURIComponent(cp)}`, this.httpOptions);
   }

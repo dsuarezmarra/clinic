@@ -4,8 +4,8 @@ import { filter, map, take } from 'rxjs/operators';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Guard que protege rutas que requieren autenticaciÛn.
- * Redirige a /login si el usuario no est· autenticado.
+ * Guard que protege rutas que requieren autenticaci√≥n.
+ * Redirige a /login si el usuario no est√° autenticado.
  */
 export const authGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,
@@ -14,9 +14,9 @@ export const authGuard: CanActivateFn = (
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Esperar a que termine de cargar la autenticaciÛn
+  // Esperar a que termine de cargar la autenticaci√≥n
   return authService.isLoading$.pipe(
-    filter(isLoading => !isLoading), // Esperar hasta que no estÈ cargando
+    filter(isLoading => !isLoading), // Esperar hasta que no est√© cargando
     take(1),
     map(() => {
       if (authService.isAuthenticated()) {
@@ -26,7 +26,7 @@ export const authGuard: CanActivateFn = (
 
       console.log('[AuthGuard] User not authenticated, redirecting to login');
       
-      // Guardar la URL intentada para redirigir despuÈs del login
+      // Guardar la URL intentada para redirigir despu√©s del login
       router.navigate(['/login'], {
         queryParams: { returnUrl: state.url }
       });
@@ -37,8 +37,8 @@ export const authGuard: CanActivateFn = (
 };
 
 /**
- * Guard que evita acceder a /login si ya est· autenticado.
- * Redirige a /inicio si el usuario ya est· logueado.
+ * Guard que evita acceder a /login si ya est√° autenticado.
+ * Redirige a /inicio si el usuario ya est√° logueado.
  */
 export const noAuthGuard: CanActivateFn = (
   route: ActivatedRouteSnapshot,

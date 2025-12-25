@@ -30,7 +30,7 @@ export class PacientesComponent implements OnInit, OnDestroy {
   loading = false;
   searchTerm = '';
   
-  // Subject para debounce de búsqueda
+  // Subject para debounce de bÃºsqueda
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
 
@@ -93,13 +93,13 @@ export class PacientesComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.loadPatients();
     
-    // Configurar búsqueda con debounce para evitar race conditions
+    // Configurar bÃºsqueda con debounce para evitar race conditions
     this.searchSubscription = this.searchSubject.pipe(
-      debounceTime(300), // Esperar 300ms después de la última tecla
-      distinctUntilChanged(), // Solo si el valor cambió
+      debounceTime(300), // Esperar 300ms despuÃ©s de la Ãºltima tecla
+      distinctUntilChanged(), // Solo si el valor cambiÃ³
       tap(() => {
         this.loading = true;
-        this.currentPage = 1; // Reiniciar a página 1
+        this.currentPage = 1; // Reiniciar a pÃ¡gina 1
       }),
       switchMap(searchTerm => {
         const params = {
@@ -259,7 +259,7 @@ export class PacientesComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    // Limpiar subscripción para evitar memory leaks
+    // Limpiar subscripciÃ³n para evitar memory leaks
     this.searchSubscription?.unsubscribe();
   }
 

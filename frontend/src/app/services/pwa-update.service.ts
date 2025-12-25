@@ -4,7 +4,7 @@ import { filter, first, interval } from 'rxjs';
 
 /**
  * Servicio para manejar actualizaciones de la PWA
- * VersiÛn simplificada - solo maneja actualizaciones, no bloquea
+ * Versi√≥n simplificada - solo maneja actualizaciones, no bloquea
  */
 @Injectable({
   providedIn: 'root'
@@ -22,31 +22,31 @@ export class PwaUpdateService {
    */
   initialize(): void {
     if (!this.swUpdate.isEnabled) {
-      console.log('[PWA] Service Worker no est· habilitado');
+      console.log('[PWA] Service Worker no est√° habilitado');
       return;
     }
 
     console.log('[PWA] Servicio PWA inicializado');
 
-    // Escuchar cuando hay una nueva versiÛn lista
+    // Escuchar cuando hay una nueva versi√≥n lista
     this.swUpdate.versionUpdates
       .pipe(filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY'))
       .subscribe(evt => {
-        console.log('[PWA] Nueva versiÛn disponible:', evt.latestVersion);
-        console.log('[PWA] VersiÛn actual:', evt.currentVersion);
+        console.log('[PWA] Nueva versi√≥n disponible:', evt.latestVersion);
+        console.log('[PWA] Versi√≥n actual:', evt.currentVersion);
         
-        // Activar la nueva versiÛn inmediatamente
+        // Activar la nueva versi√≥n inmediatamente
         this.activateUpdate();
       });
 
     // Manejar errores del Service Worker
     this.swUpdate.unrecoverable.subscribe(event => {
       console.error('[PWA] Error irrecuperable del Service Worker:', event.reason);
-      // Recargar la p·gina para recuperar
+      // Recargar la p√°gina para recuperar
       this.forceReload();
     });
 
-    // Verificar actualizaciones periÛdicamente (cada 30 minutos, despuÈs de que la app estÈ estable)
+    // Verificar actualizaciones peri√≥dicamente (cada 30 minutos, despu√©s de que la app est√© estable)
     this.scheduleUpdateCheck();
   }
 
@@ -61,9 +61,9 @@ export class PwaUpdateService {
       const updateAvailable = await this.swUpdate.checkForUpdate();
       
       if (updateAvailable) {
-        console.log('[PWA] °ActualizaciÛn disponible!');
+        console.log('[PWA] ¬°Actualizaci√≥n disponible!');
       } else {
-        console.log('[PWA] La app est· actualizada');
+        console.log('[PWA] La app est√° actualizada');
       }
     } catch (err) {
       console.error('[PWA] Error al verificar actualizaciones:', err);
@@ -71,32 +71,32 @@ export class PwaUpdateService {
   }
 
   /**
-   * Activar la actualizaciÛn y recargar
+   * Activar la actualizaci√≥n y recargar
    */
   async activateUpdate(): Promise<void> {
     if (!this.swUpdate.isEnabled) return;
 
     try {
-      console.log('[PWA] Activando nueva versiÛn...');
+      console.log('[PWA] Activando nueva versi√≥n...');
       const activated = await this.swUpdate.activateUpdate();
       
       if (activated) {
-        console.log('[PWA] Nueva versiÛn activada, recargando...');
+        console.log('[PWA] Nueva versi√≥n activada, recargando...');
         setTimeout(() => {
           window.location.reload();
         }, 100);
       }
     } catch (err) {
-      console.error('[PWA] Error al activar actualizaciÛn:', err);
+      console.error('[PWA] Error al activar actualizaci√≥n:', err);
       this.forceReload();
     }
   }
 
   /**
-   * Programar verificaciÛn periÛdica de actualizaciones
+   * Programar verificaci√≥n peri√≥dica de actualizaciones
    */
   private scheduleUpdateCheck(): void {
-    // Esperar a que la app estÈ estable antes de verificar actualizaciones
+    // Esperar a que la app est√© estable antes de verificar actualizaciones
     this.appRef.isStable.pipe(first(isStable => isStable === true)).subscribe(() => {
       console.log('[PWA] App estable');
       
@@ -111,7 +111,7 @@ export class PwaUpdateService {
   }
 
   /**
-   * Forzar recarga limpia de la p·gina
+   * Forzar recarga limpia de la p√°gina
    */
   private forceReload(): void {
     console.log('[PWA] Forzando recarga limpia...');

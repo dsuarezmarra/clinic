@@ -4,7 +4,7 @@ const isLocalDev = typeof window !== 'undefined' &&
 
 export const environment = {
   production: !isLocalDev,
-  // Backend: local en desarrollo, Vercel en producción
+  // Backend: local en desarrollo, Vercel en producciÃ³n
   apiUrl: isLocalDev 
     ? 'http://localhost:3000/api' 
     : 'https://api-clinic-personal.vercel.app/api'

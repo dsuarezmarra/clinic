@@ -10,37 +10,37 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
-    canActivate: [noAuthGuard]  // No accesible si ya está logueado
+    canActivate: [noAuthGuard]  // No accesible si ya estÃ¡ logueado
   },
   {
     path: 'inicio',
     loadComponent: () => import('./pages/inicio/inicio.component').then(m => m.InicioComponent),
-    canActivate: [authGuard]  // Requiere autenticación
+    canActivate: [authGuard]  // Requiere autenticaciÃ³n
   },
   {
     path: 'agenda',
     loadComponent: () => import('./pages/agenda/agenda.component').then(m => m.AgendaComponent),
-    canActivate: [authGuard]  // Requiere autenticación
+    canActivate: [authGuard]  // Requiere autenticaciÃ³n
   },
   {
     path: 'pacientes',
     loadComponent: () => import('./pages/pacientes/pacientes.component').then(m => m.PacientesComponent),
-    canActivate: [authGuard]  // Requiere autenticación
+    canActivate: [authGuard]  // Requiere autenticaciÃ³n
   },
   {
     path: 'pacientes/:id',
     loadComponent: () => import('./pages/paciente-detalle/paciente-detalle.component').then(m => m.PacienteDetalleComponent),
-    canActivate: [authGuard]  // Requiere autenticación
+    canActivate: [authGuard]  // Requiere autenticaciÃ³n
   },
   {
     path: 'configuracion',
     loadComponent: () => import('./pages/configuracion/configuracion.component').then(m => m.ConfiguracionComponent),
-    canActivate: [authGuard]  // Requiere autenticación
+    canActivate: [authGuard]  // Requiere autenticaciÃ³n
   },
   {
     path: 'reset-password',
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
-    canActivate: [noAuthGuard]  // Para el link de recuperar contraseña
+    canActivate: [noAuthGuard]  // Para el link de recuperar contraseÃ±a
   },
   {
     path: '**',

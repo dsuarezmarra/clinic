@@ -30,7 +30,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
 
-  // Observable p˙blico para el usuario actual
+  // Observable p√∫blico para el usuario actual
   currentUser$ = this.currentUserSubject.asObservable();
   isLoading$ = this.isLoadingSubject.asObservable();
 
@@ -51,18 +51,18 @@ export class AuthService {
       }
     });
 
-    // Verificar sesiÛn existente al cargar
+    // Verificar sesi√≥n existente al cargar
     this.initializeAuth();
   }
 
   /**
-   * Inicializa la autenticaciÛn verificando si hay una sesiÛn guardada
+   * Inicializa la autenticaci√≥n verificando si hay una sesi√≥n guardada
    */
   private async initializeAuth(): Promise<void> {
     try {
       this.isLoadingSubject.next(true);
 
-      // Obtener sesiÛn actual
+      // Obtener sesi√≥n actual
       const { data: { session }, error } = await this.supabase.auth.getSession();
 
       if (error) {
@@ -80,7 +80,7 @@ export class AuthService {
         console.log('[AuthService] No existing session');
       }
 
-      // Escuchar cambios de autenticaciÛn
+      // Escuchar cambios de autenticaci√≥n
       this.supabase.auth.onAuthStateChange((event, session) => {
         console.log('[AuthService] Auth state changed:', event);
         
@@ -101,7 +101,7 @@ export class AuthService {
   }
 
   /**
-   * Login con email y contraseÒa
+   * Login con email y contrase√±a
    */
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
@@ -123,7 +123,7 @@ export class AuthService {
       if (!data.user) {
         return {
           success: false,
-          message: 'No se pudo obtener informaciÛn del usuario'
+          message: 'No se pudo obtener informaci√≥n del usuario'
         };
       }
 
@@ -136,7 +136,7 @@ export class AuthService {
         await this.supabase.auth.signOut();
         return {
           success: false,
-          message: 'Este usuario no tiene acceso a esta clÌnica'
+          message: 'Este usuario no tiene acceso a esta cl√≠nica'
         };
       }
 
@@ -147,7 +147,7 @@ export class AuthService {
 
       return {
         success: true,
-        message: 'Inicio de sesiÛn exitoso',
+        message: 'Inicio de sesi√≥n exitoso',
         user: authUser
       };
 
@@ -155,13 +155,13 @@ export class AuthService {
       console.error('[AuthService] Unexpected login error:', error);
       return {
         success: false,
-        message: 'Error inesperado al iniciar sesiÛn'
+        message: 'Error inesperado al iniciar sesi√≥n'
       };
     }
   }
 
   /**
-   * Cerrar sesiÛn
+   * Cerrar sesi√≥n
    */
   async logout(): Promise<void> {
     try {
@@ -175,7 +175,7 @@ export class AuthService {
   }
 
   /**
-   * Solicitar recuperaciÛn de contraseÒa por email
+   * Solicitar recuperaci√≥n de contrase√±a por email
    */
   async requestPasswordReset(email: string): Promise<AuthResponse> {
     try {
@@ -192,20 +192,20 @@ export class AuthService {
 
       return {
         success: true,
-        message: 'Se ha enviado un email con las instrucciones para restablecer tu contraseÒa'
+        message: 'Se ha enviado un email con las instrucciones para restablecer tu contrase√±a'
       };
 
     } catch (error) {
       console.error('[AuthService] Password reset error:', error);
       return {
         success: false,
-        message: 'Error al solicitar recuperaciÛn de contraseÒa'
+        message: 'Error al solicitar recuperaci√≥n de contrase√±a'
       };
     }
   }
 
   /**
-   * Actualizar contraseÒa (cuando el usuario hace clic en el link del email)
+   * Actualizar contrase√±a (cuando el usuario hace clic en el link del email)
    */
   async updatePassword(newPassword: string): Promise<AuthResponse> {
     try {
@@ -222,14 +222,14 @@ export class AuthService {
 
       return {
         success: true,
-        message: 'ContraseÒa actualizada correctamente'
+        message: 'Contrase√±a actualizada correctamente'
       };
 
     } catch (error) {
       console.error('[AuthService] Update password error:', error);
       return {
         success: false,
-        message: 'Error al actualizar la contraseÒa'
+        message: 'Error al actualizar la contrase√±a'
       };
     }
   }
@@ -248,14 +248,14 @@ export class AuthService {
   }
 
   /**
-   * Verificar si el usuario est· autenticado
+   * Verificar si el usuario est√° autenticado
    */
   isAuthenticated(): boolean {
     return this.currentUserSubject.value !== null;
   }
 
   /**
-   * Obtener usuario actual (sÌncrono)
+   * Obtener usuario actual (s√≠ncrono)
    */
   getCurrentUser(): AuthUser | null {
     return this.currentUserSubject.value;
@@ -274,18 +274,18 @@ export class AuthService {
   }
 
   /**
-   * Traducir errores de Supabase Auth al espaÒol
+   * Traducir errores de Supabase Auth al espa√±ol
    */
   private translateAuthError(message: string): string {
     const translations: Record<string, string> = {
-      'Invalid login credentials': 'Email o contraseÒa incorrectos',
-      'Email not confirmed': 'Debes confirmar tu email antes de iniciar sesiÛn',
+      'Invalid login credentials': 'Email o contrase√±a incorrectos',
+      'Email not confirmed': 'Debes confirmar tu email antes de iniciar sesi√≥n',
       'User not found': 'Usuario no encontrado',
-      'Invalid email or password': 'Email o contraseÒa incorrectos',
+      'Invalid email or password': 'Email o contrase√±a incorrectos',
       'Too many requests': 'Demasiados intentos. Espera unos minutos',
-      'Password should be at least 6 characters': 'La contraseÒa debe tener al menos 6 caracteres',
-      'User already registered': 'Este email ya est· registrado',
-      'Network error': 'Error de conexiÛn. Verifica tu internet'
+      'Password should be at least 6 characters': 'La contrase√±a debe tener al menos 6 caracteres',
+      'User already registered': 'Este email ya est√° registrado',
+      'Network error': 'Error de conexi√≥n. Verifica tu internet'
     };
 
     return translations[message] || message;
