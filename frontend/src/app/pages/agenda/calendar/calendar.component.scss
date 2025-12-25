@@ -520,6 +520,13 @@
     color: #6d4c41 !important;
 }
 
+/* Pendiente - Asegura position relative para el pseudo-elemento */
+.appointment-block.status-pending,
+.appointment-block-continued.status-pending,
+.appointment-card.status-pending {
+    position: relative;
+}
+
 /* Pagado - Check verde en esquina inferior izquierda */
 .appointment-block.status-paid,
 .appointment-block-continued.status-paid,
