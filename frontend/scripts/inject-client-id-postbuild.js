@@ -12,7 +12,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const clientId = process.env.VITE_CLIENT_ID || 'masajecorporaldeportivo';
+// Leer CLIENT_ID de cualquiera de las dos variables de entorno (Vercel usa CLIENT_ID, local usa VITE_CLIENT_ID)
+const clientId = process.env.CLIENT_ID || process.env.VITE_CLIENT_ID || 'masajecorporaldeportivo';
 const distPath = join(__dirname, '..', 'dist', 'clinic-frontend', 'browser');
 
 console.log('\n🔧 ============================================');
