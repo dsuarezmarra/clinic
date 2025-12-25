@@ -343,6 +343,7 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     const filesRoutes = require('../src/routes/files');
     const reportsRoutes = require('../src/routes/reports');
     const statsRoutes = require('../src/routes/stats');
+    const invoicesRoutes = require('../src/routes/invoices');
 
 // Registrar rutas legacy con rate limiting
     app.use('/api/config', generalLimiter, configRoutes);
@@ -351,6 +352,7 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     app.use('/api/files', generalLimiter, filesRoutes);
     app.use('/api/reports', generalLimiter, reportsRoutes);
     app.use('/api/stats', generalLimiter, statsRoutes);
+    app.use('/api/invoices', generalLimiter, invoicesRoutes);
 
     console.log('Todas las rutas cargadas con rate limiting');
   } catch (error) {
