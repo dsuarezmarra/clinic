@@ -127,6 +127,9 @@ router.get('/', [
     const isSupabase = !!req.prisma || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '1';
     const isSQLite = process.env.DATABASE_URL?.includes('file:') || process.env.DATABASE_URL_SQLITE || false;
 
+    // DEBUG: Log para verificar detección
+    console.log(`[DEBUG SEARCH] isSupabase=${isSupabase}, req.prisma=${!!req.prisma}, search=${search}, USE_SUPABASE=${process.env.USE_SUPABASE}`);
+
     let patients, total;
 
     if (search && isSupabase) {
@@ -216,7 +219,14 @@ router.get('/', [
         limit: parseInt(limit), 
         total, 
         pages: Math.ceil(total / limit) 
-      } 
+      },
+      _debug: {
+        isSupabase,
+        hasPrismaShim: !!req.prisma,
+        useSupabaseEnv: process.env.USE_SUPABASE,
+        searchUsed: search || null,
+        accentInsensitive: !!(search && isSupabase)
+      }
     });
   } catch (error) {
     next(error);
