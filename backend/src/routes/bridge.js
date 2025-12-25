@@ -139,23 +139,69 @@ router.use('/files*', loadTenant);  // ✅ AGREGADO: archivos necesitan tenant
 // ============================================================
 
 // GET /api/patients - Listar pacientes con paginación y búsqueda
+/**
+ * Normaliza texto eliminando acentos/diacríticos
+ * Ejemplo: "María" -> "Maria", "José" -> "Jose", "Ruíz" -> "Ruiz"
+ */
+function normalizeAccents(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Verifica si un texto coincide con el término de búsqueda (accent-insensitive)
+ */
+function matchesSearch(text, searchTerm) {
+  if (!text || !searchTerm) return false;
+  const normalizedText = normalizeAccents(text).toLowerCase();
+  const normalizedSearch = normalizeAccents(searchTerm).toLowerCase();
+  return normalizedText.includes(normalizedSearch);
+}
+
 router.get('/patients', async (req, res) => {
   try {
     const { search, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
     
-    // Incluir credit_packs para calcular activeSessions
-    let endpoint = `${req.getTable('patients')}?select=*,${req.getTable('credit_packs')}(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
+    let patients, total;
     
-    // Agregar búsqueda si existe
     if (search) {
-      const searchTerm = encodeURIComponent(search);
-      endpoint += `&or=(firstName.ilike.*${searchTerm}*,lastName.ilike.*${searchTerm}*,phone.ilike.*${searchTerm}*)`;
+      // BÚSQUEDA ACCENT-INSENSITIVE: traer TODOS los pacientes y filtrar en JavaScript
+      // porque PostgreSQL ilike NO es accent-insensitive por defecto
+      console.log(`[SEARCH] Búsqueda accent-insensitive para: "${search}"`);
+      
+      const endpoint = `${req.getTable('patients')}?select=*,${req.getTable('credit_packs')}(unitsRemaining)&order=firstName.asc,lastName.asc`;
+      
+      const { data: allPatients } = await supabaseFetch(endpoint, {
+        headers: { 'Prefer': 'count=exact' }
+      });
+      
+      console.log(`[SEARCH] Total pacientes en BD: ${allPatients?.length || 0}`);
+      
+      // Filtrar con normalización de acentos
+      const filteredPatients = (allPatients || []).filter(patient => {
+        const matchFirst = matchesSearch(patient.firstName, search);
+        const matchLast = matchesSearch(patient.lastName, search);
+        const matchPhone = patient.phone && patient.phone.includes(search);
+        return matchFirst || matchLast || matchPhone;
+      });
+      
+      console.log(`[SEARCH] Pacientes filtrados: ${filteredPatients.length}`);
+      
+      total = filteredPatients.length;
+      // Aplicar paginación después del filtrado
+      patients = filteredPatients.slice(offset, offset + parseInt(limit));
+    } else {
+      // Sin búsqueda: usar paginación normal de Supabase
+      const endpoint = `${req.getTable('patients')}?select=*,${req.getTable('credit_packs')}(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
+      
+      const result = await supabaseFetch(endpoint, {
+        headers: { 'Prefer': 'count=exact' }
+      });
+      
+      patients = result.data || [];
+      total = result.total || 0;
     }
-    
-    const { data: patients, total } = await supabaseFetch(endpoint, {
-      headers: { 'Prefer': 'count=exact' }
-    });
     
     // Calcular activeSessions para cada paciente
     const patientsWithActiveSessions = (patients || []).map(patient => {
