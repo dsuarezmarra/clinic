@@ -122,31 +122,30 @@ router.get('/', [
     const { search, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
-    // Detectar el tipo de base de datos para usar funciones compatibles
-    // Detectamos Supabase si: 1) hay req.prisma (shim inyectado), o 2) variable de entorno
-    const isSupabase = !!req.prisma || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '1';
-    const isSQLite = process.env.DATABASE_URL?.includes('file:') || process.env.DATABASE_URL_SQLITE || false;
-
-    // DEBUG: Log para verificar detección
-    console.log(`[DEBUG SEARCH] isSupabase=${isSupabase}, req.prisma=${!!req.prisma}, search=${search}, USE_SUPABASE=${process.env.USE_SUPABASE}`);
-
     let patients, total;
 
-    if (search && isSupabase) {
-      // Para Supabase: búsqueda accent-insensitive en JavaScript
+    if (search) {
+      // SIEMPRE usar búsqueda accent-insensitive en JavaScript
       // Traemos todos los pacientes y filtramos en el servidor
       const safeSearch = sanitizeSearchInput(search);
+      
+      console.log(`[SEARCH] Búsqueda accent-insensitive para: "${search}" (sanitizado: "${safeSearch}")`);
       
       const allPatients = await getDb(req).patients.findMany({
         orderBy: { firstName: 'asc' }
       });
 
+      console.log(`[SEARCH] Total pacientes en BD: ${allPatients.length}`);
+
       // Filtrar con búsqueda accent-insensitive
       const filteredPatients = allPatients.filter(patient => {
-        return matchesSearch(patient.firstName, safeSearch) ||
-               matchesSearch(patient.lastName, safeSearch) ||
-               (patient.phone && patient.phone.includes(safeSearch));
+        const matchFirst = matchesSearch(patient.firstName, safeSearch);
+        const matchLast = matchesSearch(patient.lastName, safeSearch);
+        const matchPhone = patient.phone && patient.phone.includes(safeSearch);
+        return matchFirst || matchLast || matchPhone;
       });
+
+      console.log(`[SEARCH] Pacientes filtrados: ${filteredPatients.length}`);
 
       // Ordenar los resultados filtrados
       filteredPatients.sort((a, b) => {
@@ -160,24 +159,11 @@ router.get('/', [
       // Aplicar paginación después del filtrado
       patients = filteredPatients.slice(offset, offset + parseInt(limit));
     } else {
-      // Para Prisma/SQLite u otras BD, o cuando no hay búsqueda
-      const where = {};
-      if (search) {
-        const safeSearch = sanitizeSearchInput(search);
-        if (safeSearch) {
-          where.OR = [
-            { firstName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
-            { lastName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
-            { phone: { contains: safeSearch } }
-          ];
-        }
-      }
-
+      // Sin búsqueda: traer pacientes con paginación normal
       const queryOptions = {
-        where,
         skip: offset,
         take: parseInt(limit),
-        orderBy: isSupabase ? { firstName: 'asc' } : [{ firstName: 'asc' }, { lastName: 'asc' }],
+        orderBy: { firstName: 'asc' },
         include: {
           _count: { select: { appointments: true, files: true, creditPacks: true } },
           creditPacks: { select: { unitsRemaining: true } }
@@ -186,10 +172,11 @@ router.get('/', [
 
       [patients, total] = await Promise.all([
         getDb(req).patients.findMany(queryOptions),
-        getDb(req).patients.count({ where: search ? where : {} })
+        getDb(req).patients.count({})
       ]);
 
-      if (isSupabase && !search) {
+      // Ordenar por firstName y lastName
+      if (Array.isArray(patients)) {
         patients.sort((a, b) => {
           const firstNameCompare = a.firstName.localeCompare(b.firstName);
           if (firstNameCompare !== 0) return firstNameCompare;
@@ -219,13 +206,6 @@ router.get('/', [
         limit: parseInt(limit), 
         total, 
         pages: Math.ceil(total / limit) 
-      },
-      _debug: {
-        isSupabase,
-        hasPrismaShim: !!req.prisma,
-        useSupabaseEnv: process.env.USE_SUPABASE,
-        searchUsed: search || null,
-        accentInsensitive: !!(search && isSupabase)
       }
     });
   } catch (error) {
