@@ -142,6 +142,16 @@ router.get('/', [
         const matchFirst = matchesSearch(patient.firstName, safeSearch);
         const matchLast = matchesSearch(patient.lastName, safeSearch);
         const matchPhone = patient.phone && patient.phone.includes(safeSearch);
+        
+        // Debug log para pacientes con "Ruiz" en el apellido
+        if (patient.lastName && patient.lastName.toLowerCase().includes('ru')) {
+          console.log(`[SEARCH DEBUG] Paciente: ${patient.firstName} ${patient.lastName}`);
+          console.log(`[SEARCH DEBUG]   - lastName original: "${patient.lastName}"`);
+          console.log(`[SEARCH DEBUG]   - lastName normalizado: "${normalizeAccents(patient.lastName).toLowerCase()}"`);
+          console.log(`[SEARCH DEBUG]   - búsqueda normalizada: "${normalizeAccents(safeSearch).toLowerCase()}"`);
+          console.log(`[SEARCH DEBUG]   - matchLast: ${matchLast}`);
+        }
+        
         return matchFirst || matchLast || matchPhone;
       });
 
