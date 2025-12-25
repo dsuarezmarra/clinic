@@ -529,7 +529,7 @@
 
 .appointment-block.status-paid::after,
 .appointment-card.status-paid::after {
-    content: '?';
+    content: '\2713';
     position: absolute;
     bottom: 2px;
     left: 4px;
@@ -545,12 +545,13 @@
     font-weight: bold;
     line-height: 1;
     box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    font-family: Arial, sans-serif;
 }
 
 /* Indicador de pendiente - Aspa roja en esquina inferior izquierda */
 .appointment-block.status-pending::before,
 .appointment-card.status-pending::before {
-    content: '?';
+    content: '\2717';
     position: absolute;
     bottom: 2px;
     left: 4px;
@@ -566,6 +567,7 @@
     font-weight: bold;
     line-height: 1;
     box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+    font-family: Arial, sans-serif;
 }
 
 /* Origen de la cita: texto pequeño en esquina inferior derecha dentro del bloque */
