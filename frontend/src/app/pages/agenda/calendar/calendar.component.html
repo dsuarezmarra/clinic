@@ -198,13 +198,10 @@
                                     </div>
                                 </div>
                                 <div class="appointment-actions">
-                                    <button class="btn btn-sm btn-outline-primary me-1"
-                                        (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger"
+                                    <button class="btn-delete-appointment"
+                                        title="Eliminar cita"
                                         (click)="deleteAppointment(appointment.id); $event.stopPropagation()">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="bi bi-trash3"></i>
                                     </button>
                                 </div>
                             </div>
