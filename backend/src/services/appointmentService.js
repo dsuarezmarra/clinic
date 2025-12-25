@@ -1,17 +1,32 @@
-const prisma = require('./database');
+const defaultPrisma = require('./database');
 const moment = require('moment-timezone');
 
 const TIMEZONE = 'Europe/Madrid';
 
 /**
- * Servicio centralizado para gestiÃ³n de citas y consumo de crÃ©ditos
- * Principios de diseÃ±o:
- * - Estado calculado: El estado "pagado" se calcula dinÃ¡micamente basado en credit_packs.paid
- * - Transacciones atÃ³micas: Las operaciones crÃ­ticas usan transacciones para mantener consistencia
- * - Idempotencia: Las operaciones pueden ejecutarse mÃºltiples veces sin efectos secundarios
- * - SeparaciÃ³n de responsabilidades: Cada mÃ©todo tiene una responsabilidad clara
+ * Servicio centralizado para gestión de citas y consumo de créditos
+ * Principios de diseño:
+ * - Estado calculado: El estado "pagado" se calcula dinámicamente basado en credit_packs.paid
+ * - Transacciones atómicas: Las operaciones críticas usan transacciones para mantener consistencia
+ * - Idempotencia: Las operaciones pueden ejecutarse múltiples veces sin efectos secundarios
+ * - Separación de responsabilidades: Cada método tiene una responsabilidad clara
+ * - Multi-tenant: Acepta cliente de BD como parámetro para soporte multi-tenant
  */
 class AppointmentService {
+  /**
+   * @param {Object} prismaClient - Cliente de base de datos (opcional, usa default si no se proporciona)
+   */
+  constructor(prismaClient = null) {
+    this.prisma = prismaClient || defaultPrisma;
+  }
+
+  /**
+   * Crea una nueva instancia del servicio con un cliente de BD específico
+   * @param {Object} prismaClient - Cliente de base de datos tenant-aware
+   */
+  static withClient(prismaClient) {
+    return new AppointmentService(prismaClient);
+  }
 
   // ===== UTILIDADES Y HELPERS =====
 
@@ -81,14 +96,14 @@ class AppointmentService {
       whereClause.id = { not: excludeId };
     }
 
-    return await prisma.appointment.findFirst({ where: whereClause });
+    return await this.prisma.appointment.findFirst({ where: whereClause });
   }
 
   /**
    * Obtiene los crÃ©ditos disponibles de un paciente
    */
   async getPatientAvailableCredits(patientId) {
-    const rawPacks = await prisma.creditPack.findMany({ 
+    const rawPacks = await this.prisma.creditPack.findMany({ 
       where: { patientId } 
     });
 
@@ -243,10 +258,10 @@ class AppointmentService {
     const startMoment = moment.tz(start, TIMEZONE);
     let endMoment = moment.tz(end, TIMEZONE);
 
-    // Auto-detectar duraciÃ³n de 60min si hay packs disponibles
+    // Auto-detectar duración de 60min si hay packs disponibles
     let finalDuration = durationMinutes;
     if (consumesCredit && patientId) {
-      const sixtyMinPack = await prisma.creditPack.findFirst({
+      const sixtyMinPack = await this.prisma.creditPack.findFirst({
         where: {
           patientId,
           unitMinutes: 60,
@@ -284,8 +299,8 @@ class AppointmentService {
       }
     }
 
-    // Crear cita en transacciÃ³n
-    return await prisma.$transaction(async (tx) => {
+    // Crear cita en transacción
+    return await this.prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.create({
         data: {
           start: this._toUTC(startMoment.toDate()),
@@ -338,7 +353,7 @@ class AppointmentService {
     }
 
     // Obtener cita actual con sus redemptions
-    const currentAppointment = await prisma.appointment.findUnique({
+    const currentAppointment = await this.prisma.appointment.findUnique({
       where: { id },
       include: { 
         creditRedemptions: { include: { creditPack: true } }
@@ -364,8 +379,8 @@ class AppointmentService {
       paidParam: paid
     });
 
-    return await prisma.$transaction(async (tx) => {
-      // 1. Revertir crÃ©ditos si es necesario (solo para cambios estructurales en citas no pagadas)
+    return await this.prisma.$transaction(async (tx) => {
+      // 1. Revertir créditos si es necesario (solo para cambios estructurales en citas no pagadas)
       if (hasStructuralChanges && currentAppointment.consumesCredit && !currentlyPaid) {
         console.log(`[UPDATE APPOINTMENT] Revirtiendo crÃ©ditos para cambios estructurales`);
         await this.revertCredits(id, tx);
@@ -490,7 +505,7 @@ class AppointmentService {
    * Cancela una cita y revierte sus crÃ©ditos
    */
   async cancelAppointment(id) {
-    const appointment = await prisma.appointment.findUnique({
+    const appointment = await this.prisma.appointment.findUnique({
       where: { id }
     });
 
@@ -498,8 +513,8 @@ class AppointmentService {
       throw new Error('Cita no encontrada');
     }
 
-    return await prisma.$transaction(async (tx) => {
-      // Revertir crÃ©ditos si es necesario
+    return await this.prisma.$transaction(async (tx) => {
+      // Revertir créditos si es necesario
       if (appointment.consumesCredit && appointment.patientId) {
         await this.revertCredits(id, tx);
       }
@@ -521,7 +536,7 @@ class AppointmentService {
     const fromUTC = this._toUTC(from);
     const toUTC = this._toUTC(to);
 
-    const appointments = await prisma.appointment.findMany({
+    const appointments = await this.prisma.appointment.findMany({
       where: {
         start: { gte: fromUTC },
         end: { lte: toUTC }
@@ -552,4 +567,6 @@ class AppointmentService {
   }
 }
 
-module.exports = new AppointmentService();
+// Exportar tanto la clase como una instancia por defecto (para compatibilidad)
+module.exports = AppointmentService;
+module.exports.default = new AppointmentService();

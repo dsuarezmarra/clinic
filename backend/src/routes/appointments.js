@@ -1,9 +1,11 @@
 const express = require('express');
 const { body, param, query, validationResult } = require('express-validator');
-const appointmentService = require('../services/appointmentService');
+const AppointmentService = require('../services/appointmentService');
 const prisma = require('../services/database');
 // Helper: prefer injected Supabase shim (req.prisma) otherwise fallback to Prisma
 const getDb = (req) => req.prisma || prisma;
+// Helper: obtener servicio de citas con cliente tenant-aware
+const getAppointmentService = (req) => AppointmentService.withClient(getDb(req));
 const moment = require('moment-timezone');
 
 const router = express.Router();
@@ -216,7 +218,7 @@ router.post('/', [
     }
 
     try {
-      const appointment = await appointmentService.createAppointment({
+      const appointment = await getAppointmentService(req).createAppointment({
         start,
         end,
         patientId: patientId || null,
@@ -252,12 +254,12 @@ router.post('/', [
     } catch (error) {
       // Si es error de Sesiones insuficientes y se permite crear sin sesi√≥n
       if (error.code === 'INSUFFICIENT_CREDITS' && allowWithoutCredit) {
-        const appointment = await appointmentService.createAppointment({
+        const appointment = await getAppointmentService(req).createAppointment({
           start,
           end,
           patientId: patientId || null,
           durationMinutes,
-          consumesCredit: false, // No consumir sesi√≥n
+          consumesCredit: false, // No consumir sesiÛn
           notes: `${notes || ''}\n[NOTA: Creada sin Sesiones suficientes]`.trim()
         });
 
@@ -358,7 +360,7 @@ router.put('/:id', [
       });
     }
 
-    const appointment = await appointmentService.updateAppointment(id, {
+    const appointment = await getAppointmentService(req).updateAppointment(id, {
       start,
       end,
       patientId,
@@ -392,7 +394,7 @@ router.delete('/:id', [
     const { action = 'cancel' } = req.query;
 
     if (action === 'cancel') {
-      const appointment = await appointmentService.cancelAppointment(id);
+      const appointment = await getAppointmentService(req).cancelAppointment(id);
 
       const appointmentWithLocalTime = {
         ...appointment,
@@ -413,9 +415,9 @@ router.delete('/:id', [
         });
       }
 
-      // Revertir Sesiones si se hab√≠an consumido
+      // Revertir Sesiones si se habÌan consumido
       if (appointment.consumesCredit && appointment.patientId) {
-        await appointmentService.revertCredits(id);
+        await getAppointmentService(req).revertCredits(id);
       }
 
       await getDb(req).appointments.delete({
@@ -438,7 +440,7 @@ router.get('/conflicts/check', [
   try {
     const { start, end, excludeId } = req.query;
 
-    const conflict = await appointmentService.checkOverlap(start, end, excludeId);
+    const conflict = await getAppointmentService(req).checkOverlap(start, end, excludeId);
 
     if (conflict) {
       res.json({

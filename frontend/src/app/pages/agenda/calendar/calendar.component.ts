@@ -486,6 +486,71 @@ export class CalendarComponent implements OnInit {
     }
 
     /**
+     * Crea rápidamente una sesión o bono para un paciente desde el modal de selección
+     * @param patient Paciente al que añadir el crédito
+     * @param type Tipo de crédito ('sesion' para 1 unidad, 'bono' para múltiples)
+     * @param minutes Duración de cada unidad (30 o 60 minutos)
+     * @param quantity Número de unidades a crear
+     * @param paid Si el crédito está pagado o pendiente
+     * @param event Evento del click para prevenir propagación
+     */
+    quickCreateCredit(patient: Patient, type: 'sesion' | 'bono', minutes: 30 | 60, quantity: number, paid: boolean, event: Event) {
+        event.stopPropagation(); // Prevenir selección del paciente
+        event.preventDefault();
+        
+        // Marcar que estamos creando para deshabilitar botones
+        patient.isCreatingCredit = true;
+        
+        const paidLabel = paid ? 'pagado' : 'pendiente';
+        const label = type === 'sesion' 
+            ? `Sesión ${minutes}min (${paidLabel})` 
+            : `Bono ${quantity}x${minutes}min (${paidLabel})`;
+        
+        const creditPack = {
+            patientId: patient.id!,
+            type: type,
+            minutes: minutes,
+            quantity: quantity,
+            paid: paid,
+            notes: `Creado rápidamente desde agenda`,
+            priceCents: 0 // Precio por defecto, se puede ajustar después
+        };
+        
+        this.creditService.createCreditPack(creditPack).subscribe({
+            next: (result) => {
+                console.log('? Credit pack creado:', result);
+                
+                // Actualizar el contador de sesiones del paciente localmente
+                const addedUnits = quantity;
+                patient.activeSessions = (patient.activeSessions || 0) + addedUnits;
+                
+                // También actualizar en la lista filtrada y principal
+                const patientInList = this.patients.find(p => p.id === patient.id);
+                if (patientInList) {
+                    patientInList.activeSessions = patient.activeSessions;
+                }
+                const patientInFiltered = this.filteredPatients.find(p => p.id === patient.id);
+                if (patientInFiltered) {
+                    patientInFiltered.activeSessions = patient.activeSessions;
+                }
+                
+                // Si este paciente está seleccionado, actualizar también selectedPatient
+                if (this.selectedPatient && this.selectedPatient.id === patient.id) {
+                    this.selectedPatient.activeSessions = patient.activeSessions;
+                }
+                
+                patient.isCreatingCredit = false;
+                this.notificationService.showSuccess(`${label} añadido a ${patient.firstName}`);
+            },
+            error: (err) => {
+                console.error('? Error creando credit pack:', err);
+                patient.isCreatingCredit = false;
+                this.notificationService.showError(`Error al crear ${label}`);
+            }
+        });
+    }
+
+    /**
      * Verifica si hay solapamiento entre dos rangos de tiempo
      */
     hasTimeOverlap(start1: Date, end1: Date, start2: Date, end2: Date): boolean {
