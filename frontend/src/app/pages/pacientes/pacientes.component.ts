@@ -280,13 +280,13 @@ export class PacientesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    console.log('ðŸ“¤ Enviando datos del paciente:', this.patientFormData);
+    console.log('📤 Enviando datos del paciente:', this.patientFormData);
 
     this.loading = true;
 
     if (this.selectedPatient) {
       // Actualizar paciente existente
-      console.log('ðŸ“ Actualizando paciente ID:', this.selectedPatient.id);
+      console.log('📝 Actualizando paciente ID:', this.selectedPatient.id);
       this.patientService.updatePatient(this.selectedPatient.id, this.patientFormData).subscribe({
         next: (updatedPatient: Patient) => {
           const index = this.patients.findIndex(p => p.id === updatedPatient.id);
@@ -308,7 +308,7 @@ export class PacientesComponent implements OnInit, OnDestroy {
       });
     } else {
       // Crear nuevo paciente
-      console.log('ðŸ†• Creando nuevo paciente');
+      console.log('🆕 Creando nuevo paciente');
       this.patientService.createPatient(this.patientFormData).subscribe({
         next: (newPatient: Patient) => {
           this.patients.push(newPatient);
@@ -400,9 +400,9 @@ export class PacientesComponent implements OnInit, OnDestroy {
   }
 
   editPatient(patient: Patient) {
-    console.log('ðŸ” Editando paciente:', patient);
-    console.log('ðŸ” DNI disponible:', patient.dni);
-    console.log('ðŸ” Datos completos:', {
+    console.log('📝 Editando paciente:', patient);
+    console.log('📝 DNI disponible:', patient.dni);
+    console.log('📝 Datos completos:', {
       id: patient.id,
       firstName: patient.firstName,
       lastName: patient.lastName,
@@ -415,11 +415,11 @@ export class PacientesComponent implements OnInit, OnDestroy {
     // Si el paciente no tiene todos los datos necesarios (por ejemplo, viene de paginación),
     // necesitamos cargarlo completo desde el servidor
     if (!(patient as any).dni || (patient as any).dni === undefined) {
-      console.log('âš ï¸ Paciente no tiene DNI, cargando datos completos...');
+      console.log('⚠️ Paciente no tiene DNI, cargando datos completos...');
       this.loading = true;
       this.patientService.getPatientById(patient.id).subscribe({
         next: (fullPatient: Patient) => {
-          console.log('âœ… Datos completos cargados:', fullPatient);
+          console.log('✅ Datos completos cargados:', fullPatient);
           this.editPatientWithFullData(fullPatient);
           this.loading = false;
         },
@@ -431,7 +431,7 @@ export class PacientesComponent implements OnInit, OnDestroy {
       });
     } else {
       // El paciente ya tiene todos los datos necesarios
-      console.log('âœ… Paciente tiene todos los datos, editando directamente');
+      console.log('✅ Paciente tiene todos los datos, editando directamente');
       this.editPatientWithFullData(patient);
     }
   }

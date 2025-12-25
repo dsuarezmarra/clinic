@@ -94,7 +94,7 @@ export class ConfiguracionComponent implements OnInit {
    * Cambiar a la pestaña de precios y cargar datos
    */
   switchToPricesTab() {
-    console.log('ð·️ Cambiando a pestaña de Precios');
+    console.log('🏷️ Cambiando a pestaña de Precios');
     this.activeTab = 'prices';
     // Siempre cargar los precios actuales para mostrar los valores vigentes
     this.loadPrices();
@@ -761,7 +761,7 @@ export class ConfiguracionComponent implements OnInit {
    * Cargar precios actuales del sistema
    */
   loadPrices() {
-    console.log('ð Cargando precios...');
+    console.log('💰 Cargando precios...');
     this.loadingPrices = true;
     this.configService.getPrices().subscribe({
       next: (prices: any) => {
@@ -772,7 +772,7 @@ export class ConfiguracionComponent implements OnInit {
           bonoPrice30: prices.bonoPrice30 ?? 100,
           bonoPrice60: prices.bonoPrice60 ?? 180
         };
-        console.log('ð Aplicando valores al formulario:', formValues);
+        console.log('📝 Aplicando valores al formulario:', formValues);
         this.pricesForm.patchValue(formValues);
         this.loadingPrices = false;
       },
@@ -795,7 +795,7 @@ export class ConfiguracionComponent implements OnInit {
 
     // Validaciones de negocio
     const prices = this.pricesForm.value;
-    console.log('ð¾ Guardando precios:', prices);
+    console.log('💾 Guardando precios:', prices);
 
     // Validar que precio 60min > precio 30min
     if (prices.sessionPrice60 <= prices.sessionPrice30) {

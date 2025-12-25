@@ -148,7 +148,7 @@ export class CalendarComponent implements OnInit {
             const tenantSlug = this.clientConfigService.getTenantSlug();
             const url = `${apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
             
-            console.log(`ðŸ“Š Exportando CSV para ${tenantSlug}: ${url}`);
+            console.log(`📊 Exportando CSV para ${tenantSlug}: ${url}`);
             
             const resp = await fetch(url, { 
                 headers: { 
@@ -426,23 +426,23 @@ export class CalendarComponent implements OnInit {
         if (patient && patient.id) {
             this.creditService.getPatientCredits(patient.id).subscribe({
                 next: (res: any) => {
-                    console.log('ðŸ“¦ Credits received:', res);
+                    console.log('📦 Credits received:', res);
                     const packs = res.creditPacks || [];
                     
                     // ACTUALIZAR activeSessions del paciente seleccionado con el total de unidades restantes
                     const totalUnitsRemaining = packs.reduce((sum: number, p: any) => sum + (Number(p.unitsRemaining) || 0), 0);
                     if (this.selectedPatient) {
                         this.selectedPatient.activeSessions = totalUnitsRemaining;
-                        console.log(`âœ… activeSessions actualizado a ${totalUnitsRemaining} para ${this.selectedPatient.firstName}`);
+                        console.log(`✅ activeSessions actualizado a ${totalUnitsRemaining} para ${this.selectedPatient.firstName}`);
                     }
                     
                     // PRIORIDAD 1: Buscar packs PAGADOS
                     const paidPacks = packs.filter((p: any) => p.paid === true && p.unitsRemaining > 0);
-                    console.log(`ðŸ“¦ Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
+                    console.log(`📦 Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
                     
                     // PRIORIDAD 2: Si no hay pagados, buscar packs PENDIENTES
                     const pendingPacks = packs.filter((p: any) => p.paid === false && p.unitsRemaining > 0);
-                    console.log(`ðŸ“¦ Packs PENDIENTES disponibles: ${pendingPacks.length}`, pendingPacks);
+                    console.log(`📦 Packs PENDIENTES disponibles: ${pendingPacks.length}`, pendingPacks);
                     
                     // Determinar qué pack usar para proponer duración
                     let packToUse = null;
@@ -458,7 +458,7 @@ export class CalendarComponent implements OnInit {
                     
                     if (!packToUse) {
                         this.proposedDuration = 30;
-                        console.log('âš ï¸ No hay packs disponibles, proponiendo 30min por defecto');
+                        console.log('⚠️ No hay packs disponibles, proponiendo 30min por defecto');
                         return;
                     }
                     
@@ -466,19 +466,19 @@ export class CalendarComponent implements OnInit {
                     const unitsRem = Number(packToUse.unitsRemaining);
                     const paidLabel = isPaid ? 'PAGADO' : 'PENDIENTE';
                     
-                    console.log(`âœ… Pack ${paidLabel} más antiguo: ${packToUse.label}, ${unitMin}min, ${unitsRem} units disponibles`);
+                    console.log(`✅ Pack ${paidLabel} más antiguo: ${packToUse.label}, ${unitMin}min, ${unitsRem} units disponibles`);
                     
                     // Proponer duración según el pack disponible
                     if (unitMin === 60 && unitsRem >= 2) {
                         this.proposedDuration = 60;
-                        console.log(`âœ… Proponiendo 60min (pack ${paidLabel} de 60min con 2+ units)`);
+                        console.log(`✅ Proponiendo 60min (pack ${paidLabel} de 60min con 2+ units)`);
                     } else {
                         this.proposedDuration = 30;
-                        console.log(`âœ… Proponiendo 30min (pack ${paidLabel} de 30min o <2 units)`);
+                        console.log(`✅ Proponiendo 30min (pack ${paidLabel} de 30min o <2 units)`);
                     }
                 },
                 error: (err) => {
-                    console.error('âŒ Error getting credits:', err);
+                    console.error('❌ Error getting credits:', err);
                     this.proposedDuration = 30;
                 }
             });
@@ -486,16 +486,16 @@ export class CalendarComponent implements OnInit {
     }
 
     /**
-     * Crea r�pidamente una sesi�n o bono para un paciente desde el modal de selecci�n
-     * @param patient Paciente al que a�adir el cr�dito
-     * @param type Tipo de cr�dito ('sesion' para 1 unidad, 'bono' para m�ltiples)
-     * @param minutes Duraci�n de cada unidad (30 o 60 minutos)
-     * @param quantity N�mero de unidades a crear
-     * @param paid Si el cr�dito est� pagado o pendiente
-     * @param event Evento del click para prevenir propagaci�n
+     * Crea rápidamente una sesión o bono para un paciente desde el modal de selección
+     * @param patient Paciente al que añadir el crédito
+     * @param type Tipo de crédito ('sesion' para 1 unidad, 'bono' para múltiples)
+     * @param minutes Duración de cada unidad (30 o 60 minutos)
+     * @param quantity Número de unidades a crear
+     * @param paid Si el crédito está pagado o pendiente
+     * @param event Evento del click para prevenir propagación
      */
     quickCreateCredit(patient: Patient, type: 'sesion' | 'bono', minutes: 30 | 60, quantity: number, paid: boolean, event: Event) {
-        event.stopPropagation(); // Prevenir selecci�n del paciente
+        event.stopPropagation(); // Prevenir selección del paciente
         event.preventDefault();
         
         // Marcar que estamos creando para deshabilitar botones
@@ -504,7 +504,7 @@ export class CalendarComponent implements OnInit {
         const paidLabel = paid ? 'pagado' : 'pendiente';
         const sessionsInBono = minutes === 60 ? 5 : 5; // Ambos bonos tienen 5 sesiones
         const label = type === 'sesion' 
-            ? `Sesi�n ${minutes}min (${paidLabel})` 
+            ? `Sesión ${minutes}min (${paidLabel})` 
             : `Bono ${sessionsInBono} sesiones de ${minutes}min (${paidLabel})`;
         
         const creditPack = {
@@ -513,8 +513,8 @@ export class CalendarComponent implements OnInit {
             minutes: minutes,
             quantity: quantity,
             paid: paid,
-            notes: `Creado r�pidamente desde agenda`,
-            priceCents: 0 // Precio por defecto, se puede ajustar despu�s
+            notes: `Creado rápidamente desde agenda`,
+            priceCents: 0 // Precio por defecto, se puede ajustar después
         };
         
         this.creditService.createCreditPack(creditPack).subscribe({
@@ -522,8 +522,8 @@ export class CalendarComponent implements OnInit {
                 console.log('? Credit pack creado:', result);
                 
                 // Actualizar el contador de sesiones del paciente localmente
-                // La l�gica debe coincidir con el backend:
-                // - Sesi�n: 1 unidad por sesi�n de 30min, 2 unidades por sesi�n de 60min
+                // La lógica debe coincidir con el backend:
+                // - Sesión: 1 unidad por sesión de 30min, 2 unidades por sesión de 60min
                 // - Bono 30min: 5 unidades (sesiones de 30min) por cada quantity
                 // - Bono 60min: 10 unidades (equivalente a 5 sesiones de 60min) por cada quantity
                 let addedUnits: number;
@@ -535,7 +535,7 @@ export class CalendarComponent implements OnInit {
                 }
                 patient.activeSessions = (patient.activeSessions || 0) + addedUnits;
                 
-                // Tambi�n actualizar en la lista filtrada y principal
+                // También actualizar en la lista filtrada y principal
                 const patientInList = this.patients.find(p => p.id === patient.id);
                 if (patientInList) {
                     patientInList.activeSessions = patient.activeSessions;
@@ -545,13 +545,13 @@ export class CalendarComponent implements OnInit {
                     patientInFiltered.activeSessions = patient.activeSessions;
                 }
                 
-                // Si este paciente est� seleccionado, actualizar tambi�n selectedPatient
+                // Si este paciente está seleccionado, actualizar también selectedPatient
                 if (this.selectedPatient && this.selectedPatient.id === patient.id) {
                     this.selectedPatient.activeSessions = patient.activeSessions;
                 }
                 
                 patient.isCreatingCredit = false;
-                this.notificationService.showSuccess(`${label} a�adido a ${patient.firstName}`);
+                this.notificationService.showSuccess(`${label} añadido a ${patient.firstName}`);
             },
             error: (err) => {
                 console.error('? Error creando credit pack:', err);
@@ -587,13 +587,13 @@ export class CalendarComponent implements OnInit {
     }
 
     createAppointment() {
-        // EVITAR CREACIÃ“N DUPLICADA (race condition con click + touchstart)
+        // EVITAR CREACIÓN DUPLICADA (race condition con click + touchstart)
         if (this.isCreatingAppointment) {
-            console.warn('âš ï¸ Ya se está creando una cita, ignorando clic duplicado');
+            console.warn('⚠️ Ya se está creando una cita, ignorando clic duplicado');
             return;
         }
 
-        // âš¡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
+        // ⚡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
         this.isCreatingAppointment = true;
 
         if (!this.selectedPatient) {
@@ -623,7 +623,7 @@ export class CalendarComponent implements OnInit {
         const startDateTime = new Date(this.selectedDate);
         startDateTime.setHours(hours, minutes, 0, 0);
         const duration = this.proposedDuration || 30;
-        console.log(`ðŸ• Creating appointment with duration: ${duration}min (proposedDuration=${this.proposedDuration})`);
+        console.log(`🕐 Creating appointment with duration: ${duration}min (proposedDuration=${this.proposedDuration})`);
         const endDateTime = new Date(startDateTime);
         endDateTime.setMinutes(endDateTime.getMinutes() + duration);
         
@@ -647,31 +647,31 @@ export class CalendarComponent implements OnInit {
             durationMinutes: duration,
             consumesCredit: true
         };
-        console.log('ðŸ“‹ Appointment data:', appointmentData);
+        console.log('📋 Appointment data:', appointmentData);
         this.appointmentService.createAppointment(appointmentData).subscribe({
             next: (appointment) => {
                 this.notificationService.showSuccess('Cita creada exitosamente');
                 this.closeModal();
                 this.loadPatients();
                 
-                // âš¡ ESPERAR a que loadAppointments() termine antes de resetear flag
+                // ⚡ ESPERAR a que loadAppointments() termine antes de resetear flag
                 // Esto previene errores de validación si el usuario crea otra cita inmediatamente
                 this.appointmentService.getAllAppointments().subscribe({
                     next: (appointments) => {
                         this.appointments = appointments;
-                        this.isCreatingAppointment = false; // â† RESET FLAG después de recargar
-                        console.log('âœ… Appointments reloaded, flag reset');
+                        this.isCreatingAppointment = false; // ← RESET FLAG después de recargar
+                        console.log('✅ Appointments reloaded, flag reset');
                     },
                     error: (error) => {
                         console.error('Error reloading appointments:', error);
-                        this.isCreatingAppointment = false; // â† RESET FLAG incluso si falla recarga
+                        this.isCreatingAppointment = false; // ← RESET FLAG incluso si falla recarga
                     }
                 });
             },
             error: (error) => {
                 this.notificationService.showError('Error al crear la cita');
                 console.error('Error creating appointment:', error);
-                this.isCreatingAppointment = false; // â† RESET FLAG TAMBIÃ‰N EN ERROR
+                this.isCreatingAppointment = false; // ← RESET FLAG TAMBIÉN EN ERROR
             }
         });
     }
@@ -697,8 +697,8 @@ export class CalendarComponent implements OnInit {
     }
 
     /**
-     * Normaliza un texto eliminando acentos y diacr�ticos
-     * para b�squeda insensible a acentos
+     * Normaliza un texto eliminando acentos y diacrñticos
+     * para bñsqueda insensible a acentos
      */
     private normalizeText(text: string): string {
         return text
@@ -729,13 +729,13 @@ export class CalendarComponent implements OnInit {
     updateAppointment() {
         if (!this.editingAppointment) return;
 
-        // EVITAR ACTUALIZACIÃ“N DUPLICADA (race condition con click + touchstart)
+        // EVITAR ACTUALIZACIÓN DUPLICADA (race condition con click + touchstart)
         if (this.isUpdatingAppointment) {
-            console.warn('âš ï¸ Ya se está actualizando la cita, ignorando clic duplicado');
+            console.warn('⚠️ Ya se está actualizando la cita, ignorando clic duplicado');
             return;
         }
 
-        // âš¡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
+        // ⚡ ESTABLECER FLAG INMEDIATAMENTE para bloquear eventos duplicados
         this.isUpdatingAppointment = true;
 
         // Detectar si cambió el estado de pago comparando con el original
@@ -759,15 +759,15 @@ export class CalendarComponent implements OnInit {
                     this.closeModal();
                     this.loadAppointments();
                     this.loadPatients();
-                    this.isUpdatingAppointment = false; // â† RESET FLAG en success
+                    this.isUpdatingAppointment = false; // ← RESET FLAG en success
                 },
                 error: (error) => {
                     console.error('Error updating payment status:', error);
                     this.notificationService.showError('Error al actualizar estado de pago');
-                    this.isUpdatingAppointment = false; // â† RESET FLAG en error
+                    this.isUpdatingAppointment = false; // ← RESET FLAG en error
                 }
             });
-            return; // â† IMPORTANTE: Salir aquí sin actualizar la cita
+            return; // ← IMPORTANTE: Salir aquí sin actualizar la cita
         }
 
         // Si cambió fecha/hora, continuar con actualización de cita
@@ -786,7 +786,7 @@ export class CalendarComponent implements OnInit {
             const maxAllowedStart = 21 * 60 + 30; // 21:30
             if (minutesFromMidnight < minAllowed || minutesFromMidnight > maxAllowedStart || (minute % 30) !== 0) {
                 this.notificationService.showError('La hora debe estar entre 09:00 y 22:00 en pasos de 30 minutos');
-                this.isUpdatingAppointment = false; // â† RESET FLAG si falla validación
+                this.isUpdatingAppointment = false; // ← RESET FLAG si falla validación
                 return;
             }
 
@@ -810,7 +810,7 @@ export class CalendarComponent implements OnInit {
                 this.notificationService.showError(
                     `Ya existe una cita en ese horario: ${patientName} (${timeRange}). Por favor, selecciona otro horario.`
                 );
-                this.isUpdatingAppointment = false; // â† RESET FLAG si falla validación
+                this.isUpdatingAppointment = false; // ← RESET FLAG si falla validación
                 return;
             }
         }
@@ -825,25 +825,25 @@ export class CalendarComponent implements OnInit {
         // Update the appointment only if there are changes
         if (Object.keys(payload).length === 0) {
             this.notificationService.showInfo('No hay cambios para guardar');
-            this.isUpdatingAppointment = false; // â† RESET FLAG si no hay cambios
+            this.isUpdatingAppointment = false; // ← RESET FLAG si no hay cambios
             return;
         }
 
         this.appointmentService.updateAppointment(this.editingAppointment.id, payload).subscribe({
             next: (appointment) => {
-                // Si el pago CAMBIÃ“ (además del datetime), actualizar el pack
+                // Si el pago CAMBIÓ (además del datetime), actualizar el pack
                 if (paymentStatusChanged && this.editingAppointment?.creditRedemptions?.length) {
                     const packId = this.editingAppointment.creditRedemptions[0].creditPackId;
                     console.log(`[DEBUG] Payment status also changed. Updating pack ${packId} to ${this.editingPaid}`);
                     this.creditService.updatePackPaymentStatus(packId, this.editingPaid).subscribe({
                         next: () => {
                             console.log(`[DEBUG] Pack payment status updated successfully`);
-                            // âœ… UN SOLO MENSAJE: Cita actualizada (incluye cambio de pago si hubo)
+                            // ✅ UN SOLO MENSAJE: Cita actualizada (incluye cambio de pago si hubo)
                             this.notificationService.showSuccess('Cita actualizada exitosamente');
                             this.closeModal();
                             this.loadAppointments();
                             this.loadPatients();
-                            this.isUpdatingAppointment = false; // â† RESET FLAG en success
+                            this.isUpdatingAppointment = false; // ← RESET FLAG en success
                         },
                         error: (error) => {
                             console.error('Error updating payment status:', error);
@@ -851,22 +851,22 @@ export class CalendarComponent implements OnInit {
                             this.closeModal();
                             this.loadAppointments();
                             this.loadPatients();
-                            this.isUpdatingAppointment = false; // â† RESET FLAG en error
+                            this.isUpdatingAppointment = false; // ← RESET FLAG en error
                         }
                     });
                 } else {
-                    // âœ… UN SOLO MENSAJE: Cita actualizada (pago NO cambió)
+                    // ✅ UN SOLO MENSAJE: Cita actualizada (pago NO cambió)
                     this.notificationService.showSuccess('Cita actualizada exitosamente');
                     this.closeModal();
                     this.loadAppointments();
                     this.loadPatients();
-                    this.isUpdatingAppointment = false; // â† RESET FLAG en success
+                    this.isUpdatingAppointment = false; // ← RESET FLAG en success
                 }
             },
             error: (error) => {
                 console.error('Error updating appointment:', error);
                 this.notificationService.showError('Error al actualizar la cita');
-                this.isUpdatingAppointment = false; // â† RESET FLAG en error
+                this.isUpdatingAppointment = false; // ← RESET FLAG en error
             }
         });
     }
@@ -917,8 +917,8 @@ export class CalendarComponent implements OnInit {
         this.selectedPatient = null;
         this.editingAppointment = null;
         this.patientSearchTerm = '';
-        this.isCreatingAppointment = false; // â† RESET FLAG al cerrar modal
-        this.isUpdatingAppointment = false; // â† RESET FLAG al cerrar modal
+        this.isCreatingAppointment = false; // ← RESET FLAG al cerrar modal
+        this.isUpdatingAppointment = false; // ← RESET FLAG al cerrar modal
     }
 
     getPatientName(appointment: Appointment): string {
@@ -947,7 +947,7 @@ export class CalendarComponent implements OnInit {
         return `${startTime} - ${endTime}`;
     }
 
-    // Devuelve un texto corto indicando el origen de la cita: 'Bono 5Ã—60m' o 'Sesión 30m'
+    // Devuelve un texto corto indicando el origen de la cita: 'Bono 5×60m' o 'Sesión 30m'
     getAppointmentOrigin(appointment: Appointment): string {
         if (!appointment) return '';
         const redemptions = appointment.creditRedemptions || [];
@@ -972,9 +972,9 @@ export class CalendarComponent implements OnInit {
             if (unitsTotal > 0) {
                 if (unitsTotal === 1) return `Sesión ${unitMinutes}m`;
                 if (unitsTotal === 2) return `Sesión ${unitMinutes}m`;
-                // Bonos: mostrar como "Bono XÃ—Ym" donde X es número de sesiones y Ym la duración
+                // Bonos: mostrar como "Bono X×Ym" donde X es número de sesiones y Ym la duración
                 const sessions = unitMinutes === 60 ? Math.round(unitsTotal / 2) : unitsTotal;
-                return `Bono ${sessions}Ã—${unitMinutes}m`;
+                return `Bono ${sessions}×${unitMinutes}m`;
             }
         }
 
