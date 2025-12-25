@@ -328,7 +328,7 @@ Ctrl+Shift+F → Buscar en: docs/implementacion-clientes
 
 ### ⚠️ Antes de Empezar
 
-1. **Verificar que backend API est� funcionando:**
+1. **Verificar que backend API est� funcionando:**
 
    ```powershell
    curl https://api-clinic-personal.vercel.app/api/health

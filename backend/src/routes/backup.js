@@ -6,7 +6,7 @@ const router = express.Router();
 
 /**
  * Valida que el nombre de archivo sea seguro (sin path traversal)
- * Solo permite: letras, números, guiones, guiones bajos, puntos
+ * Solo permite: letras, nÃºmeros, guiones, guiones bajos, puntos
  */
 function isValidFileName(fileName) {
     if (!fileName || typeof fileName !== 'string') return false;
@@ -84,10 +84,10 @@ router.post('/restore/:fileName', async (req, res, next) => {
         
         // Validar nombre de archivo para prevenir path traversal
         if (!isValidFileName(fileName)) {
-            console.warn(`?? Intento de restore con fileName inválido: ${fileName}`);
+            console.warn(`?? Intento de restore con fileName invÃ¡lido: ${fileName}`);
             return res.status(400).json({
                 success: false,
-                message: 'Nombre de archivo inválido'
+                message: 'Nombre de archivo invÃ¡lido'
             });
         }
         
@@ -105,7 +105,7 @@ router.post('/restore/:fileName', async (req, res, next) => {
     // In development allow automatic restore by default to simplify local workflows.
     // In production, allow if ALLOW_AUTO_RESTORE=true or a valid RESTORE_SECRET is provided.
     const allowAutoRestore = allowEnv || isDev || !!force || secretOk;
-    console.log('ðŸ” restore request:', { fileName, allowEnv, NODE_ENV: process.env.NODE_ENV, force, allowAutoRestore });
+    console.log('Ã°ÂŸÂ”Â restore request:', { fileName, allowEnv, NODE_ENV: process.env.NODE_ENV, force, allowAutoRestore });
     const result = await backup.restoreBackup(fileName, { allowAutoRestore });
 
     // If restoreBackup imported data, return success; otherwise return 400 with diagnostics and instructions
@@ -141,10 +141,10 @@ router.get('/download/:fileName', async (req, res, next) => {
         
         // Validar nombre de archivo para prevenir path traversal
         if (!isValidFileName(fileName)) {
-            console.warn(`?? Intento de download con fileName inválido: ${fileName}`);
+            console.warn(`?? Intento de download con fileName invÃ¡lido: ${fileName}`);
             return res.status(400).json({
                 success: false,
-                message: 'Nombre de archivo inválido'
+                message: 'Nombre de archivo invÃ¡lido'
             });
         }
         
@@ -160,14 +160,14 @@ router.get('/download/:fileName', async (req, res, next) => {
             });
         }
         
-        // Verificar que el path resuelto está dentro del directorio de backups
+        // Verificar que el path resuelto estÃ¡ dentro del directorio de backups
         const backupsDir = path.resolve(__dirname, '../../backups');
         const resolvedPath = path.resolve(backupPath);
         if (!resolvedPath.startsWith(backupsDir)) {
             console.warn(`?? Path traversal detectado en download: ${resolvedPath}`);
             return res.status(400).json({
                 success: false,
-                message: 'Ruta de archivo inválida'
+                message: 'Ruta de archivo invÃ¡lida'
             });
         }
 
@@ -190,10 +190,10 @@ router.delete('/delete/:fileName', async (req, res, next) => {
         
         // Validar nombre de archivo para prevenir path traversal
         if (!isValidFileName(fileName)) {
-            console.warn(`?? Intento de delete con fileName inválido: ${fileName}`);
+            console.warn(`?? Intento de delete con fileName invÃ¡lido: ${fileName}`);
             return res.status(400).json({
                 success: false,
-                message: 'Nombre de archivo inválido'
+                message: 'Nombre de archivo invÃ¡lido'
             });
         }
         
@@ -236,16 +236,16 @@ router.get('/status', async (req, res, next) => {
     }
 });
 
-// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automático semanal)
-// Este endpoint es llamado automáticamente por Vercel Cron según la configuración en vercel.json
+// GET /api/backup/cron - Endpoint para Vercel Cron Jobs (backup automÃ¡tico semanal)
+// Este endpoint es llamado automÃ¡ticamente por Vercel Cron segÃºn la configuraciÃ³n en vercel.json
 router.get('/cron', async (req, res, next) => {
     try {
         // Verificar que la llamada viene de Vercel Cron o tiene la clave correcta
         const authHeader = req.headers['authorization'];
         const cronSecret = process.env.CRON_SECRET;
         
-        // Vercel envía el header Authorization con el valor Bearer <CRON_SECRET>
-        // Si no hay CRON_SECRET configurado, permitimos la ejecución (para desarrollo)
+        // Vercel envÃ­a el header Authorization con el valor Bearer <CRON_SECRET>
+        // Si no hay CRON_SECRET configurado, permitimos la ejecuciÃ³n (para desarrollo)
         if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
             console.log('[CRON] Acceso no autorizado al endpoint de cron');
             return res.status(401).json({
@@ -254,7 +254,7 @@ router.get('/cron', async (req, res, next) => {
             });
         }
 
-        console.log('[CRON] Ejecutando backup semanal automático...');
+        console.log('[CRON] Ejecutando backup semanal automÃ¡tico...');
         
         const backup = new DatabaseBackup();
         const result = await backup.createBackup('weekly');
@@ -263,7 +263,7 @@ router.get('/cron', async (req, res, next) => {
         
         res.json({
             success: true,
-            message: 'Backup semanal automático completado',
+            message: 'Backup semanal automÃ¡tico completado',
             type: 'weekly',
             timestamp: new Date().toISOString(),
             ...result
@@ -272,7 +272,7 @@ router.get('/cron', async (req, res, next) => {
         console.error('[CRON] Error en backup semanal:', error.message);
         res.status(500).json({
             success: false,
-            message: error.message || 'Error al crear backup automático'
+            message: error.message || 'Error al crear backup automÃ¡tico'
         });
     }
 });

@@ -75,7 +75,7 @@ class DatabaseBackup {
                 
                 console.log(`? Backup ${type} creado exitosamente (via=${createdVia}, serverless):`);
                 console.log(`   ?? Archivo: ${backupFileName}`);
-                console.log(`   ?? Tama�o: ${backupSizeInMB} MB`);
+                console.log(`   ?? Tamaño: ${backupSizeInMB} MB`);
                 console.log(`   ?? Almacenado: Supabase backups_storage`);
 
                 return {
@@ -91,17 +91,17 @@ class DatabaseBackup {
                 };
             }
 
-            // Verificar que el backup se cre� correctamente (modo local)
+            // Verificar que el backup se creó correctamente (modo local)
             if (fs.existsSync(backupPath)) {
                 const backupStats = fs.statSync(backupPath);
                 const backupSizeInMB = (backupStats.size / (1024 * 1024)).toFixed(2);
 
                 console.log(`? Backup ${type} creado exitosamente (via=${createdVia}):`);
                 console.log(`   ?? Archivo: ${backupFileName}`);
-                console.log(`   ?? Tama�o: ${backupSizeInMB} MB`);
-                console.log(`   ?? Ubicaci�n: ${backupPath}`);
+                console.log(`   ?? Tamaño: ${backupSizeInMB} MB`);
+                console.log(`   ?? Ubicación: ${backupPath}`);
 
-                // Limpiar backups antiguos solo si es autom�tico
+                // Limpiar backups antiguos solo si es automático
                 if (type !== 'manual') {
                     await this.cleanOldBackups();
                 }

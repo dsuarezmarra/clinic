@@ -1,7 +1,7 @@
 // Vercel Serverless Function Entry Point
-// Este archivo adapta nuestra aplicaci�n Express para funcionar en Vercel
+// Este archivo adapta nuestra aplicación Express para funcionar en Vercel
 
-// ?? SSL bypass SOLO para desarrollo local (nunca en producci�n)
+// ?? SSL bypass SOLO para desarrollo local (nunca en producción)
 if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_TLS_CHECK === 'true') {
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
   console.warn('?? ADVERTENCIA: SSL verification deshabilitada (solo desarrollo)');
@@ -14,7 +14,7 @@ const compression = require('compression');
 const path = require('path');
 
 // ============================================
-// RATE LIMITING - Protecci�n contra brute force
+// RATE LIMITING - Protección contra brute force
 // ============================================
 const rateLimitStore = new Map();
 
@@ -26,7 +26,7 @@ const createRateLimiter = (options = {}) => {
   const {
     windowMs = 60 * 1000,        // 1 minuto por defecto
     max = 100,                    // 100 requests por ventana
-    message = 'Demasiadas solicitudes, intente m�s tarde',
+    message = 'Demasiadas solicitudes, intente más tarde',
     skipInDevelopment = false
   } = options;
 
@@ -97,7 +97,7 @@ const strictLimiter = createRateLimiter({
 const backupLimiter = createRateLimiter({ 
   windowMs: 60 * 60 * 1000,  // 1 hora
   max: 5,                     // 5 backups por hora
-  message: 'L�mite de backups alcanzado, intente en una hora'
+  message: 'Límite de backups alcanzado, intente en una hora'
 });
 
 // Cargar variables de entorno
@@ -116,7 +116,7 @@ const ALLOWED_ORIGINS = [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  // Permitir origen si est� en la whitelist
+  // Permitir origen si está en la whitelist
   if (ALLOWED_ORIGINS.includes(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   } else if (process.env.NODE_ENV !== 'production') {
@@ -155,7 +155,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,  // Necesario para CORS
   crossOriginResourcePolicy: { policy: "cross-origin" },  // Permitir recursos cross-origin
   hsts: {
-    maxAge: 31536000,  // 1 a�o
+    maxAge: 31536000,  // 1 año
     includeSubDomains: true,
     preload: true
   },
@@ -176,9 +176,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Diagn�stico de variables de entorno (SOLO desarrollo)
+// Diagnóstico de variables de entorno (SOLO desarrollo)
 app.get('/api/env-check', (req, res) => {
-  // ?? Bloquear en producci�n
+  // ?? Bloquear en producción
   if (process.env.NODE_ENV === 'production') {
     return res.status(404).json({ error: 'Not found' });
   }
@@ -192,7 +192,7 @@ app.get('/api/env-check', (req, res) => {
   };
   
   res.json({
-    message: 'Diagn�stico de variables de entorno (solo dev)',
+    message: 'Diagnóstico de variables de entorno (solo dev)',
     variables: envVars
   });
 });
@@ -220,7 +220,7 @@ app.get('/api/test-direct', async (req, res) => {
     // Crear cliente con la configuración más simple posible
     const supabase = createClient(url, key);
     
-    console.log('✅ Cliente Supabase creado');
+    console.log('â Cliente Supabase creado');
     
     const { data, error, count } = await supabase
       .from('patients')
@@ -228,7 +228,7 @@ app.get('/api/test-direct', async (req, res) => {
       .limit(5);
     
     if (error) {
-      console.error('❌ Error de Supabase:', JSON.stringify(error));
+      console.error('â Error de Supabase:', JSON.stringify(error));
       return res.status(500).json({
         error: 'Error consultando Supabase',
         details: error,
@@ -237,7 +237,7 @@ app.get('/api/test-direct', async (req, res) => {
       });
     }
     
-    console.log(`✅ Éxito: ${count} pacientes, devolviendo ${data.length}`);
+    console.log(`â Ãxito: ${count} pacientes, devolviendo ${data.length}`);
     
     return res.json({
       success: true,
@@ -246,7 +246,7 @@ app.get('/api/test-direct', async (req, res) => {
     });
     
   } catch (err) {
-    console.error('💥 Excepción en test directo:', err);
+    console.error('ð¥ Excepción en test directo:', err);
     return res.status(500).json({
       error: 'Excepción en servidor',
       message: err.message,
@@ -261,7 +261,7 @@ app.get('/api/test-fetch', async (req, res) => {
     const url = (process.env.SUPABASE_URL || '').trim();
     const key = (process.env.SUPABASE_SERVICE_KEY || '').trim();
     
-    console.log('🧪 Test con fetch directo...');
+    console.log('ð§ª Test con fetch directo...');
     console.log('   URL:', url);
     console.log('   KEY length:', key.length);
     
@@ -309,7 +309,7 @@ app.get('/api/test-fetch', async (req, res) => {
     });
     
   } catch (err) {
-    console.error('💥 Exception:', err);
+    console.error('ð¥ Exception:', err);
     return res.status(500).json({
       error: 'Exception',
       message: err.message
@@ -320,21 +320,21 @@ app.get('/api/test-fetch', async (req, res) => {
 // Importar rutas solo si hay DB configurada
 if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
   try {
-    console.log('🔧 Configurando base de datos...');
-    console.log('   DATABASE_URL:', process.env.DATABASE_URL ? '✅ Configurado' : '❌ NO configurado');
-    console.log('   SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Configurado' : '❌ NO configurado');
-    console.log('   SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '✅ Configurado' : '❌ NO configurado');
+    console.log('ð§ Configurando base de datos...');
+    console.log('   DATABASE_URL:', process.env.DATABASE_URL ? 'â Configurado' : 'â NO configurado');
+    console.log('   SUPABASE_URL:', process.env.SUPABASE_URL ? 'â Configurado' : 'â NO configurado');
+    console.log('   SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? 'â Configurado' : 'â NO configurado');
     console.log('   USE_SUPABASE:', process.env.USE_SUPABASE);
     
-    // 🌉 BRIDGE ROUTES: Usar fetch directo (funciona en Vercel)
+    // ð BRIDGE ROUTES: Usar fetch directo (funciona en Vercel)
     const bridgeRoutes = require('../src/routes/bridge');
     app.use('/api', generalLimiter, bridgeRoutes);
     console.log('Bridge routes con rate limiting cargadas');
     
-    // ⚠️ IMPORTANTE: Aplicar middleware de database ANTES de las rutas legacy
+    // â ï¸ IMPORTANTE: Aplicar middleware de database ANTES de las rutas legacy
     const databaseMiddleware = require('../src/middleware/database-middleware');
     app.use(databaseMiddleware);
-    console.log('✅ Middleware de database aplicado');
+    console.log('â Middleware de database aplicado');
     
     // Rutas legacy (con SDK - pueden no funcionar en Vercel)
     const configRoutes = require('../src/routes/config');
@@ -354,11 +354,11 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
 
     console.log('Todas las rutas cargadas con rate limiting');
   } catch (error) {
-    console.error('⚠️  Error cargando rutas:', error.message);
+    console.error('â ï¸  Error cargando rutas:', error.message);
     console.error('Las rutas de API no estarán disponibles hasta configurar las variables de entorno');
   }
 } else {
-  console.log('⚠️  Variables de entorno no configuradas. Solo /health disponible.');
+  console.log('â ï¸  Variables de entorno no configuradas. Solo /health disponible.');
 }
 
 // Ruta raíz

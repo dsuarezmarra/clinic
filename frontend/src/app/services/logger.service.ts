@@ -1,4 +1,4 @@
-import { Injectable, isDevMode } from '@angular/core';
+﻿import { Injectable, isDevMode } from '@angular/core';
 
 /**
  * Servicio de logging que se desactiva automáticamente en producción
@@ -92,3 +92,4 @@ export class LoggerService {
     }
   }
 }
+

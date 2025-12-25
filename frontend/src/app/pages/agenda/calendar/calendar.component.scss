@@ -1,4 +1,4 @@
-.calendar-day-compact.holiday-compact {
+﻿.calendar-day-compact.holiday-compact {
     background: #ffb3b3;
     color: #b71c1c;
     border: 1px solid #b71c1c;
@@ -230,7 +230,7 @@
     border: 2px solid #2196f3;
 }
 
-/* Día actual que NO es fin de semana debe tener fondo blanco como días normales */
+/* D�a actual que NO es fin de semana debe tener fondo blanco como d�as normales */
 .calendar-day.today:not(.weekend) {
     background: white;
     border: 1px solid #dee2e6;
@@ -294,7 +294,7 @@
     background: #fd7e14;
 }
 
-/* Asegurar que los encabezados de días laborables tengan el color correcto */
+/* Asegurar que los encabezados de d�as laborables tengan el color correcto */
 .day-column-header:not(.weekend) {
     background: #6c757d;
     color: white;
@@ -304,7 +304,7 @@
     background: var(--primary-color);
 }
 
-/* Día actual que NO es fin de semana debe tener el mismo color que días laborables normales */
+/* D�a actual que NO es fin de semana debe tener el mismo color que d�as laborables normales */
 .day-column-header.today:not(.weekend) {
     background: #6c757d;
     color: white;
@@ -363,7 +363,7 @@
     background: #fff3cd;
 }
 
-/* Asegurar que los días de semana (lunes-viernes) tengan fondo blanco */
+/* Asegurar que los d�as de semana (lunes-viernes) tengan fondo blanco */
 .time-slot:not(.weekend) {
     background: white;
 }
@@ -491,7 +491,7 @@
     border-left: 4px solid #1976d2;
 }
 
-/* Citas de 60+ minutos - Color más intenso */
+/* Citas de 60+ minutos - Color m�s intenso */
 .appointment-block.duration-long,
 .appointment-block-continued.duration-long,
 .appointment-card.duration-long {
@@ -577,7 +577,7 @@
     font-family: Arial, sans-serif;
 }
 
-/* Origen de la cita: texto pequeño en esquina inferior derecha dentro del bloque */
+/* Origen de la cita: texto peque�o en esquina inferior derecha dentro del bloque */
 .appointment-origin {
     position: absolute;
     right: 6px;
@@ -597,7 +597,7 @@
     opacity: 1;
 }
 
-/* También para slots continuados */
+/* Tambi�n para slots continuados */
 .appointment-block:hover .appointment-continued-content .appointment-origin {
     opacity: 1;
 }
@@ -880,7 +880,7 @@
     border: 1px solid #0d6efd !important;
 }
 
-/* Botones de vista - Personalización completa */
+/* Botones de vista - Personalizaci�n completa */
 .btn-outline-primary {
     color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
@@ -969,7 +969,7 @@
     background: #a8a8a8;
 }
 
-/* Igualar tamaño de botones de navegación */
+/* Igualar tama�o de botones de navegaci�n */
 .calendar-header .btn {
     min-width: 40px;
     height: 38px;
@@ -977,7 +977,7 @@
     align-items: center;
     justify-content: center;
 }
-/* ===== BOTONES DE ACCI�N R�PIDA ===== */
+/* ===== BOTONES DE ACCI�N R�PIDA ===== */
 .quick-actions {
     border-top: 1px dashed #dee2e6 !important;
     background: #fafafa;
@@ -1046,7 +1046,7 @@
     }
 }
 
-/* Sesi�n pagada - Verde */
+/* Sesi�n pagada - Verde */
 .quick-btn-paid {
     background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     color: white;
@@ -1056,7 +1056,7 @@
     }
 }
 
-/* Sesi�n pendiente - Naranja */
+/* Sesi�n pendiente - Naranja */
 .quick-btn-pending {
     background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
     color: #212529;
@@ -1086,7 +1086,7 @@
     }
 }
 
-/* Responsive para botones de acci�n r�pida */
+/* Responsive para botones de acci�n r�pida */
 @media (max-width: 576px) {
     .quick-actions-grid {
         flex-direction: column;
@@ -1107,3 +1107,4 @@
         max-width: 60px;
     }
 }
+

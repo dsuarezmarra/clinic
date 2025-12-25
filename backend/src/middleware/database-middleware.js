@@ -1,4 +1,4 @@
-const { DatabaseManager } = require('../database/database-manager');
+ï»¿const { DatabaseManager } = require('../database/database-manager');
 
 // ğŸ†• CachÃ© de instancias de DatabaseManager por tenant
 const tenantManagers = new Map();
@@ -24,7 +24,7 @@ async function getManagerForTenant(tenantSlug) {
  * MULTI-TENANT: Crea una instancia de DatabaseManager con el tenantSlug del request
  */
 function injectDatabaseMiddleware(req, res, next) {
-  console.log('??? Middleware DB ejecutándose para:', req.method, req.originalUrl);
+  console.log('??? Middleware DB ejecutï¿½ndose para:', req.method, req.originalUrl);
   
   // ?? Rutas que no requieren tenant (backup cron, health, etc.)
   const bypassTenantRoutes = ['/api/backup/cron', '/api/backup/list', '/api/backup/stats', '/api/backup/status', '/health'];
@@ -37,7 +37,7 @@ function injectDatabaseMiddleware(req, res, next) {
   
   // Detectar placeholder sin resolver (error de build)
   if (tenantSlug && tenantSlug.includes('__VITE_CLIENT_ID__')) {
-    console.warn('?? [Warning] Se detectó placeholder sin resolver: __VITE_CLIENT_ID__');
+    console.warn('?? [Warning] Se detectï¿½ placeholder sin resolver: __VITE_CLIENT_ID__');
     tenantSlug = null;
   }
   
@@ -52,7 +52,7 @@ function injectDatabaseMiddleware(req, res, next) {
   } else if (shouldBypassTenant) {
     console.log(`?? [Bypass] Ruta sin requerimiento de tenant: ${req.originalUrl}`);
   } else {
-    console.log('?? [Warning] Sin tenant slug en producción - petición denegada');
+    console.log('?? [Warning] Sin tenant slug en producciï¿½n - peticiï¿½n denegada');
   }
   
   // Para rutas bypass, simplemente pasar sin requerir DB manager
@@ -64,7 +64,7 @@ function injectDatabaseMiddleware(req, res, next) {
     return next();
   }
   
-  // Inicializar de forma asíncrona pero NO bloquear el servidor
+  // Inicializar de forma asï¿½ncrona pero NO bloquear el servidor
   getManagerForTenant(tenantSlug)
     .then(dbManager => {
       // Si la base de datos estÃ¡ conectada, inyectar el cliente normalmente

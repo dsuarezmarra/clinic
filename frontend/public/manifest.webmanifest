@@ -1,7 +1,7 @@
 {
-  "name": "ClÃ­nica Masaje Corporal Deportivo",
-  "short_name": "ClÃ­nica MCD",
-  "description": "Sistema de gestiÃ³n de citas y pacientes para masaje corporal deportivo",
+  "name": "Clínica Masaje Corporal Deportivo",
+  "short_name": "Clínica MCD",
+  "description": "Sistema de gestión de citas y pacientes para masaje corporal deportivo",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",

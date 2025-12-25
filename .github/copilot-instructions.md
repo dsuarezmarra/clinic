@@ -156,7 +156,7 @@ Necesito implementar un nuevo cliente:
 ### Cliente 1: Masaje Corporal Deportivo
 
 - **ID:** `masajecorporaldeportivo`
-- **Colores:** Azul (#667eea) y Púrpura (#764ba2)
+- **Colores:** Azul (#667eea) y Pï¿½rpura (#764ba2)
 - **Estado:** ? Completo y funcional
 - **URL:** https://masajecorporaldeportivo.vercel.app
 
