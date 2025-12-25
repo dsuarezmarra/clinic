@@ -18,6 +18,10 @@
     {
       "path": "/api/backup/cron",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/whatsapp-reminders/send",
+      "schedule": "0 * * * *"
     }
   ],
   "env": {

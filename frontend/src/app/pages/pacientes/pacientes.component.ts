@@ -60,7 +60,8 @@ export class PacientesComponent implements OnInit, OnDestroy {
     province: '',
     birthDate: '',
     family_contact: '',
-    notes: ''
+    notes: '',
+    whatsappReminders: true // Por defecto activado
   };
   locationProvinces: Array<{ code: string; name: string }> = [];
   locationCities: string[] = [];
@@ -147,8 +148,23 @@ export class PacientesComponent implements OnInit, OnDestroy {
       if (params['edit']) {
         this.loadPatientsAndEdit(params['edit']);
       }
+      // Si viene de la agenda con crear=true, abrir el formulario de nuevo paciente
+      if (params['crear'] === 'true') {
+        this.showCreateForm = true;
+        this.selectedPatient = null;
+        this.resetForm();
+        // Verificar si hay una cita pendiente guardada
+        const pendingAppointment = sessionStorage.getItem('pendingAppointment');
+        if (pendingAppointment) {
+          this.hasPendingAppointment = true;
+          this.notificationService.showInfo('Crea el paciente y luego podrás asignarle la cita');
+        }
+      }
     });
   }
+
+  // Flag para saber si hay una cita pendiente desde la agenda
+  hasPendingAppointment = false;
 
   loadPatients() {
     this.loading = true;
@@ -314,6 +330,23 @@ export class PacientesComponent implements OnInit, OnDestroy {
           this.patients.push(newPatient);
           this.filterPatients();
           this.notificationService.showSuccess('Paciente creado exitosamente');
+          
+          // Si hay una cita pendiente desde la agenda, volver allí con el ID del nuevo paciente
+          if (this.hasPendingAppointment) {
+            const pendingAppointment = sessionStorage.getItem('pendingAppointment');
+            if (pendingAppointment) {
+              // Guardar el ID del nuevo paciente para crear la cita
+              const appointmentData = JSON.parse(pendingAppointment);
+              appointmentData.newPatientId = newPatient.id;
+              appointmentData.newPatientName = `${newPatient.firstName} ${newPatient.lastName}`;
+              sessionStorage.setItem('pendingAppointment', JSON.stringify(appointmentData));
+              
+              // Navegar de vuelta a la agenda
+              this.router.navigate(['/agenda']);
+              this.hasPendingAppointment = false;
+            }
+          }
+          
           this.cancelForm();
           this.loading = false;
         },
@@ -384,7 +417,8 @@ export class PacientesComponent implements OnInit, OnDestroy {
       province: '',
       birthDate: '',
       family_contact: '',
-      notes: ''
+      notes: '',
+      whatsappReminders: true // Por defecto activado
     };
   }
 
@@ -466,7 +500,8 @@ export class PacientesComponent implements OnInit, OnDestroy {
       province: (patient as any).province || '',
       birthDate: formattedBirthDate,
       family_contact: (patient as any).family_contact || '',
-      notes: patient.notes || ''
+      notes: patient.notes || '',
+      whatsappReminders: (patient as any).whatsappReminders !== false // Default true si no existe
     };
 
     // Asegurar que las localidades se carguen según la provincia existente cuando se edita

@@ -933,8 +933,11 @@ export class CalendarComponent implements OnInit {
         };
         sessionStorage.setItem('pendingAppointment', JSON.stringify(pendingAppointment));
         
-        // Navegamos a la página de nuevo paciente
-        this.router.navigate(['/pacientes/nuevo']);
+        // Cerramos el modal actual
+        this.showPatientSelector = false;
+        
+        // Navegamos a la página de pacientes con query param para abrir el formulario
+        this.router.navigate(['/pacientes'], { queryParams: { crear: 'true' } });
     }
 
     getPatientName(appointment: Appointment): string {

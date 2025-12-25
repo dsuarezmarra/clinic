@@ -345,6 +345,7 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     const statsRoutes = require('../src/routes/stats');
     const invoicesRoutes = require('../src/routes/invoices');
     const emailRoutes = require('../src/routes/email');
+    const whatsappRemindersRoutes = require('../src/routes/whatsapp-reminders');
 
 // Registrar rutas legacy con rate limiting
     app.use('/api/config', generalLimiter, configRoutes);
@@ -355,6 +356,7 @@ if (process.env.DATABASE_URL || process.env.SUPABASE_URL) {
     app.use('/api/stats', generalLimiter, statsRoutes);
     app.use('/api/invoices', generalLimiter, invoicesRoutes);
     app.use('/api/email', generalLimiter, emailRoutes);
+    app.use('/api/whatsapp-reminders', generalLimiter, whatsappRemindersRoutes);
 
     console.log('Todas las rutas cargadas con rate limiting');
   } catch (error) {

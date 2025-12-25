@@ -15,6 +15,7 @@ export interface Patient {
   birthDate?: string;
   family_contact?: string;
   notes?: string;
+  whatsappReminders?: boolean; // Recordatorios WhatsApp 24h antes (default: true)
   createdAt: string;
   updatedAt: string;
   totalCredits?: number;
@@ -57,6 +58,7 @@ export interface CreatePatientRequest {
   birthDate?: string;
   family_contact?: string;
   notes?: string;
+  whatsappReminders?: boolean; // Recordatorios WhatsApp 24h antes (default: true)
 }
 
 export interface PatientSearchParams {

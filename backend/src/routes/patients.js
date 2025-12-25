@@ -290,7 +290,9 @@ router.post('/', [
         city: city ? city.trim() : null,
         province: province ? province.trim() : null,
         birthDate: processedBirthDate,
-        notes: notes ? notes.trim() : null
+        notes: notes ? notes.trim() : null,
+        family_contact: req.body.family_contact ? req.body.family_contact.trim() : null,
+        whatsappReminders: req.body.whatsappReminders !== false // Default true
       }
     });
 
@@ -400,6 +402,8 @@ router.put('/:id', [
     if (cp !== undefined) updateData.cp = cp ? cp.trim() : null;
     if (city !== undefined) updateData.city = city ? city.trim() : null;
     if (province !== undefined) updateData.province = province ? province.trim() : null;
+    if (req.body.hasOwnProperty('family_contact')) updateData.family_contact = req.body.family_contact ? req.body.family_contact.trim() : null;
+    if (req.body.hasOwnProperty('whatsappReminders')) updateData.whatsappReminders = req.body.whatsappReminders !== false;
 
     let processedBirthDate = null;
     if (birthDate !== undefined) {
