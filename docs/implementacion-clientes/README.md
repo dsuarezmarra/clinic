@@ -57,25 +57,25 @@ El **CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO.md** incluye TODOS los fixes crític
 
 ### 🎯 **1. Para Implementación Rápida (EMPEZAR AQUÍ)**
 
-| Documento                                  | Descripción                     | Tiempo                               | Uso                                      |
-| ------------------------------------------ | ------------------------------- | ------------------------------------ | ---------------------------------------- |
-| **QUICK_REFERENCE_NUEVO_CLIENTE.md**       | Cheat sheet de 1 página         | 5 min lectura                        | Lookup rápido durante implementación     |
-| **CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO** | ⭐ **VERSIÓN ACTUALIZADA 2025** | 10 min lectura + 60-70 min ejecución | ✅ **USA ESTE** - Con todos los fixes V3 |
-| **CHECKLIST_NUEVO_CLIENTE_RAPIDO.md**      | Versión V1 (outdated)           | ⚠️ **NO USAR** - Falta fixes         | ❌ Versión obsoleta - Reemplazada por V3 |
+| Documento                                  | Descripción                    | Tiempo                                | Uso                                      |
+| ------------------------------------------ | ------------------------------- | ------------------------------------- | ---------------------------------------- |
+| **QUICK_REFERENCE_NUEVO_CLIENTE.md**       | Cheat sheet de 1 página        | 5 min lectura                         | Lookup rápido durante implementación   |
+| **CHECKLIST_NUEVO_CLIENTE_V3_ACTUALIZADO** | ⭐ **VERSIÓN ACTUALIZADA 2025** | 10 min lectura + 60-70 min ejecución | ✅ **USA ESTE** - Con todos los fixes V3  |
+| **CHECKLIST_NUEVO_CLIENTE_RAPIDO.md**      | Versión V1 (outdated)          | ⚠️ **NO USAR** - Falta fixes        | ❌ Versión obsoleta - Reemplazada por V3 |
 
 ### 📖 **2. Para Entender el Sistema Completo**
 
-| Documento                              | Descripción                            | Líneas | Uso                                          |
-| -------------------------------------- | -------------------------------------- | ------ | -------------------------------------------- |
-| **TEMPLATE_NUEVO_CLIENTE_COMPLETO.md** | Guía exhaustiva con todos los detalles | 2,500+ | Primera implementación o referencia completa |
-| **LECCIONES_APRENDIDAS_ACTIFISIO.md**  | Bugs encontrados y soluciones          | 1,000+ | Troubleshooting y debugging                  |
-| **ANTES_DESPUES_CAMBIOS_VISUALES.md**  | Comparación de código antes/después    | 1,200+ | Entender qué cambió y por qué                |
+| Documento                              | Descripción                            | Líneas | Uso                                           |
+| -------------------------------------- | --------------------------------------- | ------- | --------------------------------------------- |
+| **TEMPLATE_NUEVO_CLIENTE_COMPLETO.md** | Guía exhaustiva con todos los detalles | 2,500+  | Primera implementación o referencia completa |
+| **LECCIONES_APRENDIDAS_ACTIFISIO.md**  | Bugs encontrados y soluciones           | 1,000+  | Troubleshooting y debugging                   |
+| **ANTES_DESPUES_CAMBIOS_VISUALES.md**  | Comparación de código antes/después  | 1,200+  | Entender qué cambió y por qué              |
 
 ### 🗂️ **3. Recursos Adicionales**
 
-| Documento                           | Descripción                       | Uso                |
-| ----------------------------------- | --------------------------------- | ------------------ |
-| **CREAR_TABLAS_NUEVO_CLIENTE.md**   | SQL script completo para Supabase | Crear tablas y RLS |
+| Documento                           | Descripción                      | Uso                 |
+| ----------------------------------- | --------------------------------- | ------------------- |
+| **CREAR_TABLAS_NUEVO_CLIENTE.md**   | SQL script completo para Supabase | Crear tablas y RLS  |
 | **INDICE_MAESTRO_DOCUMENTACION.md** | Índice de 26+ docs del proyecto   | Navegación general |
 
 ---
