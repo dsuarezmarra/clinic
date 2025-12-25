@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 
 import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 import { CreateCreditPackRequest } from '../../models/credit.model';
@@ -22,11 +24,15 @@ import { UtilsService } from '../../services/utils.service';
   templateUrl: './pacientes.component.html',
   styleUrl: './pacientes.component.scss'
 })
-export class PacientesComponent implements OnInit {
+export class PacientesComponent implements OnInit, OnDestroy {
   patients: Patient[] = [];
   filteredPatients: Patient[] = [];
   loading = false;
   searchTerm = '';
+  
+  // Subject para debounce de búsqueda
+  private searchSubject = new Subject<string>();
+  private searchSubscription?: Subscription;
 
   // Pagination states
   currentPage = 1;
@@ -86,6 +92,39 @@ export class PacientesComponent implements OnInit {
 
   ngOnInit() {
     this.loadPatients();
+    
+    // Configurar búsqueda con debounce para evitar race conditions
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(300), // Esperar 300ms después de la última tecla
+      distinctUntilChanged(), // Solo si el valor cambió
+      tap(() => {
+        this.loading = true;
+        this.currentPage = 1; // Reiniciar a página 1
+      }),
+      switchMap(searchTerm => {
+        const params = {
+          page: this.currentPage,
+          limit: this.pageSize,
+          search: searchTerm.trim() || undefined
+        };
+        return this.patientService.getPatients(params);
+      })
+    ).subscribe({
+      next: (response: PatientListResponse) => {
+        this.patients = response.patients;
+        this.filteredPatients = response.patients;
+        this.totalPatients = response.pagination.total;
+        this.totalPages = response.pagination.pages;
+        this.loading = false;
+        this.cdr.detectChanges();
+        this.loadBatchPricePreview();
+      },
+      error: (error: any) => {
+        console.error('Error loading patients:', error);
+        this.notificationService.showError('Error al cargar pacientes');
+        this.loading = false;
+      }
+    });
 
     // Cargar provincias y localidades para autocompletar
     this.patientService.getLocations().subscribe({
@@ -219,9 +258,14 @@ export class PacientesComponent implements OnInit {
     });
   }
 
+  ngOnDestroy() {
+    // Limpiar subscripción para evitar memory leaks
+    this.searchSubscription?.unsubscribe();
+  }
+
   filterPatients() {
-    // La bÃºsqueda ahora se maneja en el servidor
-    this.onSearchChange();
+    // Usar Subject con debounce para evitar race conditions
+    this.searchSubject.next(this.searchTerm);
   }
 
   savePatient() {
