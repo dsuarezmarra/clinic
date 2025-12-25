@@ -123,7 +123,8 @@ router.get('/', [
     const offset = (page - 1) * limit;
 
     // Detectar el tipo de base de datos para usar funciones compatibles
-    const isSupabase = process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '1';
+    // Detectamos Supabase si: 1) hay req.prisma (shim inyectado), o 2) variable de entorno
+    const isSupabase = !!req.prisma || process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '1';
     const isSQLite = process.env.DATABASE_URL?.includes('file:') || process.env.DATABASE_URL_SQLITE || false;
 
     let patients, total;
