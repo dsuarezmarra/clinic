@@ -40,6 +40,28 @@ function sanitizeSearchInput(input) {
   return sanitized.trim();
 }
 
+/**
+ * Normaliza texto eliminando acentos/diacríticos
+ * Ejemplo: "María" -> "Maria", "José" -> "Jose"
+ */
+function normalizeAccents(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Verifica si un texto coincide con el término de búsqueda (accent-insensitive)
+ * @param {string} text - Texto a verificar
+ * @param {string} searchTerm - Término de búsqueda
+ * @returns {boolean}
+ */
+function matchesSearch(text, searchTerm) {
+  if (!text || !searchTerm) return false;
+  const normalizedText = normalizeAccents(text).toLowerCase();
+  const normalizedSearch = normalizeAccents(searchTerm).toLowerCase();
+  return normalizedText.includes(normalizedSearch);
+}
+
 // Middleware para eliminar email si es cadena vacÃ­a antes de validar en PUT
 router.use('/:id', (req, res, next) => {
   if (req.method === 'PUT' && req.body && req.body.email === '') {
@@ -104,41 +126,72 @@ router.get('/', [
     const isSupabase = process.env.USE_SUPABASE === 'true' || process.env.USE_SUPABASE === '1';
     const isSQLite = process.env.DATABASE_URL?.includes('file:') || process.env.DATABASE_URL_SQLITE || false;
 
-    const where = {};
-    if (search) {
-      // Sanitizar entrada para prevenir SQL injection
+    let patients, total;
+
+    if (search && isSupabase) {
+      // Para Supabase: búsqueda accent-insensitive en JavaScript
+      // Traemos todos los pacientes y filtramos en el servidor
       const safeSearch = sanitizeSearchInput(search);
-      if (safeSearch) {
-        where.OR = [
-          { firstName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
-          { lastName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
-          { phone: { contains: safeSearch } }
-        ];
-      }
-    }
+      
+      const allPatients = await getDb(req).patients.findMany({
+        orderBy: { firstName: 'asc' }
+      });
 
-    const queryOptions = {
-      where,
-      skip: offset,
-      take: parseInt(limit),
-      orderBy: isSupabase ? { firstName: 'asc' } : [{ firstName: 'asc' }, { lastName: 'asc' }],
-      include: {
-        _count: { select: { appointments: true, files: true, creditPacks: true } },
-        creditPacks: { select: { unitsRemaining: true } }
-      }
-    };
+      // Filtrar con búsqueda accent-insensitive
+      const filteredPatients = allPatients.filter(patient => {
+        return matchesSearch(patient.firstName, safeSearch) ||
+               matchesSearch(patient.lastName, safeSearch) ||
+               (patient.phone && patient.phone.includes(safeSearch));
+      });
 
-    const [patients, total] = await Promise.all([
-      getDb(req).patients.findMany(queryOptions),
-      getDb(req).patients.count({ where: search ? where : {} })
-    ]);
-
-    if (isSupabase) {
-      patients.sort((a, b) => {
+      // Ordenar los resultados filtrados
+      filteredPatients.sort((a, b) => {
         const firstNameCompare = a.firstName.localeCompare(b.firstName);
         if (firstNameCompare !== 0) return firstNameCompare;
         return a.lastName.localeCompare(b.lastName);
       });
+
+      total = filteredPatients.length;
+      
+      // Aplicar paginación después del filtrado
+      patients = filteredPatients.slice(offset, offset + parseInt(limit));
+    } else {
+      // Para Prisma/SQLite u otras BD, o cuando no hay búsqueda
+      const where = {};
+      if (search) {
+        const safeSearch = sanitizeSearchInput(search);
+        if (safeSearch) {
+          where.OR = [
+            { firstName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
+            { lastName: { contains: safeSearch, ...(!isSQLite && !isSupabase ? { mode: 'insensitive' } : {}) } },
+            { phone: { contains: safeSearch } }
+          ];
+        }
+      }
+
+      const queryOptions = {
+        where,
+        skip: offset,
+        take: parseInt(limit),
+        orderBy: isSupabase ? { firstName: 'asc' } : [{ firstName: 'asc' }, { lastName: 'asc' }],
+        include: {
+          _count: { select: { appointments: true, files: true, creditPacks: true } },
+          creditPacks: { select: { unitsRemaining: true } }
+        }
+      };
+
+      [patients, total] = await Promise.all([
+        getDb(req).patients.findMany(queryOptions),
+        getDb(req).patients.count({ where: search ? where : {} })
+      ]);
+
+      if (isSupabase && !search) {
+        patients.sort((a, b) => {
+          const firstNameCompare = a.firstName.localeCompare(b.firstName);
+          if (firstNameCompare !== 0) return firstNameCompare;
+          return a.lastName.localeCompare(b.lastName);
+        });
+      }
     }
 
     const safePatients = Array.isArray(patients) ? patients : [];
