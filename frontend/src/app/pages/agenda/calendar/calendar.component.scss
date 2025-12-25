@@ -737,7 +737,8 @@
     -webkit-tap-highlight-color: rgba(0, 123, 255, 0.2);
     min-height: 60px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    background: white;
 }
 
 .patient-card:hover,
@@ -975,4 +976,134 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+/* ===== BOTONES DE ACCIÓN RÁPIDA ===== */
+.quick-actions {
+    border-top: 1px dashed #dee2e6 !important;
+    background: #fafafa;
+    border-radius: 0 0 6px 6px;
+    margin: 8px -12px -12px -12px;
+    padding: 10px 12px 8px 12px;
+}
+
+.quick-actions-grid {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.quick-action-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.quick-action-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.quick-action-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.quick-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 42px;
+    
+    i {
+        font-size: 9px;
+    }
+    
+    &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    
+    &:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+/* Sesión pagada - Verde */
+.quick-btn-paid {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #218838 0%, #1aa179 100%);
+    }
+}
+
+/* Sesión pendiente - Naranja */
+.quick-btn-pending {
+    background: linear-gradient(135deg, #fd7e14 0%, #ffc107 100%);
+    color: #212529;
+    
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #e96b02 0%, #e0a800 100%);
+    }
+}
+
+/* Bono pagado - Azul */
+.quick-btn-bono-paid {
+    background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+    color: white;
+    
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0b5ed7 0%, #520dc2 100%);
+    }
+}
+
+/* Bono pendiente - Rosa/Magenta */
+.quick-btn-bono-pending {
+    background: linear-gradient(135deg, #d63384 0%, #e91e63 100%);
+    color: white;
+    
+    &:hover:not(:disabled) {
+        background: linear-gradient(135deg, #b02a6f 0%, #c2185b 100%);
+    }
+}
+
+/* Responsive para botones de acción rápida */
+@media (max-width: 576px) {
+    .quick-actions-grid {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .quick-action-group {
+        width: 100%;
+    }
+    
+    .quick-action-buttons {
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .quick-btn {
+        flex: 1;
+        max-width: 60px;
+    }
 }

@@ -28,6 +28,8 @@ export interface Patient {
   appointments?: Appointment[];
   // UI-only preview field for small price snippets loaded on list views
   pricePreview?: string;
+  // UI-only flag to track credit creation in progress
+  isCreatingCredit?: boolean;
 }
 
 export interface PatientFile {

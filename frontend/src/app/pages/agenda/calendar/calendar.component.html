@@ -263,7 +263,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <strong>{{ patient.firstName }} {{ patient.lastName }}</strong>
-                                <div class="text-muted small">{{ patient.phone }}</div>
+                                <div class="text-muted small">{{ patient.phone || 'Sin teléfono' }}</div>
                                 <div class="text-muted small" *ngIf="patient.email">{{ patient.email }}</div>
                             </div>
                             <div class="text-end">
@@ -271,6 +271,75 @@
                                     [class.bg-danger]="(patient.activeSessions || 0) === 0">
                                     {{ patient.activeSessions || 0 }} sesiones
                                 </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Botones de acción rápida para añadir sesiones/bonos -->
+                        <div class="quick-actions mt-2 pt-2 border-top" (click)="$event.stopPropagation()">
+                            <div class="quick-actions-grid">
+                                <!-- Columna: Sesiones -->
+                                <div class="quick-action-group">
+                                    <span class="quick-action-label">1 Sesi&#243;n</span>
+                                    <div class="quick-action-buttons">
+                                        <button class="quick-btn quick-btn-paid" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'sesion', 30, 1, true, $event)"
+                                                title="1 Sesi&#243;n de 30 minutos - PAGADA">
+                                            30' &#10003;
+                                        </button>
+                                        <button class="quick-btn quick-btn-pending" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'sesion', 30, 1, false, $event)"
+                                                title="1 Sesi&#243;n de 30 minutos - PENDIENTE de pago">
+                                            30' &#8987;
+                                        </button>
+                                        <button class="quick-btn quick-btn-paid" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'sesion', 60, 1, true, $event)"
+                                                title="1 Sesi&#243;n de 60 minutos - PAGADA">
+                                            60' &#10003;
+                                        </button>
+                                        <button class="quick-btn quick-btn-pending" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'sesion', 60, 1, false, $event)"
+                                                title="1 Sesi&#243;n de 60 minutos - PENDIENTE de pago">
+                                            60' &#8987;
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Columna: Bonos -->
+                                <div class="quick-action-group">
+                                    <span class="quick-action-label">Bono 5 sesiones</span>
+                                    <div class="quick-action-buttons">
+                                        <button class="quick-btn quick-btn-bono-paid" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'bono', 30, 1, true, $event)"
+                                                title="Bono de 5 sesiones de 30 minutos - PAGADO">
+                                            30' &#10003;
+                                        </button>
+                                        <button class="quick-btn quick-btn-bono-pending" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'bono', 30, 1, false, $event)"
+                                                title="Bono de 5 sesiones de 30 minutos - PENDIENTE de pago">
+                                            30' &#8987;
+                                        </button>
+                                        <button class="quick-btn quick-btn-bono-paid" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'bono', 60, 1, true, $event)"
+                                                title="Bono de 5 sesiones de 60 minutos - PAGADO">
+                                            60' &#10003;
+                                        </button>
+                                        <button class="quick-btn quick-btn-bono-pending" 
+                                                [disabled]="patient.isCreatingCredit"
+                                                (click)="quickCreateCredit(patient, 'bono', 60, 1, false, $event)"
+                                                title="Bono de 5 sesiones de 60 minutos - PENDIENTE de pago">
+                                            60' &#8987;
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div *ngIf="patient.isCreatingCredit" class="text-center mt-1">
+                                <small class="text-muted"><i class="fas fa-spinner fa-spin"></i> Creando...</small>
                             </div>
                         </div>
                     </div>

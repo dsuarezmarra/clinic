@@ -502,9 +502,10 @@ export class CalendarComponent implements OnInit {
         patient.isCreatingCredit = true;
         
         const paidLabel = paid ? 'pagado' : 'pendiente';
+        const sessionsInBono = minutes === 60 ? 5 : 5; // Ambos bonos tienen 5 sesiones
         const label = type === 'sesion' 
             ? `Sesión ${minutes}min (${paidLabel})` 
-            : `Bono ${quantity}x${minutes}min (${paidLabel})`;
+            : `Bono ${sessionsInBono} sesiones de ${minutes}min (${paidLabel})`;
         
         const creditPack = {
             patientId: patient.id!,
@@ -521,7 +522,17 @@ export class CalendarComponent implements OnInit {
                 console.log('? Credit pack creado:', result);
                 
                 // Actualizar el contador de sesiones del paciente localmente
-                const addedUnits = quantity;
+                // La lógica debe coincidir con el backend:
+                // - Sesión: 1 unidad por sesión de 30min, 2 unidades por sesión de 60min
+                // - Bono 30min: 5 unidades (sesiones de 30min) por cada quantity
+                // - Bono 60min: 10 unidades (equivalente a 5 sesiones de 60min) por cada quantity
+                let addedUnits: number;
+                if (type === 'sesion') {
+                    addedUnits = minutes === 60 ? quantity * 2 : quantity;
+                } else {
+                    // Bono: 5 sesiones de 30min o 10 unidades (5 sesiones de 60min)
+                    addedUnits = minutes === 60 ? quantity * 10 : quantity * 5;
+                }
                 patient.activeSessions = (patient.activeSessions || 0) + addedUnits;
                 
                 // También actualizar en la lista filtrada y principal
@@ -685,18 +696,34 @@ export class CalendarComponent implements OnInit {
         this.editingPaid = (status === 'paid');
     }
 
+    /**
+     * Normaliza un texto eliminando acentos y diacríticos
+     * para búsqueda insensible a acentos
+     */
+    private normalizeText(text: string): string {
+        return text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
     filterPatients() {
         if (!this.patientSearchTerm.trim()) {
             this.filteredPatients = [...this.patients];
             return;
         }
-        const searchTerm = this.patientSearchTerm.toLowerCase();
-        this.filteredPatients = this.patients.filter(patient =>
-            patient.firstName.toLowerCase().includes(searchTerm) ||
-            patient.lastName.toLowerCase().includes(searchTerm) ||
-            patient.phone.includes(searchTerm) ||
-            (patient.email && patient.email.toLowerCase().includes(searchTerm))
-        );
+        const searchTerm = this.normalizeText(this.patientSearchTerm);
+        this.filteredPatients = this.patients.filter(patient => {
+            const firstName = this.normalizeText(patient.firstName || '');
+            const lastName = this.normalizeText(patient.lastName || '');
+            const phone = patient.phone || '';
+            const email = this.normalizeText(patient.email || '');
+            
+            return firstName.includes(searchTerm) ||
+                   lastName.includes(searchTerm) ||
+                   phone.includes(searchTerm) ||
+                   email.includes(searchTerm);
+        });
     }
 
     updateAppointment() {
