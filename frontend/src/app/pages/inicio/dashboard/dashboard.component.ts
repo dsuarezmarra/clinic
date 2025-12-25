@@ -229,19 +229,24 @@ export class DashboardComponent implements OnInit {
         this.showEditModal = true;
     }
 
-    // Filtrar pacientes por búsqueda
+    // Normalizar acentos para búsqueda (elimina tildes y diacríticos)
+    private normalizeAccents(str: string): string {
+        return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    }
+
+    // Filtrar pacientes por búsqueda (insensible a acentos)
     filterPatients() {
         if (!this.patientSearchTerm.trim()) {
             this.filteredPatients = [...this.patients];
             return;
         }
 
-        const searchTerm = this.patientSearchTerm.toLowerCase();
+        const searchTerm = this.normalizeAccents(this.patientSearchTerm);
         this.filteredPatients = this.patients.filter(patient =>
-            patient.firstName.toLowerCase().includes(searchTerm) ||
-            patient.lastName.toLowerCase().includes(searchTerm) ||
+            this.normalizeAccents(patient.firstName).includes(searchTerm) ||
+            this.normalizeAccents(patient.lastName).includes(searchTerm) ||
             patient.phone.includes(searchTerm) ||
-            (patient.email && patient.email.toLowerCase().includes(searchTerm))
+            (patient.email && this.normalizeAccents(patient.email).includes(searchTerm))
         );
     }
 
