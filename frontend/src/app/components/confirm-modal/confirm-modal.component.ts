@@ -50,7 +50,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.5);
-      z-index: 1040;
+      z-index: 2000;
     }
 
     .modal-container {
@@ -62,7 +62,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1050;
+      z-index: 2010;
     }
 
     .modal-dialog {

@@ -114,13 +114,13 @@ class AppointmentService {
     return creditPacks.reduce((total, pack) => total + pack.unitsRemaining, 0);
   }
 
-  // ===== GESTIÃ“N DE CRÃ‰DITOS =====
+  // ===== GESTIÓN DE CRÉDITOS =====
 
   /**
-   * Consume crÃ©ditos para una cita de forma idempotente
+   * Consume créditos para una cita de forma idempotente
    */
   async consumeCredits(patientId, appointmentId, durationMinutes, transaction = null) {
-    const tx = transaction || prisma;
+    const tx = transaction || this.prisma;
     
     console.log(`[CONSUME CREDITS] Appointment ${appointmentId}, Duration: ${durationMinutes}min`);
     
@@ -208,10 +208,10 @@ class AppointmentService {
   }
 
   /**
-   * Revierte el consumo de crÃ©ditos
+   * Revierte el consumo de créditos
    */
   async revertCredits(appointmentId, transaction = null) {
-    const tx = transaction || prisma;
+    const tx = transaction || this.prisma;
     
     console.log(`[REVERT CREDITS] Appointment ${appointmentId}`);
     
