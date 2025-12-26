@@ -25,20 +25,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
     @HostListener('document:keydown.escape')
     onEscapeKey() {
         if (this.isDragging) {
+            console.log('[CalendarComponent] Escape pressed, resetting drag state');
             this.resetDragState();
         }
-    }
-
-    // HostListener para resetear estado de drag cuando se suelta el mouse en cualquier parte
-    @HostListener('document:mouseup')
-    onGlobalMouseUp() {
-        // Dar un pequeño delay para que el evento de drop tenga tiempo de ejecutarse
-        setTimeout(() => {
-            if (this.isDragging) {
-                console.warn('[CalendarComponent] Drag state was stuck, resetting...');
-                this.resetDragState();
-            }
-        }, 100);
     }
 
     // Método centralizado para resetear el estado de drag
