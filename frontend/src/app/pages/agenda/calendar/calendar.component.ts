@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // ...existing code... (PatientSelectorComponent removed because it's not used in the template)
@@ -20,7 +20,36 @@ import { PatientService } from '../../../services/patient.service';
     templateUrl: './calendar.component.html',
     styleUrls: ['./calendar.component.scss']
 })
-export class CalendarComponent implements OnInit {
+export class CalendarComponent implements OnInit, OnDestroy {
+    // HostListener para resetear estado de drag cuando se presiona Escape
+    @HostListener('document:keydown.escape')
+    onEscapeKey() {
+        if (this.isDragging) {
+            this.resetDragState();
+        }
+    }
+
+    // HostListener para resetear estado de drag cuando se suelta el mouse en cualquier parte
+    @HostListener('document:mouseup')
+    onGlobalMouseUp() {
+        // Dar un pequeño delay para que el evento de drop tenga tiempo de ejecutarse
+        setTimeout(() => {
+            if (this.isDragging) {
+                console.warn('[CalendarComponent] Drag state was stuck, resetting...');
+                this.resetDragState();
+            }
+        }, 100);
+    }
+
+    // Método centralizado para resetear el estado de drag
+    private resetDragState() {
+        this.isDragging = false;
+        this.draggedAppointment = null;
+        this.dropTargetSlot = null;
+        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    }
+
     // Devuelve true si el día es festivo (puedes personalizar la lista de festivos)
     isHoliday(day: Date): boolean {
         const holidays = [
@@ -200,6 +229,11 @@ export class CalendarComponent implements OnInit {
             // Actualizar las citas que usan este pack
             this.updateAppointmentPaymentStatus(change.packId, change.paid);
         });
+    }
+
+    ngOnDestroy() {
+        // Limpiar estado de drag al destruir el componente
+        this.resetDragState();
     }
 
 
@@ -1250,16 +1284,8 @@ export class CalendarComponent implements OnInit {
      * Finalizar el arrastre
      */
     onDragEnd(event: DragEvent) {
-        this.isDragging = false;
-        this.draggedAppointment = null;
-        this.dropTargetSlot = null;
-        
-        // Quitar clase visual
-        const target = event.target as HTMLElement;
-        target.classList.remove('dragging');
-        
-        // Quitar clases de todos los slots
-        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+        // Usar el método centralizado para resetear estado
+        this.resetDragState();
     }
 
     /**
