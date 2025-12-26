@@ -41,6 +41,9 @@ export class PatientService {
     if (params?.limit) {
       httpParams = httpParams.set('limit', params.limit.toString());
     }
+    
+    // Añadir timestamp para evitar caché del navegador (problema 304 Not Modified)
+    httpParams = httpParams.set('_t', Date.now().toString());
 
     return this.http.get<PatientListResponse>(this.apiUrl, {
       params: httpParams,

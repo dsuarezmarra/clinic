@@ -369,7 +369,14 @@ class DatabaseManager {
                             query = query.order(orderField, { ascending: orderDirection === 'asc' });
                         }
                         
-                        if (options.take) {
+                        // Supabase usa .range(start, end) para paginación
+                        // options.skip = offset, options.take = limit
+                        if (typeof options.skip === 'number' && typeof options.take === 'number') {
+                            const start = options.skip;
+                            const end = options.skip + options.take - 1;
+                            query = query.range(start, end);
+                            console.log(`[DB-SHIM] patients.findMany: Aplicando paginación - range(${start}, ${end})`);
+                        } else if (options.take) {
                             query = query.limit(options.take);
                         }
                         
