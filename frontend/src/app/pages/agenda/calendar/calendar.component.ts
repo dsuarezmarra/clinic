@@ -126,9 +126,18 @@ export class CalendarComponent implements OnInit, OnDestroy {
         document.removeEventListener('mousemove', this.onMouseMoveDuringDrag);
         document.removeEventListener('mouseup', this.onMouseUpDuringDrag);
 
+        // Guardar referencia a la cita antes de resetear
+        const appointmentToEdit = this.draggedAppointment;
+
         if (this.isDragging && this.draggedAppointment && this.dropTargetSlot) {
+            // Hubo drag real con destino válido -> ejecutar drop
             this.executeDrop();
+        } else if (!this.isDragging && appointmentToEdit) {
+            // NO hubo drag (click simple) -> abrir modal de edición
+            this.resetDragState();
+            this.openEditAppointmentModal(appointmentToEdit);
         } else {
+            // Cancelado o sin destino válido
             this.resetDragState();
         }
     };
@@ -1426,18 +1435,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
 
     /**
-     * Handler de click en una cita - abre el modal de edición
-     * Solo se ejecuta si no hubo drag
+     * Handler de click en una cita - ya no necesario para abrir modal
+     * Se mantiene solo para stopPropagation y evitar que el click llegue al slot padre
      */
     onAppointmentClick(event: MouseEvent, appointment: Appointment) {
-        // Si estamos arrastrando, no abrir el modal
-        if (this.isDragging) {
-            event.stopPropagation();
-            return;
-        }
-        
-        // Abrir el modal de edición
-        this.openEditAppointmentModal(appointment);
+        // Prevenir que el click llegue al slot padre (que abriría el modal de crear cita)
         event.stopPropagation();
     }
 
