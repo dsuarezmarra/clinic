@@ -305,15 +305,21 @@ export class PacientesComponent implements OnInit, OnDestroy {
       console.log('📝 Actualizando paciente ID:', this.selectedPatient.id);
       this.patientService.updatePatient(this.selectedPatient.id, this.patientFormData).subscribe({
         next: (updatedPatient: Patient) => {
+          // Actualizar en ambas listas directamente
           const index = this.patients.findIndex(p => p.id === updatedPatient.id);
           if (index !== -1) {
             this.patients[index] = updatedPatient;
-            this.filterPatients();
           }
+          const filteredIndex = this.filteredPatients.findIndex(p => p.id === updatedPatient.id);
+          if (filteredIndex !== -1) {
+            this.filteredPatients[filteredIndex] = updatedPatient;
+          }
+          
+          // Forzar detección de cambios
+          this.cdr.detectChanges();
+          
           this.notificationService.showSuccess('Paciente actualizado exitosamente');
           this.cancelForm();
-          // Recargar todos los datos después de actualizar el paciente
-          this.loadPatients();
           this.loading = false;
         },
         error: (error: any) => {
@@ -327,8 +333,13 @@ export class PacientesComponent implements OnInit, OnDestroy {
       console.log('🆕 Creando nuevo paciente');
       this.patientService.createPatient(this.patientFormData).subscribe({
         next: (newPatient: Patient) => {
-          this.patients.push(newPatient);
-          this.filterPatients();
+          // Añadir a ambas listas directamente
+          this.patients.unshift(newPatient); // Al principio para que sea visible
+          this.filteredPatients.unshift(newPatient);
+          this.totalPatients++;
+          
+          // Forzar detección de cambios
+          this.cdr.detectChanges();
           this.notificationService.showSuccess('Paciente creado exitosamente');
           
           // Si hay una cita pendiente desde la agenda, volver allí con el ID del nuevo paciente
@@ -553,10 +564,18 @@ export class PacientesComponent implements OnInit, OnDestroy {
     if (!this.patientToDelete) return;
 
     this.deleteLoading = true;
-    this.patientService.deletePatient(this.patientToDelete.id).subscribe({
+    const patientIdToDelete = this.patientToDelete.id;
+    
+    this.patientService.deletePatient(patientIdToDelete).subscribe({
       next: () => {
-        this.patients = this.patients.filter(p => p.id !== this.patientToDelete!.id);
-        this.filterPatients();
+        // Eliminar de ambas listas inmediatamente
+        this.patients = this.patients.filter(p => p.id !== patientIdToDelete);
+        this.filteredPatients = this.filteredPatients.filter(p => p.id !== patientIdToDelete);
+        this.totalPatients = Math.max(0, this.totalPatients - 1);
+        
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+        
         this.notificationService.showSuccess('Paciente eliminado exitosamente');
         this.cancelDeletePatient();
       },
