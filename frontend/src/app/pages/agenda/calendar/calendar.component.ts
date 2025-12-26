@@ -22,21 +22,18 @@ import { PatientService } from '../../../services/patient.service';
 })
 export class CalendarComponent implements OnInit, OnDestroy {
     // ========================================
-    // NUEVO SISTEMA DE DRAG & DROP (Mouse Events)
+    // SISTEMA DE DRAG & DROP (Mouse Events)
     // ========================================
     
-    // Estado del drag con mouse events
+    // Estado del drag
     private dragStartPos: { x: number; y: number } | null = null;
-    private dragThreshold = 5; // píxeles mínimos para considerar un drag
+    private dragThreshold = 8; // píxeles mínimos para considerar un drag
     private dragGhostElement: HTMLElement | null = null;
-    private boundMouseMove: ((e: MouseEvent) => void) | null = null;
-    private boundMouseUp: ((e: MouseEvent) => void) | null = null;
 
     // HostListener para resetear estado de drag cuando se presiona Escape
     @HostListener('document:keydown.escape')
     onEscapeKey() {
         if (this.isDragging) {
-            console.log('[CalendarComponent] Escape pressed, cancelling drag');
             this.cancelDrag();
         }
     }
@@ -48,9 +45,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.dropTargetSlot = null;
         this.dragStartPos = null;
         this.removeDragGhost();
-        this.removeGlobalMouseListeners();
         document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-        document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
     }
@@ -101,56 +96,42 @@ export class CalendarComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Agregar solo listener de mousemove (para detectar inicio de drag)
-    private addMouseMoveListener() {
-        this.boundMouseMove = this.onGlobalMouseMove.bind(this);
-        document.addEventListener('mousemove', this.boundMouseMove);
-    }
-
-    // Agregar listener de mouseup (solo cuando hay drag real)
-    private addMouseUpListener() {
-        this.boundMouseUp = this.onGlobalMouseUp.bind(this);
-        document.addEventListener('mouseup', this.boundMouseUp);
-    }
-
-    // Remover listeners globales de mouse
-    private removeGlobalMouseListeners() {
-        if (this.boundMouseMove) {
-            document.removeEventListener('mousemove', this.boundMouseMove);
-            this.boundMouseMove = null;
-        }
-        if (this.boundMouseUp) {
-            document.removeEventListener('mouseup', this.boundMouseUp);
-            this.boundMouseUp = null;
-        }
-    }
-
-    // Handler global de mousemove
-    private onGlobalMouseMove(event: MouseEvent) {
+    // Handler de mousemove durante drag
+    private onMouseMoveDuringDrag = (event: MouseEvent) => {
         if (!this.dragStartPos || !this.draggedAppointment) return;
 
         const dx = event.clientX - this.dragStartPos.x;
         const dy = event.clientY - this.dragStartPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Si no hemos superado el threshold, no iniciar drag visual
+        // Si no hemos superado el threshold, no hacer nada
         if (!this.isDragging && distance >= this.dragThreshold) {
+            // Iniciar drag visual
             this.isDragging = true;
-            this.wasRealDrag = true; // Marcar que hubo un drag real
             document.body.style.cursor = 'grabbing';
             document.body.style.userSelect = 'none';
-            event.preventDefault(); // Prevenir selección solo cuando hay drag real
-            // Agregar listener de mouseup solo cuando hay drag real
-            this.addMouseUpListener();
             this.createDragGhost(this.draggedAppointment, event.clientX, event.clientY);
         }
 
         if (this.isDragging) {
-            event.preventDefault(); // Continuar previniendo durante el drag
+            event.preventDefault();
             this.updateDragGhost(event.clientX, event.clientY);
             this.updateDropTarget(event.clientX, event.clientY);
         }
-    }
+    };
+
+    // Handler de mouseup durante drag
+    private onMouseUpDuringDrag = (event: MouseEvent) => {
+        // Remover listeners
+        document.removeEventListener('mousemove', this.onMouseMoveDuringDrag);
+        document.removeEventListener('mouseup', this.onMouseUpDuringDrag);
+
+        if (this.isDragging && this.draggedAppointment && this.dropTargetSlot) {
+            this.executeDrop();
+        } else {
+            this.resetDragState();
+        }
+    };
 
     // Buscar slot de destino bajo el cursor
     private updateDropTarget(x: number, y: number) {
@@ -177,15 +158,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
                     time: time
                 };
             }
-        }
-    }
-
-    // Handler global de mouseup
-    private onGlobalMouseUp(event: MouseEvent) {
-        if (this.isDragging && this.draggedAppointment && this.dropTargetSlot) {
-            this.executeDrop();
-        } else {
-            this.cancelDrag();
         }
     }
 
@@ -228,6 +200,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     // Cancelar el drag
     private cancelDrag() {
+        document.removeEventListener('mousemove', this.onMouseMoveDuringDrag);
+        document.removeEventListener('mouseup', this.onMouseUpDuringDrag);
         this.resetDragState();
     }
 
@@ -1429,9 +1403,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // DRAG & DROP FUNCTIONALITY (Mouse Events)
     // ========================================
 
-    // Indica si hubo un drag real (movimiento significativo)
-    private wasRealDrag = false;
-
     /**
      * Iniciar posible arrastre de una cita (mousedown)
      * Solo prepara el estado, el drag real inicia al mover el mouse
@@ -1445,35 +1416,29 @@ export class CalendarComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // NO llamar preventDefault() aquí para permitir que click funcione si no hay drag
-        
         // Guardar posición inicial y cita
         this.dragStartPos = { x: event.clientX, y: event.clientY };
         this.draggedAppointment = appointment;
-        this.wasRealDrag = false;
         
-        // Solo agregar listener de mousemove para detectar si hay movimiento
-        this.addMouseMoveListener();
-        
-        // Agregar un listener temporal de mouseup para limpiar si se suelta sin mover
-        const cleanupOnMouseUp = () => {
-            document.removeEventListener('mouseup', cleanupOnMouseUp);
-            // Solo limpiar si NO estamos en un drag real
-            if (!this.isDragging) {
-                this.removeGlobalMouseListeners();
-                this.dragStartPos = null;
-                this.draggedAppointment = null;
-            }
-        };
-        document.addEventListener('mouseup', cleanupOnMouseUp, { once: true });
+        // Agregar listeners para detectar drag
+        document.addEventListener('mousemove', this.onMouseMoveDuringDrag);
+        document.addEventListener('mouseup', this.onMouseUpDuringDrag);
     }
 
     /**
-     * Determina si el click debe abrir el modal de edición
-     * Retorna true solo si no hubo un drag real
+     * Handler de click en una cita - abre el modal de edición
+     * Solo se ejecuta si no hubo drag
      */
-    shouldOpenEditModal(): boolean {
-        return !this.wasRealDrag;
+    onAppointmentClick(event: MouseEvent, appointment: Appointment) {
+        // Si estamos arrastrando, no abrir el modal
+        if (this.isDragging) {
+            event.stopPropagation();
+            return;
+        }
+        
+        // Abrir el modal de edición
+        this.openEditAppointmentModal(appointment);
+        event.stopPropagation();
     }
 
     /**
