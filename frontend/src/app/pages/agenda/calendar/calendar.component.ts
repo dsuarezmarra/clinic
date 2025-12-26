@@ -21,12 +21,23 @@ import { PatientService } from '../../../services/patient.service';
     styleUrls: ['./calendar.component.scss']
 })
 export class CalendarComponent implements OnInit, OnDestroy {
+    // ========================================
+    // NUEVO SISTEMA DE DRAG & DROP (Mouse Events)
+    // ========================================
+    
+    // Estado del drag con mouse events
+    private dragStartPos: { x: number; y: number } | null = null;
+    private dragThreshold = 5; // píxeles mínimos para considerar un drag
+    private dragGhostElement: HTMLElement | null = null;
+    private boundMouseMove: ((e: MouseEvent) => void) | null = null;
+    private boundMouseUp: ((e: MouseEvent) => void) | null = null;
+
     // HostListener para resetear estado de drag cuando se presiona Escape
     @HostListener('document:keydown.escape')
     onEscapeKey() {
         if (this.isDragging) {
-            console.log('[CalendarComponent] Escape pressed, resetting drag state');
-            this.resetDragState();
+            console.log('[CalendarComponent] Escape pressed, cancelling drag');
+            this.cancelDrag();
         }
     }
 
@@ -35,8 +46,183 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.isDragging = false;
         this.draggedAppointment = null;
         this.dropTargetSlot = null;
+        this.dragStartPos = null;
+        this.removeDragGhost();
+        this.removeGlobalMouseListeners();
         document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
         document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
+
+    // Crear elemento fantasma para visualizar el drag
+    private createDragGhost(appointment: Appointment, x: number, y: number) {
+        this.removeDragGhost();
+        
+        const ghost = document.createElement('div');
+        ghost.className = 'drag-ghost';
+        ghost.innerHTML = `
+            <strong>${this.getPatientName(appointment)}</strong>
+            <small>${this.formatTimeRange(appointment.start, appointment.end)}</small>
+        `;
+        ghost.style.cssText = `
+            position: fixed;
+            left: ${x}px;
+            top: ${y}px;
+            background: var(--primary-color, #667eea);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+            z-index: 10000;
+            font-size: 12px;
+            transform: translate(-50%, -50%);
+            opacity: 0.9;
+            max-width: 200px;
+        `;
+        document.body.appendChild(ghost);
+        this.dragGhostElement = ghost;
+    }
+
+    // Actualizar posición del fantasma
+    private updateDragGhost(x: number, y: number) {
+        if (this.dragGhostElement) {
+            this.dragGhostElement.style.left = `${x}px`;
+            this.dragGhostElement.style.top = `${y}px`;
+        }
+    }
+
+    // Eliminar elemento fantasma
+    private removeDragGhost() {
+        if (this.dragGhostElement) {
+            this.dragGhostElement.remove();
+            this.dragGhostElement = null;
+        }
+    }
+
+    // Agregar listeners globales de mouse
+    private addGlobalMouseListeners() {
+        this.boundMouseMove = this.onGlobalMouseMove.bind(this);
+        this.boundMouseUp = this.onGlobalMouseUp.bind(this);
+        document.addEventListener('mousemove', this.boundMouseMove);
+        document.addEventListener('mouseup', this.boundMouseUp);
+    }
+
+    // Remover listeners globales de mouse
+    private removeGlobalMouseListeners() {
+        if (this.boundMouseMove) {
+            document.removeEventListener('mousemove', this.boundMouseMove);
+            this.boundMouseMove = null;
+        }
+        if (this.boundMouseUp) {
+            document.removeEventListener('mouseup', this.boundMouseUp);
+            this.boundMouseUp = null;
+        }
+    }
+
+    // Handler global de mousemove
+    private onGlobalMouseMove(event: MouseEvent) {
+        if (!this.dragStartPos || !this.draggedAppointment) return;
+
+        const dx = event.clientX - this.dragStartPos.x;
+        const dy = event.clientY - this.dragStartPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Si no hemos superado el threshold, no iniciar drag visual
+        if (!this.isDragging && distance >= this.dragThreshold) {
+            this.isDragging = true;
+            this.wasRealDrag = true; // Marcar que hubo un drag real
+            document.body.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none';
+            event.preventDefault(); // Prevenir selección solo cuando hay drag real
+            this.createDragGhost(this.draggedAppointment, event.clientX, event.clientY);
+        }
+
+        if (this.isDragging) {
+            event.preventDefault(); // Continuar previniendo durante el drag
+            this.updateDragGhost(event.clientX, event.clientY);
+            this.updateDropTarget(event.clientX, event.clientY);
+        }
+    }
+
+    // Buscar slot de destino bajo el cursor
+    private updateDropTarget(x: number, y: number) {
+        // Limpiar destino anterior
+        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+        this.dropTargetSlot = null;
+
+        // Buscar el elemento bajo el cursor
+        const elementsUnder = document.elementsFromPoint(x, y);
+        const timeSlotElement = elementsUnder.find(el => 
+            el.classList.contains('time-slot') || el.classList.contains('time-slot-row')
+        ) as HTMLElement;
+
+        if (timeSlotElement) {
+            timeSlotElement.classList.add('drop-target');
+            
+            // Obtener datos del slot desde atributos data-*
+            const dateStr = timeSlotElement.dataset['date'];
+            const time = timeSlotElement.dataset['time'];
+            
+            if (dateStr && time) {
+                this.dropTargetSlot = {
+                    date: new Date(dateStr),
+                    time: time
+                };
+            }
+        }
+    }
+
+    // Handler global de mouseup
+    private onGlobalMouseUp(event: MouseEvent) {
+        if (this.isDragging && this.draggedAppointment && this.dropTargetSlot) {
+            this.executeDrop();
+        } else {
+            this.cancelDrag();
+        }
+    }
+
+    // Ejecutar el drop de la cita
+    private executeDrop() {
+        if (!this.draggedAppointment || !this.dropTargetSlot) {
+            this.resetDragState();
+            return;
+        }
+
+        const { date, time } = this.dropTargetSlot;
+        
+        // Verificar que el slot no esté ocupado por otra cita
+        const existingAppointment = this.getAppointmentForTimeSlot(date, time);
+        if (existingAppointment && existingAppointment.id !== this.draggedAppointment.id) {
+            this.notificationService.showError('Este horario ya está ocupado');
+            this.resetDragState();
+            return;
+        }
+
+        // Calcular nueva fecha/hora de inicio
+        const [hours, minutes] = time.split(':').map(Number);
+        const newStart = new Date(date);
+        newStart.setHours(hours, minutes, 0, 0);
+        
+        // Calcular nueva fecha/hora de fin (mantener la misma duración)
+        const oldStart = new Date(this.draggedAppointment.start);
+        const oldEnd = new Date(this.draggedAppointment.end);
+        const durationMs = oldEnd.getTime() - oldStart.getTime();
+        const newEnd = new Date(newStart.getTime() + durationMs);
+
+        // Guardar referencia antes de resetear
+        const appointmentId = this.draggedAppointment.id;
+        
+        this.resetDragState();
+        
+        // Actualizar la cita
+        this.moveAppointment(appointmentId, newStart, newEnd);
+    }
+
+    // Cancelar el drag
+    private cancelDrag() {
+        this.resetDragState();
     }
 
     // Devuelve true si el día es festivo (puedes personalizar la lista de festivos)
@@ -1234,120 +1420,42 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
 
     // ========================================
-    // DRAG & DROP FUNCTIONALITY
+    // DRAG & DROP FUNCTIONALITY (Mouse Events)
     // ========================================
 
-    /**
-     * Iniciar el arrastre de una cita
-     */
-    onDragStart(event: DragEvent, appointment: Appointment) {
-        this.isDragging = true;
-        this.draggedAppointment = appointment;
-        
-        // Establecer datos para el drag
-        if (event.dataTransfer) {
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('text/plain', appointment.id);
-        }
-        
-        // Añadir clase visual al elemento arrastrado
-        const target = event.target as HTMLElement;
-        setTimeout(() => target.classList.add('dragging'), 0);
-    }
+    // Indica si hubo un drag real (movimiento significativo)
+    private wasRealDrag = false;
 
     /**
-     * Iniciar el arrastre de una cita en vista semanal
-     * Solo permite arrastrar si es el inicio de la cita
+     * Iniciar posible arrastre de una cita (mousedown)
+     * Solo prepara el estado, el drag real inicia al mover el mouse
      */
-    onDragStartWeekly(event: DragEvent, appointment: Appointment, day: Date, timeSlot: string) {
+    onAppointmentMouseDown(event: MouseEvent, appointment: Appointment, day: Date, timeSlot: string) {
+        // Solo botón izquierdo
+        if (event.button !== 0) return;
+        
         // Solo permitir arrastrar desde el slot de inicio de la cita
         if (!this.isAppointmentStart(appointment, day, timeSlot)) {
-            event.preventDefault();
             return;
         }
+
+        // NO llamar preventDefault() aquí para permitir que click funcione si no hay drag
         
-        this.onDragStart(event, appointment);
+        // Guardar posición inicial y cita
+        this.dragStartPos = { x: event.clientX, y: event.clientY };
+        this.draggedAppointment = appointment;
+        this.wasRealDrag = false;
+        
+        // Agregar listeners globales
+        this.addGlobalMouseListeners();
     }
 
     /**
-     * Finalizar el arrastre
+     * Determina si el click debe abrir el modal de edición
+     * Retorna true solo si no hubo un drag real
      */
-    onDragEnd(event: DragEvent) {
-        // Usar el método centralizado para resetear estado
-        this.resetDragState();
-    }
-
-    /**
-     * Cuando se arrastra sobre un slot
-     */
-    onDragOver(event: DragEvent, date: Date, timeSlot: string) {
-        event.preventDefault();
-        
-        if (!this.draggedAppointment) return;
-        
-        // Verificar que no sea el mismo slot
-        const existingAppointment = this.getAppointmentForTimeSlot(date, timeSlot);
-        if (existingAppointment && existingAppointment.id === this.draggedAppointment.id) {
-            return;
-        }
-        
-        if (event.dataTransfer) {
-            event.dataTransfer.dropEffect = 'move';
-        }
-        
-        this.dropTargetSlot = { date, time: timeSlot };
-        
-        // Añadir clase visual al slot destino
-        const target = event.currentTarget as HTMLElement;
-        target.classList.add('drop-target');
-    }
-
-    /**
-     * Cuando sale del slot
-     */
-    onDragLeave(event: DragEvent) {
-        const target = event.currentTarget as HTMLElement;
-        target.classList.remove('drop-target');
-        this.dropTargetSlot = null;
-    }
-
-    /**
-     * Cuando se suelta la cita en un slot
-     */
-    onDrop(event: DragEvent, date: Date, timeSlot: string) {
-        event.preventDefault();
-        
-        const target = event.currentTarget as HTMLElement;
-        target.classList.remove('drop-target');
-        
-        if (!this.draggedAppointment) return;
-        
-        // Verificar que el slot no esté ocupado por otra cita
-        const existingAppointment = this.getAppointmentForTimeSlot(date, timeSlot);
-        if (existingAppointment && existingAppointment.id !== this.draggedAppointment.id) {
-            this.notificationService.showError('Este horario ya está ocupado');
-            this.isDragging = false;
-            this.draggedAppointment = null;
-            return;
-        }
-        
-        // Calcular nueva fecha/hora de inicio
-        const [hours, minutes] = timeSlot.split(':').map(Number);
-        const newStart = new Date(date);
-        newStart.setHours(hours, minutes, 0, 0);
-        
-        // Calcular nueva fecha/hora de fin (mantener la misma duración)
-        const oldStart = new Date(this.draggedAppointment.start);
-        const oldEnd = new Date(this.draggedAppointment.end);
-        const durationMs = oldEnd.getTime() - oldStart.getTime();
-        const newEnd = new Date(newStart.getTime() + durationMs);
-        
-        // Actualizar la cita
-        this.moveAppointment(this.draggedAppointment.id, newStart, newEnd);
-        
-        this.isDragging = false;
-        this.draggedAppointment = null;
-        this.dropTargetSlot = null;
+    shouldOpenEditModal(): boolean {
+        return !this.wasRealDrag;
     }
 
     /**

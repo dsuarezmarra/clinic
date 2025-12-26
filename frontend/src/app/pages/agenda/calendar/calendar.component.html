@@ -136,10 +136,9 @@
                     class="time-slot" 
                     [class.weekend]="isWeekend(day)"
                     [class.drop-target]="isDropTarget(day, timeSlot)"
-                    (click)="!isDragging && openCreateAppointmentModal(day, timeSlot)"
-                    (dragover)="onDragOver($event, day, timeSlot)"
-                    (dragleave)="onDragLeave($event)"
-                    (drop)="onDrop($event, day, timeSlot)">
+                    [attr.data-date]="day.toISOString()"
+                    [attr.data-time]="timeSlot"
+                    (click)="!isDragging && openCreateAppointmentModal(day, timeSlot)">
 
                     <div *ngIf="getAppointmentForTimeSlot(day, timeSlot) as appointment" 
                         [ngClass]="{
@@ -151,11 +150,9 @@
                             'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
                             'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
                         }" 
-                        draggable="true"
-                        (mousedown)="$event.stopPropagation()"
-                        (dragstart)="onDragStartWeekly($event, appointment, day, timeSlot); $event.stopPropagation()"
-                        (dragend)="onDragEnd($event)"
-                        (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+                        [class.dragging]="isDragging && draggedAppointment?.id === appointment.id"
+                        (mousedown)="onAppointmentMouseDown($event, appointment, day, timeSlot)"
+                        (click)="!isDragging && openEditAppointmentModal(appointment); $event.stopPropagation()">
                         <ng-container *ngIf="isAppointmentStart(appointment, day, timeSlot); else occupiedSlot">
                             <div class="appointment-content">
                                 <strong class="appointment-name">{{ getPatientName(appointment) }}</strong>
@@ -189,10 +186,9 @@
                 <div *ngFor="let timeSlot of timeSlots" 
                     class="time-slot-row"
                     [class.drop-target]="isDropTarget(currentDate, timeSlot)"
-                    (click)="openCreateAppointmentModal(currentDate, timeSlot)"
-                    (dragover)="onDragOver($event, currentDate, timeSlot)"
-                    (dragleave)="onDragLeave($event)"
-                    (drop)="onDrop($event, currentDate, timeSlot)">
+                    [attr.data-date]="currentDate.toISOString()"
+                    [attr.data-time]="timeSlot"
+                    (click)="!isDragging && openCreateAppointmentModal(currentDate, timeSlot)">
 
                     <div class="time-label">{{ timeSlot }}</div>
 
@@ -205,10 +201,9 @@
                                 'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
                                 'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
                             }" 
-                            draggable="true"
-                            (dragstart)="onDragStart($event, appointment)"
-                            (dragend)="onDragEnd($event)"
-                            (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+                            [class.dragging]="isDragging && draggedAppointment?.id === appointment.id"
+                            (mousedown)="onAppointmentMouseDown($event, appointment, currentDate, timeSlot)"
+                            (click)="!isDragging && openEditAppointmentModal(appointment); $event.stopPropagation()">
 
                             <div class="d-flex justify-content-between align-items-start">
                                 <div class="drag-handle">
