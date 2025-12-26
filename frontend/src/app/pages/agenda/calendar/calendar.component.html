@@ -139,7 +139,7 @@
                     class="time-slot" 
                     [class.weekend]="isWeekend(day)"
                     [class.drop-target]="isDropTarget(day, timeSlot)"
-                    (click)="openCreateAppointmentModal(day, timeSlot)"
+                    (click)="!isDragging && openCreateAppointmentModal(day, timeSlot)"
                     (dragover)="onDragOver($event, day, timeSlot)"
                     (dragleave)="onDragLeave($event)"
                     (drop)="onDrop($event, day, timeSlot)">
@@ -154,7 +154,7 @@
                             'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
                             'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
                         }" 
-                        [attr.draggable]="isAppointmentStart(appointment, day, timeSlot) ? 'true' : 'false'"
+                        draggable="true"
                         (dragstart)="onDragStartWeekly($event, appointment, day, timeSlot)"
                         (dragend)="onDragEnd($event)"
                         (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
