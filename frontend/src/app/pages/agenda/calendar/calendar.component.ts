@@ -1233,6 +1233,20 @@ export class CalendarComponent implements OnInit {
     }
 
     /**
+     * Iniciar el arrastre de una cita en vista semanal
+     * Solo permite arrastrar si es el inicio de la cita
+     */
+    onDragStartWeekly(event: DragEvent, appointment: Appointment, day: Date, timeSlot: string) {
+        // Solo permitir arrastrar desde el slot de inicio de la cita
+        if (!this.isAppointmentStart(appointment, day, timeSlot)) {
+            event.preventDefault();
+            return;
+        }
+        
+        this.onDragStart(event, appointment);
+    }
+
+    /**
      * Finalizar el arrastre
      */
     onDragEnd(event: DragEvent) {

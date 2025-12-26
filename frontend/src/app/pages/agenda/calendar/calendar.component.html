@@ -154,8 +154,8 @@
                             'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
                             'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
                         }" 
-                        [attr.draggable]="isAppointmentStart(appointment, day, timeSlot)"
-                        (dragstart)="isAppointmentStart(appointment, day, timeSlot) && onDragStart($event, appointment)"
+                        [attr.draggable]="isAppointmentStart(appointment, day, timeSlot) ? 'true' : 'false'"
+                        (dragstart)="onDragStartWeekly($event, appointment, day, timeSlot)"
                         (dragend)="onDragEnd($event)"
                         (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
                         <ng-container *ngIf="isAppointmentStart(appointment, day, timeSlot); else occupiedSlot">
