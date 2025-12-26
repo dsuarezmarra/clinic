@@ -183,7 +183,14 @@ router.get('/patients', async (req, res) => {
         const matchFirst = matchesSearch(patient.firstName, search);
         const matchLast = matchesSearch(patient.lastName, search);
         const matchPhone = patient.phone && patient.phone.includes(search);
-        return matchFirst || matchLast || matchPhone;
+        
+        // Buscar también en nombre completo (firstName + lastName y viceversa)
+        const fullName = `${patient.firstName || ''} ${patient.lastName || ''}`;
+        const fullNameReverse = `${patient.lastName || ''} ${patient.firstName || ''}`;
+        const matchFullName = matchesSearch(fullName, search);
+        const matchFullNameReverse = matchesSearch(fullNameReverse, search);
+        
+        return matchFirst || matchLast || matchPhone || matchFullName || matchFullNameReverse;
       });
       
       console.log(`[SEARCH] Pacientes filtrados: ${filteredPatients.length}`);
