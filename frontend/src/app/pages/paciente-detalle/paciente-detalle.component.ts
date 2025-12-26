@@ -2,9 +2,11 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ConfirmModalComponent } from '../../components/confirm-modal/confirm-modal.component';
 import { CreateCreditPackRequest, CreditSummary } from '../../models/credit.model';
 import { FileUploadData, PatientFile } from '../../models/file.model';
 import { Patient } from '../../models/patient.model';
+import { SafeUrlPipe } from '../../pipes/safe-url.pipe';
 import { AppointmentService } from '../../services/appointment.service';
 import { ConfigService } from '../../services/config.service';
 import { CreditService } from '../../services/credit.service';
@@ -16,7 +18,7 @@ import { UtilsService } from '../../services/utils.service';
 
 @Component({
     selector: 'app-paciente-detalle',
-    imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, ConfirmModalComponent, SafeUrlPipe],
     templateUrl: './paciente-detalle.component.html',
     styleUrls: ['./paciente-detalle.component.scss']
 })
@@ -57,6 +59,20 @@ export class PacienteDetalleComponent implements OnInit {
         paid: false,
         notes: ''
     };
+
+    // Modal de confirmación para eliminar pack de créditos
+    showDeletePackConfirm = false;
+    packToDelete: any = null;
+    deletePackLoading = false;
+
+    // Modal de confirmación para eliminar archivo
+    showDeleteFileConfirm = false;
+    fileToDelete: PatientFile | null = null;
+    deleteFileLoading = false;
+
+    // Modal de vista previa de archivo
+    showFilePreview = false;
+    previewFile: PatientFile | null = null;
 
     constructor(
         private route: ActivatedRoute,
@@ -280,20 +296,34 @@ export class PacienteDetalleComponent implements OnInit {
         });
     }
 
-    deleteCreditPack(packId: string) {
-        if (confirm('¿Estás seguro de que quieres eliminar este pack de créditos? Esta acción eliminará también todos los consumos registrados del pack.')) {
-            this.creditService.deleteCreditPack(packId).subscribe({
-                next: () => {
-                    console.log('Credit pack deleted successfully');
-                    this.notificationService.showSuccess('Pack de créditos eliminado correctamente');
-                    window.location.reload();
-                },
-                error: (error: any) => {
-                    console.error('Error deleting credit pack:', error);
-                    this.notificationService.showError('Error al eliminar el pack de créditos');
-                }
-            });
-        }
+    deleteCreditPack(pack: any) {
+        this.packToDelete = pack;
+        this.showDeletePackConfirm = true;
+    }
+
+    confirmDeletePack() {
+        if (!this.packToDelete) return;
+
+        this.deletePackLoading = true;
+        this.creditService.deleteCreditPack(this.packToDelete.id).subscribe({
+            next: () => {
+                console.log('Credit pack deleted successfully');
+                this.notificationService.showSuccess('Pack de créditos eliminado correctamente');
+                this.cancelDeletePack();
+                window.location.reload();
+            },
+            error: (error: any) => {
+                console.error('Error deleting credit pack:', error);
+                this.notificationService.showError('Error al eliminar el pack de créditos');
+                this.deletePackLoading = false;
+            }
+        });
+    }
+
+    cancelDeletePack() {
+        this.showDeletePackConfirm = false;
+        this.packToDelete = null;
+        this.deletePackLoading = false;
     }
 
     togglePackPaymentStatus(pack: any) {
@@ -598,19 +628,33 @@ export class PacienteDetalleComponent implements OnInit {
     }
 
     deleteFile(file: PatientFile) {
-        if (confirm(`¿Está seguro de que desea eliminar el archivo \"${file.originalName}\"?`)) {
-            this.fileService.deleteFile(file.id).subscribe({
-                next: () => {
-                    this.patientFiles = this.patientFiles.filter(f => f.id !== file.id);
-                    this.notificationService.showSuccess('Archivo eliminado exitosamente');
-                    this.cdr.detectChanges();
-                },
-                error: (error) => {
-                    console.error('Error deleting file:', error);
-                    this.notificationService.showError('Error al eliminar el archivo');
-                }
-            });
-        }
+        this.fileToDelete = file;
+        this.showDeleteFileConfirm = true;
+    }
+
+    confirmDeleteFile() {
+        if (!this.fileToDelete) return;
+
+        this.deleteFileLoading = true;
+        this.fileService.deleteFile(this.fileToDelete.id).subscribe({
+            next: () => {
+                this.patientFiles = this.patientFiles.filter(f => f.id !== this.fileToDelete!.id);
+                this.notificationService.showSuccess('Archivo eliminado exitosamente');
+                this.cancelDeleteFile();
+                this.cdr.detectChanges();
+            },
+            error: (error) => {
+                console.error('Error deleting file:', error);
+                this.notificationService.showError('Error al eliminar el archivo');
+                this.deleteFileLoading = false;
+            }
+        });
+    }
+
+    cancelDeleteFile() {
+        this.showDeleteFileConfirm = false;
+        this.fileToDelete = null;
+        this.deleteFileLoading = false;
     }
 
     getFileIcon(mimeType: string): string {
@@ -631,6 +675,24 @@ export class PacienteDetalleComponent implements OnInit {
 
     isImageFile(mimeType: string): boolean {
         return mimeType.startsWith('image/');
+    }
+
+    isPdfFile(mimeType: string): boolean {
+        return mimeType === 'application/pdf';
+    }
+
+    canPreviewFile(mimeType: string): boolean {
+        return this.isImageFile(mimeType) || this.isPdfFile(mimeType);
+    }
+
+    openFilePreview(file: PatientFile): void {
+        this.previewFile = file;
+        this.showFilePreview = true;
+    }
+
+    closeFilePreview(): void {
+        this.showFilePreview = false;
+        this.previewFile = null;
     }
 
     getFilePreviewUrl(fileId: string): string {

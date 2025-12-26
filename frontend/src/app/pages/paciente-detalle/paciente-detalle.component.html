@@ -295,35 +295,49 @@
                                 <button class="nav-link"
                                     [ngClass]="{'text-dark': activeTab === 'historial-tab', 'text-white': activeTab !== 'historial-tab'}"
                                     [class.active]="activeTab === 'historial-tab'"
-                                    (click)="setActiveTab('historial-tab')" type="button" role="tab">
-                                    <i class="bi bi-calendar-event me-2"></i>
+                                    [attr.aria-selected]="activeTab === 'historial-tab'"
+                                    aria-controls="historial-panel"
+                                    (click)="setActiveTab('historial-tab')" type="button" role="tab"
+                                    id="historial-tab-btn">
+                                    <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>
                                     Historial de Citas
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link"
                                     [ngClass]="{'text-dark': activeTab === 'archivos-tab', 'text-white': activeTab !== 'archivos-tab'}"
-                                    [class.active]="activeTab === 'archivos-tab'" (click)="setActiveTab('archivos-tab')"
-                                    type="button" role="tab">
-                                    <i class="bi bi-files me-2"></i>
+                                    [class.active]="activeTab === 'archivos-tab'" 
+                                    [attr.aria-selected]="activeTab === 'archivos-tab'"
+                                    aria-controls="archivos-panel"
+                                    (click)="setActiveTab('archivos-tab')"
+                                    type="button" role="tab"
+                                    id="archivos-tab-btn">
+                                    <i class="bi bi-files me-2" aria-hidden="true"></i>
                                     Archivos
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link"
                                     [ngClass]="{'text-dark': activeTab === 'creditos-tab', 'text-white': activeTab !== 'creditos-tab'}"
-                                    [class.active]="activeTab === 'creditos-tab'" (click)="setActiveTab('creditos-tab')"
-                                    type="button" role="tab">
-                                    <i class="bi bi-credit-card me-2"></i>
+                                    [class.active]="activeTab === 'creditos-tab'" 
+                                    [attr.aria-selected]="activeTab === 'creditos-tab'"
+                                    aria-controls="creditos-panel"
+                                    (click)="setActiveTab('creditos-tab')"
+                                    type="button" role="tab"
+                                    id="creditos-tab-btn">
+                                    <i class="bi bi-credit-card me-2" aria-hidden="true"></i>
                                     Sesiones
                                 </button>
                             </li>
                         </ul>
                     </div>
                     <div class="card-body">
-                        <div>
+                        <div class="tab-content">
                             <!-- Tab de citas -->
-                            <div *ngIf="activeTab === 'historial-tab'" id="citas-tab">
+                            <div *ngIf="activeTab === 'historial-tab'" 
+                                 id="historial-panel" 
+                                 role="tabpanel" 
+                                 aria-labelledby="historial-tab-btn">
                                 <div *ngIf="loadingAppointments" class="text-center text-muted py-4">
                                     <div class="spinner-border text-primary" role="status">
                                         <span class="visually-hidden">Cargando...</span>
@@ -368,7 +382,10 @@
                             </div>
 
                             <!-- Tab de archivos -->
-                            <div *ngIf="activeTab === 'archivos-tab'" id="archivos-tab">
+                            <div *ngIf="activeTab === 'archivos-tab'" 
+                                 id="archivos-panel" 
+                                 role="tabpanel" 
+                                 aria-labelledby="archivos-tab-btn">
                                 <!-- Formulario de subida de archivos -->
                                 <div class="card mb-4">
                                     <div class="card-header">
@@ -458,9 +475,12 @@
                                                             <div class="d-flex align-items-start">
                                                                 <!-- Vista previa o icono -->
                                                                 <div class="me-3 flex-shrink-0">
-                                                                    <div class="file-preview-container">
+                                                                    <div class="file-preview-container"
+                                                                        [class.clickable]="canPreviewFile(file.mimeType)"
+                                                                        (click)="canPreviewFile(file.mimeType) && openFilePreview(file)"
+                                                                        [title]="canPreviewFile(file.mimeType) ? 'Clic para ver en grande' : ''">
                                                                         <img *ngIf="isImageFile(file.mimeType)"
-                                                                            [src]="file.storedPath"
+                                                                            [src]="getFilePreviewUrl(file.id)"
                                                                             class="img-thumbnail file-preview"
                                                                             [alt]="file.originalName"
                                                                             style="width: 60px; height: 60px; object-fit: cover;"
@@ -470,6 +490,10 @@
                                                                             style="width: 60px; height: 60px; background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 0.375rem;">
                                                                             <i [class]="'bi ' + getFileIcon(file.mimeType) + ' text-primary'"
                                                                                 style="font-size: 24px;"></i>
+                                                                        </div>
+                                                                        <!-- Indicador de zoom para archivos que se pueden previsualizar -->
+                                                                        <div *ngIf="canPreviewFile(file.mimeType)" class="preview-overlay">
+                                                                            <i class="bi bi-zoom-in"></i>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -494,11 +518,11 @@
                                                                         class="d-flex align-items-center text-muted small">
                                                                         <span class="me-3">
                                                                             <i class="bi bi-calendar3 me-1"></i>
-                                                                            {{ file.createdAt | date:'dd/MM/yyyy' }}
+                                                                            {{ file.uploadDate | date:'dd/MM/yyyy' }}
                                                                         </span>
                                                                         <span>
                                                                             <i class="bi bi-file-earmark me-1"></i>
-                                                                            {{ formatFileSize(file.size) }}
+                                                                            {{ formatFileSize(file.fileSize) }}
                                                                         </span>
                                                                     </div>
                                                                 </div>
@@ -536,7 +560,10 @@
                             </div>
 
                             <!-- Tab de Sesiones -->
-                            <div *ngIf="activeTab === 'creditos-tab'" id="creditos-tab">
+                            <div *ngIf="activeTab === 'creditos-tab'" 
+                                 id="creditos-panel" 
+                                 role="tabpanel" 
+                                 aria-labelledby="creditos-tab-btn">
                                 <!-- Lista de packs de Sesiones -->
                                 <div *ngIf="getCreditPacks().length > 0; else noCredits">
                                     <div class="row">
@@ -654,7 +681,7 @@
                                                             Creado: {{ formatDate(pack.createdAt) }}
                                                         </small>
                                                         <button type="button" class="btn btn-sm btn-outline-danger"
-                                                            (click)="deleteCreditPack(pack.id)" title="Eliminar pack">
+                                                            (click)="deleteCreditPack(pack)" title="Eliminar pack">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </div>
@@ -701,5 +728,98 @@
             <i class="bi bi-arrow-left me-2"></i>
             Volver a Pacientes
         </button>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar pack de créditos -->
+<app-confirm-modal
+    [isOpen]="showDeletePackConfirm"
+    title="Eliminar Pack de Créditos"
+    message="¿Está seguro de que desea eliminar este pack de créditos?"
+    details="Esta acción eliminará también todos los consumos registrados del pack. Esta acción no se puede deshacer."
+    itemLabel="Pack"
+    [itemName]="packToDelete?.label || ''"
+    confirmText="Eliminar"
+    type="danger"
+    [loading]="deletePackLoading"
+    (confirm)="confirmDeletePack()"
+    (cancel)="cancelDeletePack()">
+</app-confirm-modal>
+
+<!-- Modal de confirmación para eliminar archivo -->
+<app-confirm-modal
+    [isOpen]="showDeleteFileConfirm"
+    title="Eliminar Archivo"
+    message="¿Está seguro de que desea eliminar este archivo?"
+    details="Esta acción no se puede deshacer."
+    itemLabel="Archivo"
+    [itemName]="fileToDelete?.originalName || ''"
+    confirmText="Eliminar"
+    type="danger"
+    [loading]="deleteFileLoading"
+    (confirm)="confirmDeleteFile()"
+    (cancel)="cancelDeleteFile()">
+</app-confirm-modal>
+
+<!-- Modal de vista previa de archivo -->
+<div class="file-preview-modal" *ngIf="showFilePreview && previewFile" (click)="closeFilePreview()">
+    <div class="preview-modal-content" (click)="$event.stopPropagation()">
+        <!-- Header del modal -->
+        <div class="preview-modal-header">
+            <div class="preview-file-info">
+                <i [class]="'bi ' + getFileIcon(previewFile.mimeType) + ' me-2'"></i>
+                <span class="preview-file-name">{{ previewFile.originalName }}</span>
+                <span class="badge ms-2" [class]="getCategoryColor(previewFile.category) + ' bg-opacity-10 border'">
+                    {{ getCategoryName(previewFile.category) }}
+                </span>
+            </div>
+            <div class="preview-actions">
+                <button type="button" class="btn btn-sm btn-outline-light me-2" (click)="downloadFile(previewFile)" title="Descargar">
+                    <i class="bi bi-download"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-light" (click)="closeFilePreview()" title="Cerrar">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Contenido del preview -->
+        <div class="preview-modal-body">
+            <!-- Preview de imagen -->
+            <img *ngIf="isImageFile(previewFile.mimeType)"
+                [src]="getFilePreviewUrl(previewFile.id)"
+                [alt]="previewFile.originalName"
+                class="preview-image"
+                (error)="onImageError($event)">
+            
+            <!-- Preview de PDF -->
+            <iframe *ngIf="isPdfFile(previewFile.mimeType)"
+                [src]="getFilePreviewUrl(previewFile.id) | safeUrl"
+                class="preview-pdf"
+                [title]="previewFile.originalName">
+            </iframe>
+            
+            <!-- Archivo sin preview disponible -->
+            <div *ngIf="!isImageFile(previewFile.mimeType) && !isPdfFile(previewFile.mimeType)" class="no-preview">
+                <i [class]="'bi ' + getFileIcon(previewFile.mimeType) + ' display-1 text-muted'"></i>
+                <p class="mt-3 text-muted">Vista previa no disponible para este tipo de archivo</p>
+                <button type="button" class="btn btn-primary" (click)="downloadFile(previewFile)">
+                    <i class="bi bi-download me-2"></i>
+                    Descargar archivo
+                </button>
+            </div>
+        </div>
+        
+        <!-- Footer con información -->
+        <div class="preview-modal-footer">
+            <span class="text-muted small">
+                <i class="bi bi-calendar3 me-1"></i>
+                {{ previewFile.uploadDate | date:'dd/MM/yyyy HH:mm' }}
+            </span>
+            <span class="text-muted small ms-3">
+                <i class="bi bi-file-earmark me-1"></i>
+                {{ formatFileSize(previewFile.fileSize) }}
+            </span>
+        </div>
     </div>
 </div>

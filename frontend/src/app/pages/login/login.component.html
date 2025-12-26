@@ -50,9 +50,9 @@
             type="button" 
             class="password-toggle"
             (click)="togglePasswordVisibility()"
-            tabindex="-1"
+            [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
           >
-            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'" aria-hidden="true"></i>
           </button>
         </div>
       </div>
@@ -86,9 +86,9 @@
 
       <!-- Link olvidé contraseña -->
       <div class="forgot-password-link">
-        <a href="javascript:void(0)" (click)="toggleForgotPassword()">
+        <button type="button" class="link-button" (click)="toggleForgotPassword()">
           ¿Olvidaste tu contraseña?
-        </a>
+        </button>
       </div>
     </form>
 
@@ -117,13 +117,13 @@
       </div>
 
       <!-- Mensajes de error/exito -->
-      <div *ngIf="errorMessage" class="alert alert-error">
-        <i class="bi bi-exclamation-circle"></i>
+      <div *ngIf="errorMessage" class="alert alert-error" role="alert" aria-live="polite">
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
         {{ errorMessage }}
       </div>
 
-      <div *ngIf="successMessage" class="alert alert-success">
-        <i class="bi bi-check-circle"></i>
+      <div *ngIf="successMessage" class="alert alert-success" role="status" aria-live="polite">
+        <i class="bi bi-check-circle" aria-hidden="true"></i>
         {{ successMessage }}
       </div>
 
@@ -144,10 +144,10 @@
       </button>
 
       <div class="back-to-login">
-        <a href="javascript:void(0)" (click)="toggleForgotPassword()">
-          <i class="bi bi-arrow-left"></i>
+        <button type="button" class="link-button" (click)="toggleForgotPassword()">
+          <i class="bi bi-arrow-left" aria-hidden="true"></i>
           Volver al login
-        </a>
+        </button>
       </div>
     </form>
 

@@ -4,23 +4,32 @@
             <!-- Pestañas de navegación -->
             <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" [class.active]="activeTab === 'clinic'" (click)="activeTab = 'clinic'"
+                    <button class="nav-link" [class.active]="activeTab === 'clinic'" 
+                        [attr.aria-selected]="activeTab === 'clinic'"
+                        aria-controls="clinic-panel"
+                        (click)="activeTab = 'clinic'"
                         id="clinic-tab" type="button" role="tab">
-                        <i class="bi bi-building"></i>
+                        <i class="bi bi-building" aria-hidden="true"></i>
                         Información de la Clínica
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" [class.active]="activeTab === 'prices'" (click)="switchToPricesTab()"
+                    <button class="nav-link" [class.active]="activeTab === 'prices'" 
+                        [attr.aria-selected]="activeTab === 'prices'"
+                        aria-controls="prices-panel"
+                        (click)="switchToPricesTab()"
                         id="prices-tab" type="button" role="tab">
-                        <i class="bi bi-currency-euro"></i>
+                        <i class="bi bi-currency-euro" aria-hidden="true"></i>
                         Precios
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" [class.active]="activeTab === 'backup'" (click)="activeTab = 'backup'"
+                    <button class="nav-link" [class.active]="activeTab === 'backup'" 
+                        [attr.aria-selected]="activeTab === 'backup'"
+                        aria-controls="backup-panel"
+                        (click)="activeTab = 'backup'"
                         id="backup-tab" type="button" role="tab">
-                        <i class="bi bi-shield-check"></i>
+                        <i class="bi bi-shield-check" aria-hidden="true"></i>
                         Backup
                     </button>
                 </li>
@@ -30,7 +39,7 @@
             <div class="tab-content" id="configTabsContent">
                 <!-- Pestaña de Información de la Clínica -->
                 <div class="tab-pane fade" [class.show]="activeTab === 'clinic'" [class.active]="activeTab === 'clinic'"
-                    id="clinic-pane" role="tabpanel">
+                    id="clinic-panel" role="tabpanel" aria-labelledby="clinic-tab">
                     <div class="card">
                         <div class="card-header">
                             <h4 class="card-title mb-0">
@@ -89,7 +98,7 @@
 
                 <!-- Pestaña de Precios -->
                 <div class="tab-pane fade" [class.show]="activeTab === 'prices'" [class.active]="activeTab === 'prices'"
-                    id="prices-pane" role="tabpanel">
+                    id="prices-panel" role="tabpanel" aria-labelledby="prices-tab">
                     <div class="card">
                         <div class="card-header">
                             <h4 class="card-title mb-0">
@@ -227,7 +236,7 @@
 
                 <!-- Pestaña de backups -->
                 <div class="tab-pane fade" [class.show]="activeTab === 'backup'" [class.active]="activeTab === 'backup'"
-                    id="backup-pane" role="tabpanel">
+                    id="backup-panel" role="tabpanel" aria-labelledby="backup-tab">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <div>
@@ -544,4 +553,17 @@
     [loading]="restoreBackupLoading"
     (confirm)="executeRestoreBackup()"
     (cancel)="cancelRestoreBackup()">
+</app-confirm-modal>
+
+<!-- Modal de confirmación para restablecer configuración -->
+<app-confirm-modal
+    [isOpen]="showResetConfigConfirm"
+    title="Restablecer Configuración"
+    message="¿Está seguro de que desea restablecer toda la configuración?"
+    details="Esta acción restaurará todos los valores a su configuración inicial. Esta acción no se puede deshacer."
+    confirmText="Restablecer"
+    type="warning"
+    [loading]="resetConfigLoading"
+    (confirm)="confirmResetConfiguration()"
+    (cancel)="cancelResetConfiguration()">
 </app-confirm-modal>

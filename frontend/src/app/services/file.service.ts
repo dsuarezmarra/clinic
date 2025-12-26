@@ -77,7 +77,8 @@ export class FileService {
     }
 
     // Formatear tamaño de archivo
-    formatFileSize(bytes: number): string {
+    formatFileSize(bytes: number | undefined | null): string {
+        if (bytes === undefined || bytes === null || isNaN(bytes)) return 'Desconocido';
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
         const sizes = ['Bytes', 'KB', 'MB', 'GB'];

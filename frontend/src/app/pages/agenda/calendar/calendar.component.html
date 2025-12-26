@@ -51,12 +51,14 @@
             </h3>
 
             <div class="d-flex gap-2 justify-content-center">
-                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Período anterior">
-                    <i class="bi bi-chevron-left"></i>
+                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" 
+                    title="Período anterior" aria-label="Ir al período anterior">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
                 </button>
                 <button class="btn btn-outline-primary" (click)="goToToday()">Hoy</button>
-                <button class="btn btn-outline-secondary btn-nav" (click)="nextPeriod()" title="Período siguiente">
-                    <i class="bi bi-chevron-right"></i>
+                <button class="btn btn-outline-secondary btn-nav" (click)="nextPeriod()" 
+                    title="Período siguiente" aria-label="Ir al período siguiente">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -65,12 +67,14 @@
     <!-- Vista Mensual -->
     <div *ngIf="viewMode === 'month'" class="year-view">
         <div class="d-flex justify-content-center align-items-center mb-3">
-            <button class="btn btn-outline-secondary btn-nav me-2" (click)="previousYear()" title="Año anterior">
-                <i class="bi bi-chevron-left"></i>
+            <button class="btn btn-outline-secondary btn-nav me-2" (click)="previousYear()" 
+                title="Año anterior" aria-label="Ir al año anterior">
+                <i class="bi bi-chevron-left" aria-hidden="true"></i>
             </button>
             <h4 class="mb-0">{{ currentYear }}</h4>
-            <button class="btn btn-outline-secondary btn-nav ms-2" (click)="nextYear()" title="Año siguiente">
-                <i class="bi bi-chevron-right"></i>
+            <button class="btn btn-outline-secondary btn-nav ms-2" (click)="nextYear()" 
+                title="Año siguiente" aria-label="Ir al año siguiente">
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </button>
         </div>
         <div class="year-months-grid-compact">
@@ -78,25 +82,23 @@
                 <h6 class="text-center mb-1">
                     {{ month }}
                     <small class="text-muted">({{ formatPriceCents(getMonthTotal(currentYear, monthIdx)) }})</small>
-                    <!-- Export buttons: icon-only (accessible) -->
-                    <button class="btn btn-sm btn-outline-success ms-2" aria-label="Exportar facturas por cita"
+                    <!-- Export buttons: accessible size (min 44px touch target) -->
+                    <button class="btn btn-sm btn-outline-success ms-2 export-btn" 
+                        aria-label="Exportar facturas por cita del mes de {{ month }}"
                         title="Exportar facturas por cita (una factura por cada cita)"
-                        (click)="exportMonthCsv(currentYear, monthIdx, 'appointment')"
-                        style="padding:.12rem .12rem; font-size:0.6rem; width:1.2rem; height:1.2rem; display:inline-flex; align-items:center; justify-content:center;">
-                        <!-- Excel-like icon (sheet with X) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16"
+                        (click)="exportMonthCsv(currentYear, monthIdx, 'appointment')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
                             fill="currentColor" aria-hidden="true">
                             <path
                                 d="M4 1.5A1.5 1.5 0 0 0 2.5 3v10A1.5 1.5 0 0 0 4 14.5h8a1.5 1.5 0 0 0 1.5-1.5V5.707A1 1 0 0 0 12.793 5L9 1.207A1 1 0 0 0 8.293 1H4zM9 2.5L12.5 6H9V2.5z" />
                             <path d="M5.2 9.2l.9-1 1 1 .9-1 .9 1-.9 1 1 1-.9 1-1-1-1 1-.9-1 1-1-.9-1z" />
                         </svg>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary ms-1" aria-label="Exportar facturas por paciente"
+                    <button class="btn btn-sm btn-outline-secondary ms-1 export-btn" 
+                        aria-label="Exportar facturas por paciente del mes de {{ month }}"
                         title="Exportar facturas por paciente (una factura por cada paciente agrupando sus citas)"
-                        (click)="exportMonthCsv(currentYear, monthIdx, 'patient')"
-                        style="padding:.12rem .12rem; font-size:0.6rem; width:1.2rem; height:1.2rem; display:inline-flex; align-items:center; justify-content:center;">
-                        <!-- Excel-like grouped icon (sheet + small X) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16"
+                        (click)="exportMonthCsv(currentYear, monthIdx, 'patient')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"
                             fill="currentColor" aria-hidden="true">
                             <path
                                 d="M3 2.5A1.5 1.5 0 0 1 4.5 1h6A1.5 1.5 0 0 1 12 2.5V4h1.5A1.5 1.5 0 0 1 15 5.5V13A1.5 1.5 0 0 1 13.5 14.5h-11A1.5 1.5 0 0 1 1 13V5.5A1.5 1.5 0 0 1 2.5 4H3V2.5zM5.5 7.5l.7-.7.8.8.8-.8.7.7-.8.8.8.8-.7.7-.8-.8-.8.8-.7-.7.8-.8-.8-.8z" />

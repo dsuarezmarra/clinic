@@ -49,6 +49,10 @@ export class ConfiguracionComponent implements OnInit {
   deleteBackupLoading = false;
   restoreBackupLoading = false;
 
+  // Reset configuration modal
+  showResetConfigConfirm = false;
+  resetConfigLoading = false;
+
   // Pestañas de configuración visibles
   activeTab: 'clinic' | 'prices' | 'backup' = 'clinic';
 
@@ -236,22 +240,29 @@ export class ConfiguracionComponent implements OnInit {
   }
 
   resetConfiguration() {
-    if (confirm('¿Estás seguro de que quieres restablecer toda la configuración?')) {
-      this.loading = true;
-      this.configService.resetConfiguration().subscribe({
-        next: (response: any) => {
-          this.configuration = response.config;
-          this.populateForms(response.config);
-          this.notificationService.showSuccess('Configuración restablecida');
-          this.loading = false;
-        },
-        error: (error: any) => {
-          console.error('Error resetting configuration:', error);
-          this.notificationService.showError('Error al restablecer la configuración');
-          this.loading = false;
-        }
-      });
-    }
+    this.showResetConfigConfirm = true;
+  }
+
+  confirmResetConfiguration() {
+    this.resetConfigLoading = true;
+    this.configService.resetConfiguration().subscribe({
+      next: (response: any) => {
+        this.configuration = response.config;
+        this.populateForms(response.config);
+        this.notificationService.showSuccess('Configuración restablecida');
+        this.cancelResetConfiguration();
+      },
+      error: (error: any) => {
+        console.error('Error resetting configuration:', error);
+        this.notificationService.showError('Error al restablecer la configuración');
+        this.resetConfigLoading = false;
+      }
+    });
+  }
+
+  cancelResetConfiguration() {
+    this.showResetConfigConfirm = false;
+    this.resetConfigLoading = false;
   }
 
   // Métodos adicionales para Bootstrap

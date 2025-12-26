@@ -11,6 +11,24 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 12px;
+    
+    /* Responsive: 3 columnas en tablets */
+    @media (max-width: 992px) {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+    }
+    
+    /* Responsive: 2 columnas en móviles */
+    @media (max-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    
+    /* Responsive: 1 columna en móviles pequeños */
+    @media (max-width: 480px) {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
 }
 
 .month-block-compact {
@@ -18,6 +36,22 @@
     border-radius: 6px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
     padding: 8px 4px;
+}
+
+/* Botones de exportación accesibles - mínimo 44px para touch */
+.export-btn {
+    min-width: 28px;
+    min-height: 28px;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    
+    svg {
+        width: 16px;
+        height: 16px;
+    }
 }
 
 .calendar-grid-compact {
