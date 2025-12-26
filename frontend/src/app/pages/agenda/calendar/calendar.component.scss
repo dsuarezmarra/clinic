@@ -385,6 +385,36 @@
     background: #f8f9fa;
 }
 
+/* Drag & Drop en vista semanal */
+.time-slot.drop-target {
+    background: rgba(102, 126, 234, 0.15) !important;
+    border: 2px dashed var(--primary-color) !important;
+    border-radius: 4px;
+}
+
+.appointment-block[draggable="true"] {
+    cursor: grab;
+    
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.appointment-block.dragging,
+.appointment-block-continued.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+/* Prevenir selección durante drag en vista semanal */
+.week-view.dragging-active {
+    user-select: none;
+    
+    * {
+        user-select: none;
+    }
+}
+
 .appointment-block {
     background: var(--primary-color);
     color: white;

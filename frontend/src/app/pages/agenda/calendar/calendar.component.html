@@ -135,10 +135,17 @@
             <!-- Filas de tiempo -->
             <div *ngFor="let timeSlot of timeSlots" class="time-row">
                 <div class="time-label">{{ timeSlot }}</div>
-                <div *ngFor="let day of getWeekDays()" class="time-slot" [class.weekend]="isWeekend(day)"
-                    (click)="openCreateAppointmentModal(day, timeSlot)">
+                <div *ngFor="let day of getWeekDays()" 
+                    class="time-slot" 
+                    [class.weekend]="isWeekend(day)"
+                    [class.drop-target]="isDropTarget(day, timeSlot)"
+                    (click)="openCreateAppointmentModal(day, timeSlot)"
+                    (dragover)="onDragOver($event, day, timeSlot)"
+                    (dragleave)="onDragLeave($event)"
+                    (drop)="onDrop($event, day, timeSlot)">
 
-                    <div *ngIf="getAppointmentForTimeSlot(day, timeSlot) as appointment" [ngClass]="{
+                    <div *ngIf="getAppointmentForTimeSlot(day, timeSlot) as appointment" 
+                        [ngClass]="{
                             'appointment-block': isAppointmentStart(appointment, day, timeSlot) || (!isAppointmentStart(appointment, day, timeSlot) && appointmentSpansMultipleSlots(appointment)),
                             'appointment-block-multi': isAppointmentStart(appointment, day, timeSlot) && appointmentSpansMultipleSlots(appointment),
                             'appointment-block-continued': !isAppointmentStart(appointment, day, timeSlot) && appointmentSpansMultipleSlots(appointment),
@@ -146,7 +153,11 @@
                             'duration-long': getAppointmentDurationClass(appointment) === 'long',
                             'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
                             'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
-                        }" (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+                        }" 
+                        [attr.draggable]="isAppointmentStart(appointment, day, timeSlot)"
+                        (dragstart)="isAppointmentStart(appointment, day, timeSlot) && onDragStart($event, appointment)"
+                        (dragend)="onDragEnd($event)"
+                        (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
                         <ng-container *ngIf="isAppointmentStart(appointment, day, timeSlot); else occupiedSlot">
                             <div class="appointment-content">
                                 <strong class="appointment-name">{{ getPatientName(appointment) }}</strong>

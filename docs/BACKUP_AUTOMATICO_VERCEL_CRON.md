@@ -1,13 +1,13 @@
-# ?? Configuraci�n de Backups Autom�ticos con Vercel Cron Jobs
+# 🔄 Configuración de Backups Automáticos con Vercel Cron Jobs
 
-## ?? Resumen
+## 📋 Resumen
 
-El sistema de backups autom�ticos anterior usaba `node-cron` que **NO funciona en Vercel** porque:
+El sistema de backups automáticos anterior usaba `node-cron` que **NO funciona en Vercel** porque:
 
-- Vercel usa funciones serverless que se "duermen" cuando no hay tr�fico
+- Vercel usa funciones serverless que se "duermen" cuando no hay tráfico
 - Los cron jobs de node-cron requieren un proceso persistente
 
-## ? Soluci�n Implementada: Vercel Cron Jobs
+## ✅ Solución Implementada: Vercel Cron Jobs
 
 ### Cambios Realizados
 
@@ -18,7 +18,7 @@ El sistema de backups autom�ticos anterior usaba `node-cron` que **NO funciona e
 ```javascript
 // Endpoint para Vercel Cron Jobs
 router.get("/cron", async (req, res, next) => {
-  // Verifica autorizaci�n con CRON_SECRET
+  // Verifica autorización con CRON_SECRET
   const authHeader = req.headers.authorization;
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -29,7 +29,7 @@ router.get("/cron", async (req, res, next) => {
 });
 ```
 
-#### 2. Configuraci�n Cron en vercel.json
+#### 2. Configuración Cron en vercel.json
 
 **Archivo:** `backend/vercel.json`
 
@@ -46,13 +46,13 @@ router.get("/cron", async (req, res, next) => {
 
 ---
 
-## ?? Configuraci�n Pendiente en Vercel Dashboard
+## ⚙️ Configuración Pendiente en Vercel Dashboard
 
 ### Paso 1: Crear CRON_SECRET
 
 1. Ir a [Vercel Dashboard](https://vercel.com/dashboard)
 2. Seleccionar proyecto `api-clinic-personal`
-3. Ir a **Settings** ? **Environment Variables**
+3. Ir a **Settings** → **Environment Variables**
 4. Agregar nueva variable:
    - **Name:** `CRON_SECRET`
    - **Value:** (generar un token seguro, ej: `openssl rand -hex 32`)
@@ -67,13 +67,13 @@ vercel --prod
 
 ### Paso 3: Verificar Cron Job
 
-1. En Vercel Dashboard ? **Settings** ? **Crons**
+1. En Vercel Dashboard → **Settings** → **Crons**
 2. Verificar que aparece el cron configurado
 3. Puedes ejecutar manualmente para probar
 
 ---
 
-## ?? Testing Manual
+## 🧪 Testing Manual
 
 Para probar el endpoint manualmente:
 
@@ -96,9 +96,9 @@ Respuesta esperada:
 
 ---
 
-## ?? Schedule (Horario)
+## 📅 Schedule (Horario)
 
-| Cron Expression | Descripci�n                      |
+| Cron Expression | Descripción                      |
 | --------------- | -------------------------------- |
 | `0 3 * * 0`     | Domingos 3:00 AM UTC             |
 | `0 3 * * *`     | Diario 3:00 AM UTC (alternativa) |
@@ -108,22 +108,22 @@ Para cambiar la frecuencia, modifica `schedule` en `vercel.json`.
 
 ---
 
-## ?? Limitaciones
+## ⚠️ Limitaciones
 
-- **Vercel Hobby Plan:** 2 cron jobs, m�ximo 1 ejecuci�n/d�a
+- **Vercel Hobby Plan:** 2 cron jobs, máximo 1 ejecución/día
 - **Vercel Pro Plan:** Cron jobs ilimitados, hasta cada minuto
 - Los cron jobs solo funcionan en **Production** deployments
 
 ---
 
-## ?? Logs
+## 📝 Logs
 
-Para ver logs de ejecuci�n:
+Para ver logs de ejecución:
 
-1. Vercel Dashboard ? **Deployments** ? Seleccionar deployment
-2. **Functions** tab ? Ver logs de `/api/backup/cron`
+1. Vercel Dashboard → **Deployments** → Seleccionar deployment
+2. **Functions** tab → Ver logs de `/api/backup/cron`
 
 ---
 
 **Fecha:** 04/10/2025  
-**Estado:** ? Configurado - Pendiente deploy y configurar CRON_SECRET
+**Estado:** ✅ Configurado - Pendiente deploy y configurar CRON_SECRET

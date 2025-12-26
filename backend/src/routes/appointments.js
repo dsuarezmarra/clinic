@@ -63,7 +63,7 @@ const validate = (req, res, next) => {
 
 // GET /api/appointments/patient/:id - Obtener todas las citas de un paciente
 router.get('/patient/:id', [
-  param('id').isUUID().withMessage('ID de paciente debe ser UUID válido')
+  param('id').isUUID().withMessage('ID de paciente debe ser UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -111,9 +111,9 @@ router.get('/patient/:id', [
 
 // GET /api/appointments - Obtener citas por rango de fechas
 router.get('/', [
-  query('from').notEmpty().isISO8601().withMessage('Fecha desde es requerida y debe ser v�lida'),
-  query('to').notEmpty().isISO8601().withMessage('Fecha hasta es requerida y debe ser v�lida'),
-  query('status').optional().isIn(['BOOKED', 'CANCELLED', 'NO_SHOW']).withMessage('Estado no v�lido')
+  query('from').notEmpty().isISO8601().withMessage('Fecha desde es requerida y debe ser válida'),
+  query('to').notEmpty().isISO8601().withMessage('Fecha hasta es requerida y debe ser válida'),
+  query('status').optional().isIn(['BOOKED', 'CANCELLED', 'NO_SHOW']).withMessage('Estado no válido')
 ], validate, async (req, res, next) => {
   try {
     const { from, to, status } = req.query;
@@ -189,8 +189,8 @@ router.get('/', [
 router.post('/', [
   body('start').notEmpty().isISO8601().withMessage('Fecha y hora de inicio son requeridas'),
   body('end').notEmpty().isISO8601().withMessage('Fecha y hora de fin son requeridas'),
-  body('patientId').optional().isUUID().withMessage('ID de paciente debe ser UUID válido'),
-  body('durationMinutes').optional().isInt({ min: 30, max: 120 }).withMessage('Duración debe ser entre 30 y 120 minutos'),
+  body('patientId').optional().isUUID().withMessage('ID de paciente debe ser UUID vÃ¡lido'),
+  body('durationMinutes').optional().isInt({ min: 30, max: 120 }).withMessage('DuraciÃ³n debe ser entre 30 y 120 minutos'),
   body('consumesCredit').optional().isBoolean(),
   body('notes').optional().isString().trim(),
   body('allowWithoutCredit').optional().isBoolean()
@@ -206,7 +206,7 @@ router.post('/', [
     }
 
     // Validar que las fechas sean coherentes (end > start). Permitimos que el servicio
-    // ajuste la duración/fin (por ejemplo forzar 60min si el paciente tiene packs de 60m).
+    // ajuste la duraciÃ³n/fin (por ejemplo forzar 60min si el paciente tiene packs de 60m).
     const startMoment = moment(start);
     const endMoment = moment(end);
     const diffMinutes = endMoment.diff(startMoment, 'minutes');
@@ -252,14 +252,14 @@ router.post('/', [
 
       res.status(201).json(appointmentWithLocalTime);
     } catch (error) {
-      // Si es error de Sesiones insuficientes y se permite crear sin sesión
+      // Si es error de Sesiones insuficientes y se permite crear sin sesiÃ³n
       if (error.code === 'INSUFFICIENT_CREDITS' && allowWithoutCredit) {
         const appointment = await getAppointmentService(req).createAppointment({
           start,
           end,
           patientId: patientId || null,
           durationMinutes,
-          consumesCredit: false, // No consumir sesi�n
+          consumesCredit: false, // No consumir sesión
           notes: `${notes || ''}\n[NOTA: Creada sin Sesiones suficientes]`.trim()
         });
 
@@ -285,7 +285,7 @@ router.post('/', [
 
 // GET /api/appointments/:id - Obtener cita por ID
 router.get('/:id', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -339,7 +339,7 @@ router.get('/:id', [
 
 // PUT /api/appointments/:id - Actualizar cita
 router.put('/:id', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido'),
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido'),
   body('start').optional().isISO8601(),
   body('end').optional().isISO8601(),
   body('patientId').optional().isUUID(),
@@ -353,7 +353,7 @@ router.put('/:id', [
     const { id } = req.params;
     const { start, end, patientId, durationMinutes, consumesCredit, notes, status, paid } = req.body;
 
-    // Validar que end sea posterior a start si ambos están presentes
+    // Validar que end sea posterior a start si ambos estÃ¡n presentes
     if (start && end && new Date(end) <= new Date(start)) {
       return res.status(400).json({
         error: 'La hora de fin debe ser posterior a la hora de inicio'
@@ -386,8 +386,8 @@ router.put('/:id', [
 
 // DELETE /api/appointments/:id - Cancelar/eliminar cita
 router.delete('/:id', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido'),
-  query('action').optional().isIn(['cancel', 'delete']).withMessage('Acción debe ser cancel o delete')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido'),
+  query('action').optional().isIn(['cancel', 'delete']).withMessage('AcciÃ³n debe ser cancel o delete')
 ], validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -415,7 +415,7 @@ router.delete('/:id', [
         });
       }
 
-      // Revertir Sesiones si se hab�an consumido
+      // Revertir Sesiones si se habían consumido
       if (appointment.consumesCredit && appointment.patientId) {
         await getAppointmentService(req).revertCredits(id);
       }
@@ -435,7 +435,7 @@ router.delete('/:id', [
 router.get('/conflicts/check', [
   query('start').notEmpty().isISO8601().withMessage('Fecha de inicio es requerida'),
   query('end').notEmpty().isISO8601().withMessage('Fecha de fin es requerida'),
-  query('excludeId').optional().isUUID().withMessage('ID a excluir debe ser UUID válido')
+  query('excludeId').optional().isUUID().withMessage('ID a excluir debe ser UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { start, end, excludeId } = req.query;

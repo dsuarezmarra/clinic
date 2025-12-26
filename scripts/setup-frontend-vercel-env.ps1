@@ -1,5 +1,5 @@
 # ============================================================================
-# ⚙️ Script para Configurar Variables de Entorno del Frontend en Vercel
+# âï¸ Script para Configurar Variables de Entorno del Frontend en Vercel
 # ============================================================================
 # 
 # PREREQUISITO: Tener Vercel CLI instalado y autenticado
@@ -21,7 +21,7 @@ param(
     [string]$ClientId
 )
 
-# Configuraci�n de proyectos
+# Configuración de proyectos
 $VERCEL_PROJECTS = @{
     masajecorporaldeportivo = @{
         ProjectName = "masajecorporaldeportivo"
@@ -35,7 +35,7 @@ $VERCEL_PROJECTS = @{
 
 function Write-Header {
     Write-Host ""
-    Write-Host "⚙️  ============================================" -ForegroundColor Cyan
+    Write-Host "âï¸  ============================================" -ForegroundColor Cyan
     Write-Host "   Variables de Entorno Frontend - Vercel" -ForegroundColor Cyan
     Write-Host "============================================" -ForegroundColor Cyan
     Write-Host ""
@@ -46,8 +46,8 @@ Write-Header
 $projectConfig = $VERCEL_PROJECTS[$ClientId]
 $projectName = $projectConfig.ProjectName
 
-Write-Host "📋 Cliente: $ClientId" -ForegroundColor Cyan
-Write-Host "📋 Proyecto: $projectName" -ForegroundColor Cyan
+Write-Host "ð Cliente: $ClientId" -ForegroundColor Cyan
+Write-Host "ð Proyecto: $projectName" -ForegroundColor Cyan
 Write-Host ""
 
 # Variables de entorno
@@ -56,28 +56,28 @@ $envVars = @{
     "VITE_API_URL" = $projectConfig.ApiUrl
 }
 
-Write-Host "📦 Variables a configurar:" -ForegroundColor Cyan
+Write-Host "ð¦ Variables a configurar:" -ForegroundColor Cyan
 foreach ($key in $envVars.Keys) {
     Write-Host "   $key = $($envVars[$key])" -ForegroundColor Gray
 }
 Write-Host ""
 
 # Instrucciones para Dashboard
-Write-Host "🌐 Configuración en Vercel Dashboard:" -ForegroundColor Cyan
+Write-Host "ð ConfiguraciÃ³n en Vercel Dashboard:" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "1. https://vercel.com/dashboard" -ForegroundColor White
 Write-Host "2. Proyecto: $projectName" -ForegroundColor White
-Write-Host "3. Settings → Environment Variables" -ForegroundColor White
+Write-Host "3. Settings â Environment Variables" -ForegroundColor White
 Write-Host ""
 
 foreach ($key in $envVars.Keys) {
     Write-Host "   Variable: $key" -ForegroundColor Cyan
     Write-Host "   Value: $($envVars[$key])" -ForegroundColor Green
-    Write-Host "   Environments: ✅ Production ✅ Preview ✅ Development" -ForegroundColor Gray
+    Write-Host "   Environments: â Production â Preview â Development" -ForegroundColor Gray
     Write-Host ""
 }
 
 Write-Host "4. Guardar cambios y redeploy" -ForegroundColor White
 Write-Host ""
-Write-Host "🎉 Configuración lista" -ForegroundColor Green
+Write-Host "ð ConfiguraciÃ³n lista" -ForegroundColor Green
 Write-Host ""
