@@ -130,10 +130,15 @@ export class DashboardComponent implements OnInit {
         this.showWhatsAppModal = false;
     }
 
-    // Abrir enlace de WhatsApp
+    // Abrir enlace de WhatsApp y marcar como enviado
     openWhatsAppLink(reminder: WhatsAppReminder) {
         if (reminder.whatsappLink) {
             window.open(reminder.whatsappLink, '_blank');
+            // Marcar como enviado
+            this.whatsappReminderService.markAsSent(reminder.id);
+            reminder.sent = true;
+            // Actualizar el contador local
+            this.whatsappRemindersCount = this.whatsappReminders.filter(r => !r.sent).length;
         }
     }
 

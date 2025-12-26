@@ -758,6 +758,21 @@
         &:last-child {
             margin-bottom: 0;
         }
+        
+        // Estilo para recordatorios ya enviados
+        &.reminder-sent {
+            background: linear-gradient(135deg, #f0fff4 0%, #f8f9fa 100%);
+            border-color: #28a745;
+            opacity: 0.85;
+            
+            &:hover {
+                opacity: 1;
+            }
+            
+            .reminder-header {
+                border-bottom-color: #c3e6cb;
+            }
+        }
     }
 }
 
