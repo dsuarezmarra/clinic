@@ -177,22 +177,33 @@
         <div class="day-schedule">
 
             <div class="time-slots">
-                <div *ngFor="let timeSlot of timeSlots" class="time-slot-row"
-                    (click)="openCreateAppointmentModal(currentDate, timeSlot)">
+                <div *ngFor="let timeSlot of timeSlots" 
+                    class="time-slot-row"
+                    [class.drop-target]="isDropTarget(currentDate, timeSlot)"
+                    (click)="openCreateAppointmentModal(currentDate, timeSlot)"
+                    (dragover)="onDragOver($event, currentDate, timeSlot)"
+                    (dragleave)="onDragLeave($event)"
+                    (drop)="onDrop($event, currentDate, timeSlot)">
 
                     <div class="time-label">{{ timeSlot }}</div>
 
                     <div class="slot-content">
                         <div *ngIf="getAppointmentForTimeSlot(currentDate, timeSlot) as appointment; else emptySlot"
-                            class="appointment-card" [ngClass]="{
+                            class="appointment-card" 
+                            [ngClass]="{
                                 'duration-short': getAppointmentDurationClass(appointment) === 'short',
                                 'duration-long': getAppointmentDurationClass(appointment) === 'long',
                                 'status-pending': getAppointmentPaymentStatus(appointment) === 'pending',
                                 'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
-                            }" (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
+                            }" 
+                            draggable="true"
+                            (dragstart)="onDragStart($event, appointment)"
+                            (dragend)="onDragEnd($event)"
+                            (click)="openEditAppointmentModal(appointment); $event.stopPropagation()">
 
                             <div class="d-flex justify-content-between align-items-start">
-                                <div>
+                                <div class="drag-handle">
+                                    <i class="bi bi-grip-vertical drag-icon"></i>
                                     <strong>{{ getPatientName(appointment) }}</strong>
                                     <div class="text-muted small">
                                         {{ formatTimeRange(appointment.start, appointment.end) }}
@@ -212,7 +223,7 @@
 
                         <ng-template #emptySlot>
                             <div class="empty-slot">
-                                <i class="fas fa-plus text-muted"></i>
+                                <i class="bi bi-plus-circle text-muted"></i>
                                 <small class="text-muted">Agregar cita</small>
                             </div>
                         </ng-template>

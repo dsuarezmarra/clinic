@@ -290,12 +290,19 @@ export class DashboardComponent implements OnInit {
         }
 
         const searchTerm = this.normalizeAccents(this.patientSearchTerm);
-        this.filteredPatients = this.patients.filter(patient =>
-            this.normalizeAccents(patient.firstName).includes(searchTerm) ||
-            this.normalizeAccents(patient.lastName).includes(searchTerm) ||
-            patient.phone.includes(searchTerm) ||
-            (patient.email && this.normalizeAccents(patient.email).includes(searchTerm))
-        );
+        this.filteredPatients = this.patients.filter(patient => {
+            const firstName = this.normalizeAccents(patient.firstName);
+            const lastName = this.normalizeAccents(patient.lastName);
+            const fullName = `${firstName} ${lastName}`;
+            const fullNameReverse = `${lastName} ${firstName}`;
+            
+            return firstName.includes(searchTerm) ||
+                lastName.includes(searchTerm) ||
+                fullName.includes(searchTerm) ||
+                fullNameReverse.includes(searchTerm) ||
+                patient.phone.includes(searchTerm) ||
+                (patient.email && this.normalizeAccents(patient.email).includes(searchTerm));
+        });
     }
 
     // Seleccionar paciente

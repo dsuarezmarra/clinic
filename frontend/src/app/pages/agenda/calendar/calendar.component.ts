@@ -117,6 +117,11 @@ export class CalendarComponent implements OnInit {
     appointmentToDelete: string | null = null;
     deleteLoading = false;
 
+    // Drag & Drop state
+    draggedAppointment: Appointment | null = null;
+    dropTargetSlot: { date: Date; time: string } | null = null;
+    isDragging: boolean = false;
+
     timeSlots: string[] = [];
     weekDays = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
     months = [
@@ -716,11 +721,15 @@ export class CalendarComponent implements OnInit {
         this.filteredPatients = this.patients.filter(patient => {
             const firstName = this.normalizeText(patient.firstName || '');
             const lastName = this.normalizeText(patient.lastName || '');
+            const fullName = `${firstName} ${lastName}`;
+            const fullNameReverse = `${lastName} ${firstName}`;
             const phone = patient.phone || '';
             const email = this.normalizeText(patient.email || '');
             
             return firstName.includes(searchTerm) ||
                    lastName.includes(searchTerm) ||
+                   fullName.includes(searchTerm) ||
+                   fullNameReverse.includes(searchTerm) ||
                    phone.includes(searchTerm) ||
                    email.includes(searchTerm);
         });
@@ -986,7 +995,7 @@ export class CalendarComponent implements OnInit {
         // Mensaje de recordatorio (mismo formato que WhatsAppReminderService)
         const message = `${waveEmoji} Hola ${patient.firstName}!\n\n${calendarEmoji} Te recuerdo tu cita de masaje para el ${formattedDate} a las ${clockEmoji} ${formattedTime}.\n\nSi necesitas cambiarla o no puedes venir, por favor escríbeme.\n\n${starEmoji} Gracias! ${thumbsUpEmoji}`;
         
-        return `https://web.whatsapp.com/send?phone=${phoneFormatted}&text=${encodeURIComponent(message)}`;
+        return `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(message)}`;
     }
 
     /**
@@ -1200,7 +1209,151 @@ export class CalendarComponent implements OnInit {
             return `${hours}h ${minutes}m`;
         }
     }
+
+    // ========================================
+    // DRAG & DROP FUNCTIONALITY
+    // ========================================
+
+    /**
+     * Iniciar el arrastre de una cita
+     */
+    onDragStart(event: DragEvent, appointment: Appointment) {
+        this.isDragging = true;
+        this.draggedAppointment = appointment;
+        
+        // Establecer datos para el drag
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', appointment.id);
+        }
+        
+        // Añadir clase visual al elemento arrastrado
+        const target = event.target as HTMLElement;
+        setTimeout(() => target.classList.add('dragging'), 0);
+    }
+
+    /**
+     * Finalizar el arrastre
+     */
+    onDragEnd(event: DragEvent) {
+        this.isDragging = false;
+        this.draggedAppointment = null;
+        this.dropTargetSlot = null;
+        
+        // Quitar clase visual
+        const target = event.target as HTMLElement;
+        target.classList.remove('dragging');
+        
+        // Quitar clases de todos los slots
+        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
+    }
+
+    /**
+     * Cuando se arrastra sobre un slot
+     */
+    onDragOver(event: DragEvent, date: Date, timeSlot: string) {
+        event.preventDefault();
+        
+        if (!this.draggedAppointment) return;
+        
+        // Verificar que no sea el mismo slot
+        const existingAppointment = this.getAppointmentForTimeSlot(date, timeSlot);
+        if (existingAppointment && existingAppointment.id === this.draggedAppointment.id) {
+            return;
+        }
+        
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = 'move';
+        }
+        
+        this.dropTargetSlot = { date, time: timeSlot };
+        
+        // Añadir clase visual al slot destino
+        const target = event.currentTarget as HTMLElement;
+        target.classList.add('drop-target');
+    }
+
+    /**
+     * Cuando sale del slot
+     */
+    onDragLeave(event: DragEvent) {
+        const target = event.currentTarget as HTMLElement;
+        target.classList.remove('drop-target');
+        this.dropTargetSlot = null;
+    }
+
+    /**
+     * Cuando se suelta la cita en un slot
+     */
+    onDrop(event: DragEvent, date: Date, timeSlot: string) {
+        event.preventDefault();
+        
+        const target = event.currentTarget as HTMLElement;
+        target.classList.remove('drop-target');
+        
+        if (!this.draggedAppointment) return;
+        
+        // Verificar que el slot no esté ocupado por otra cita
+        const existingAppointment = this.getAppointmentForTimeSlot(date, timeSlot);
+        if (existingAppointment && existingAppointment.id !== this.draggedAppointment.id) {
+            this.notificationService.showError('Este horario ya está ocupado');
+            this.isDragging = false;
+            this.draggedAppointment = null;
+            return;
+        }
+        
+        // Calcular nueva fecha/hora de inicio
+        const [hours, minutes] = timeSlot.split(':').map(Number);
+        const newStart = new Date(date);
+        newStart.setHours(hours, minutes, 0, 0);
+        
+        // Calcular nueva fecha/hora de fin (mantener la misma duración)
+        const oldStart = new Date(this.draggedAppointment.start);
+        const oldEnd = new Date(this.draggedAppointment.end);
+        const durationMs = oldEnd.getTime() - oldStart.getTime();
+        const newEnd = new Date(newStart.getTime() + durationMs);
+        
+        // Actualizar la cita
+        this.moveAppointment(this.draggedAppointment.id, newStart, newEnd);
+        
+        this.isDragging = false;
+        this.draggedAppointment = null;
+        this.dropTargetSlot = null;
+    }
+
+    /**
+     * Mover cita a nueva fecha/hora
+     */
+    private moveAppointment(appointmentId: string, newStart: Date, newEnd: Date) {
+        const appointment = this.appointments.find(a => a.id === appointmentId);
+        if (!appointment) return;
+        
+        const updateData = {
+            patientId: appointment.patient?.id || appointment.patientId,
+            start: newStart.toISOString(),
+            end: newEnd.toISOString(),
+            notes: appointment.notes || '',
+            priceCents: appointment.priceCents || 0
+        };
+        
+        this.appointmentService.updateAppointment(appointmentId, updateData).subscribe({
+            next: () => {
+                this.notificationService.showSuccess('Cita reprogramada correctamente');
+                this.loadAppointments();
+            },
+            error: (err) => {
+                console.error('Error al reprogramar cita:', err);
+                this.notificationService.showError('Error al reprogramar la cita');
+            }
+        });
+    }
+
+    /**
+     * Verificar si un slot es el destino actual del drop
+     */
+    isDropTarget(date: Date, timeSlot: string): boolean {
+        if (!this.dropTargetSlot) return false;
+        return this.dropTargetSlot.date.getTime() === date.getTime() && 
+               this.dropTargetSlot.time === timeSlot;
+    }
 }
-
-
-

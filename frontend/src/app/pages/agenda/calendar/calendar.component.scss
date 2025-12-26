@@ -768,6 +768,90 @@
     opacity: 1;
 }
 
+/* ========================================
+   DRAG & DROP STYLES
+   ======================================== */
+
+.appointment-card {
+    cursor: grab;
+    
+    &:active {
+        cursor: grabbing;
+    }
+}
+
+.drag-handle {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.drag-icon {
+    display: none;
+    color: #adb5bd;
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+.appointment-card:hover .drag-icon {
+    display: inline-block;
+}
+
+/* Estado de la cita siendo arrastrada */
+.appointment-card.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Slot destino del drop */
+.time-slot-row.drop-target {
+    background: rgba(102, 126, 234, 0.15) !important;
+    border: 2px dashed var(--primary-color) !important;
+    border-radius: 8px;
+    
+    .slot-content {
+        background: rgba(102, 126, 234, 0.1);
+    }
+    
+    .empty-slot {
+        opacity: 1;
+        color: var(--primary-color);
+        
+        i, small {
+            color: var(--primary-color) !important;
+        }
+    }
+}
+
+/* Animación al soltar */
+@keyframes dropSuccess {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.02);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.appointment-card.drop-success {
+    animation: dropSuccess 0.3s ease-out;
+}
+
+/* Prevenir selección de texto durante drag */
+.day-view.dragging-active {
+    user-select: none;
+    
+    * {
+        user-select: none;
+    }
+}
+
 /* Modales */
 .modal.show {
     background: rgba(0, 0, 0, 0.5);

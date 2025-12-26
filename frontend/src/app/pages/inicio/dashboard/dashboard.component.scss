@@ -634,6 +634,7 @@
 
 /* ========================================
    WHATSAPP FLOATING ACTION BUTTON
+   Mejorado con badge más grande y animaciones
    ======================================== */
 
 .whatsapp-fab-container {
@@ -671,33 +672,50 @@
     i {
         line-height: 1;
     }
+    
+    /* Animación de pulso en el FAB cuando hay recordatorios */
+    &.has-reminders {
+        animation: fab-attention 3s ease-in-out infinite;
+    }
 }
 
 .whatsapp-badge {
     position: absolute;
-    top: -4px;
-    right: -4px;
-    background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
-    color: #000;
-    font-size: 12px;
+    top: -6px;
+    right: -6px;
+    background: linear-gradient(135deg, #ff4757 0%, #ff3838 100%);
+    color: #fff;
+    font-size: 13px;
     font-weight: 700;
-    min-width: 22px;
-    height: 22px;
-    border-radius: 11px;
+    min-width: 26px;
+    height: 26px;
+    border-radius: 13px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 6px;
-    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.5);
-    animation: pulse-badge 2s infinite;
+    padding: 0 7px;
+    box-shadow: 0 3px 10px rgba(255, 71, 87, 0.5);
+    animation: pulse-badge 1.5s ease-in-out infinite;
+    border: 2px solid white;
 }
 
 @keyframes pulse-badge {
     0%, 100% {
         transform: scale(1);
+        box-shadow: 0 3px 10px rgba(255, 71, 87, 0.5);
     }
     50% {
-        transform: scale(1.1);
+        transform: scale(1.15);
+        box-shadow: 0 4px 15px rgba(255, 71, 87, 0.7);
+    }
+}
+
+@keyframes fab-attention {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(37, 211, 102, 0.6), 0 0 40px rgba(37, 211, 102, 0.3);
     }
 }
 

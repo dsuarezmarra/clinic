@@ -1,6 +1,9 @@
 ﻿<!-- Botón flotante de WhatsApp -->
 <div class="whatsapp-fab-container">
-    <button class="whatsapp-fab" (click)="openWhatsAppModal()" title="Recordatorios WhatsApp">
+    <button class="whatsapp-fab" 
+            [class.has-reminders]="whatsappRemindersCount > 0"
+            (click)="openWhatsAppModal()" 
+            title="Recordatorios WhatsApp ({{ whatsappRemindersCount }} pendientes)">
         <i class="bi bi-whatsapp"></i>
         <span class="whatsapp-badge" *ngIf="whatsappRemindersCount > 0">
             {{ whatsappRemindersCount > 9 ? '9+' : whatsappRemindersCount }}

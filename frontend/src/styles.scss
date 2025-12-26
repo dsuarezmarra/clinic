@@ -90,11 +90,30 @@ body {
     padding: 2rem 0;
 }
 
-/* Card styles */
+/* ========================================
+   ANIMACIONES SUTILES GLOBALES
+   Transiciones suaves en hover (200ms)
+   ======================================== */
+
+/* Card styles con transición */
 .card {
     border: none;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     border-radius: 0.75rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Cards que no deben moverse al hacer hover (modales, etc) */
+.modal .card,
+.card.no-hover,
+.card.static {
+    transform: none !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 .card-header {
@@ -102,6 +121,35 @@ body {
     color: white;
     border-radius: 0.75rem 0.75rem 0 0 !important;
     border: none;
+}
+
+/* Botones con transición suave */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Links con transición */
+a {
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Inputs con transición */
+.form-control,
+.form-select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Filas de tabla con transición */
+.table tbody tr {
+    transition: background-color 0.2s ease;
 }
 
 /* Table styles */

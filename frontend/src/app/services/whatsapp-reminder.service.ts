@@ -105,7 +105,7 @@ export class WhatsAppReminderService {
     
     // Crear enlace de WhatsApp Web directo
     const phoneFormatted = this.formatPhoneForWhatsApp(reminder.phone);
-    reminder.whatsappLink = `https://web.whatsapp.com/send?phone=${phoneFormatted}&text=${encodeURIComponent(reminder.message)}`;
+    reminder.whatsappLink = `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(reminder.message)}`;
     
     return reminder;
   }

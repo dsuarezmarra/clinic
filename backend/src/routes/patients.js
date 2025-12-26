@@ -24,9 +24,9 @@ function sanitizePhone(phone) {
 }
 
 /**
- * Sanitiza entrada de b�squeda para prevenir SQL/PostgREST injection
+ * Sanitiza entrada de búsqueda para prevenir SQL/PostgREST injection
  * - Escapa caracteres especiales de LIKE (%_)
- * - Limita longitud m�xima
+ * - Limita longitud máxima
  * - Elimina caracteres potencialmente peligrosos
  */
 function sanitizeSearchInput(input) {
@@ -41,8 +41,8 @@ function sanitizeSearchInput(input) {
 }
 
 /**
- * Normaliza texto eliminando acentos/diacr�ticos
- * Ejemplo: "Mar�a" -> "Maria", "Jos�" -> "Jose"
+ * Normaliza texto eliminando acentos/diacríticos
+ * Ejemplo: "María" -> "Maria", "José" -> "Jose"
  */
 function normalizeAccents(str) {
   if (!str || typeof str !== 'string') return '';
@@ -50,9 +50,9 @@ function normalizeAccents(str) {
 }
 
 /**
- * Verifica si un texto coincide con el t�rmino de b�squeda (accent-insensitive)
+ * Verifica si un texto coincide con el término de búsqueda (accent-insensitive)
  * @param {string} text - Texto a verificar
- * @param {string} searchTerm - T�rmino de b�squeda
+ * @param {string} searchTerm - Término de búsqueda
  * @returns {boolean}
  */
 function matchesSearch(text, searchTerm) {
@@ -62,7 +62,7 @@ function matchesSearch(text, searchTerm) {
   return normalizedText.includes(normalizedSearch);
 }
 
-// Middleware para eliminar email si es cadena vacía antes de validar en PUT
+// Middleware para eliminar email si es cadena vacÃ­a antes de validar en PUT
 router.use('/:id', (req, res, next) => {
   if (req.method === 'PUT' && req.body && req.body.email === '') {
     delete req.body.email;
@@ -73,7 +73,7 @@ router.use('/:id', (req, res, next) => {
 // Middleware de logging para todas las rutas de pacientes - solo en desarrollo
 router.use((req, res, next) => {
   if (process.env.NODE_ENV === 'development' || process.env.VERBOSE_LOGGING === 'true') {
-    console.log(`🔗 ${req.method} ${req.path} - Body:`, req.body);
+    console.log(`ð ${req.method} ${req.path} - Body:`, req.body);
   }
   next();
 });
@@ -83,16 +83,16 @@ const validate = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     if (process.env.NODE_ENV === 'development') {
-      console.log('❌ Errores de validación:', errors.array());
+      console.log('â Errores de validaciÃ³n:', errors.array());
     }
     return res.status(400).json({
-      error: 'Errores de validación',
+      error: 'Errores de validaciÃ³n',
       details: errors.array()
     });
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('✅ Validación exitosa para:', req.method, req.path);
+    console.log('â ValidaciÃ³n exitosa para:', req.method, req.path);
   }
 
   next();
@@ -105,9 +105,9 @@ router.get('/', [
   query('limit').optional().isInt({ min: 1, max: 1000 })
 ], validate, async (req, res, next) => {
   try {
-    // Modo degradado: si no hay cliente Prisma disponible, devolver lista vacía
+    // Modo degradado: si no hay cliente Prisma disponible, devolver lista vacÃ­a
     if (!req.prisma) {
-      console.warn('⚠️ GET /api/patients en modo degradado: devolviendo lista vacía');
+      console.warn('â ï¸ GET /api/patients en modo degradado: devolviendo lista vacÃ­a');
       return res.json({
         patients: [],
         pagination: {
@@ -125,11 +125,11 @@ router.get('/', [
     let patients, total;
 
     if (search) {
-      // SIEMPRE usar b�squeda accent-insensitive en JavaScript
+      // SIEMPRE usar búsqueda accent-insensitive en JavaScript
       // Traemos todos los pacientes y filtramos en el servidor
       const safeSearch = sanitizeSearchInput(search);
       
-      console.log(`[SEARCH] B�squeda accent-insensitive para: "${search}" (sanitizado: "${safeSearch}")`);
+      console.log(`[SEARCH] Búsqueda accent-insensitive para: "${search}" (sanitizado: "${safeSearch}")`);
       
       const allPatients = await getDb(req).patients.findMany({
         orderBy: { firstName: 'asc' }
@@ -137,22 +137,28 @@ router.get('/', [
 
       console.log(`[SEARCH] Total pacientes en BD: ${allPatients.length}`);
 
-      // Filtrar con b�squeda accent-insensitive
+      // Filtrar con búsqueda accent-insensitive
       const filteredPatients = allPatients.filter(patient => {
         const matchFirst = matchesSearch(patient.firstName, safeSearch);
         const matchLast = matchesSearch(patient.lastName, safeSearch);
         const matchPhone = patient.phone && patient.phone.includes(safeSearch);
+        
+        // Buscar también en nombre completo (firstName + lastName y viceversa)
+        const fullName = `${patient.firstName || ''} ${patient.lastName || ''}`;
+        const fullNameReverse = `${patient.lastName || ''} ${patient.firstName || ''}`;
+        const matchFullName = matchesSearch(fullName, safeSearch);
+        const matchFullNameReverse = matchesSearch(fullNameReverse, safeSearch);
         
         // Debug log para pacientes con "Ruiz" en el apellido
         if (patient.lastName && patient.lastName.toLowerCase().includes('ru')) {
           console.log(`[SEARCH DEBUG] Paciente: ${patient.firstName} ${patient.lastName}`);
           console.log(`[SEARCH DEBUG]   - lastName original: "${patient.lastName}"`);
           console.log(`[SEARCH DEBUG]   - lastName normalizado: "${normalizeAccents(patient.lastName).toLowerCase()}"`);
-          console.log(`[SEARCH DEBUG]   - b�squeda normalizada: "${normalizeAccents(safeSearch).toLowerCase()}"`);
+          console.log(`[SEARCH DEBUG]   - búsqueda normalizada: "${normalizeAccents(safeSearch).toLowerCase()}"`);
           console.log(`[SEARCH DEBUG]   - matchLast: ${matchLast}`);
         }
         
-        return matchFirst || matchLast || matchPhone;
+        return matchFirst || matchLast || matchPhone || matchFullName || matchFullNameReverse;
       });
 
       console.log(`[SEARCH] Pacientes filtrados: ${filteredPatients.length}`);
@@ -166,10 +172,10 @@ router.get('/', [
 
       total = filteredPatients.length;
       
-      // Aplicar paginaci�n despu�s del filtrado
+      // Aplicar paginación después del filtrado
       patients = filteredPatients.slice(offset, offset + parseInt(limit));
     } else {
-      // Sin b�squeda: traer pacientes con paginaci�n normal
+      // Sin búsqueda: traer pacientes con paginación normal
       const queryOptions = {
         skip: offset,
         take: parseInt(limit),
@@ -227,29 +233,29 @@ router.get('/', [
 router.post('/', [
   body('firstName').notEmpty().trim().withMessage('Nombre es requerido'),
   body('lastName').notEmpty().trim().withMessage('Apellidos son requeridos'),
-  body('phone').notEmpty().trim().withMessage('Teléfono es requerido'),
-  body('dni').notEmpty().trim().withMessage('DNI es requerido').isLength({ min: 5 }).withMessage('DNI inválido'),
-  body('cp').optional().matches(/^\d{5}$/).withMessage('CP debe ser un código postal de 5 dígitos'),
-  body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email debe ser válido'),
+  body('phone').notEmpty().trim().withMessage('TelÃ©fono es requerido'),
+  body('dni').notEmpty().trim().withMessage('DNI es requerido').isLength({ min: 5 }).withMessage('DNI invÃ¡lido'),
+  body('cp').optional().matches(/^\d{5}$/).withMessage('CP debe ser un cÃ³digo postal de 5 dÃ­gitos'),
+  body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email debe ser vÃ¡lido'),
   body('address').optional().trim(),
   body('birthDate').optional().custom((value) => {
     if (value && value !== '') {
       const date = new Date(value);
       if (isNaN(date.getTime())) {
-        throw new Error('Fecha de nacimiento debe ser válida');
+        throw new Error('Fecha de nacimiento debe ser vÃ¡lida');
       }
     }
     return true;
   }),
   body('notes').optional().trim()
 ], validate, async (req, res, next) => {
-  console.log('🚀 Inicio handler POST /api/patients');
-  console.log('📦 req.body:', req.body);
-  console.log('🔗 req.prisma existe:', !!req.prisma);
+  console.log('ð Inicio handler POST /api/patients');
+  console.log('ð¦ req.body:', req.body);
+  console.log('ð req.prisma existe:', !!req.prisma);
   
   try {
     if (process.env.NODE_ENV === 'development') {
-      console.log('📝 Creando nuevo paciente con datos:', req.body);
+      console.log('ð Creando nuevo paciente con datos:', req.body);
     }
 
     const { firstName, lastName, phone, email, address, birthDate, notes, dni, cp, city, province } = req.body;
@@ -260,8 +266,8 @@ router.post('/', [
         processedBirthDate = new Date(birthDate);
         if (isNaN(processedBirthDate.getTime())) {
           return res.status(400).json({ 
-            error: 'Fecha de nacimiento inválida', 
-            message: 'La fecha proporcionada no es válida' 
+            error: 'Fecha de nacimiento invÃ¡lida', 
+            message: 'La fecha proporcionada no es vÃ¡lida' 
           });
         }
       } catch (error) {
@@ -273,7 +279,7 @@ router.post('/', [
     if (!req.prisma && !getDb(req)) {
       return res.status(503).json({ 
         error: 'Servicio degradado', 
-        message: 'No se puede crear pacientes sin conexión a la base de datos' 
+        message: 'No se puede crear pacientes sin conexiÃ³n a la base de datos' 
       });
     }
 
@@ -297,11 +303,11 @@ router.post('/', [
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Paciente creado exitosamente:', patient);
+      console.log('â Paciente creado exitosamente:', patient);
     }
     res.status(201).json(patient);
   } catch (error) {
-    console.error('❌ Error al crear paciente:', error);
+    console.error('â Error al crear paciente:', error);
     if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
       return res.status(400).json({ 
         error: 'Email duplicado', 
@@ -314,7 +320,7 @@ router.post('/', [
 
 // GET /api/patients/:id - Obtener paciente por ID
 router.get('/:id', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -365,17 +371,17 @@ router.get('/:id', [
 
 // PUT /api/patients/:id - Actualizar paciente
 router.put('/:id', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido'),
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido'),
   body('firstName').optional().notEmpty().trim(),
   body('lastName').optional().notEmpty().trim(),
   body('phone').optional().notEmpty().trim(),
-  body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email debe ser válido'),
+  body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email debe ser vÃ¡lido'),
   body('address').optional().trim(),
   body('birthDate').optional().custom((value) => {
     if (value && value !== '') {
       const date = new Date(value);
       if (isNaN(date.getTime())) {
-        throw new Error('Fecha de nacimiento debe ser válida');
+        throw new Error('Fecha de nacimiento debe ser vÃ¡lida');
       }
     }
     return true;
@@ -383,7 +389,7 @@ router.put('/:id', [
   body('notes').optional().trim()
 ], validate, async (req, res, next) => {
   try {
-    console.log('📝 Actualizando paciente con datos:', req.body);
+    console.log('ð Actualizando paciente con datos:', req.body);
     const { id } = req.params;
     const { firstName, lastName, phone, email, address, birthDate, notes, dni, cp, city, province } = req.body;
     
@@ -412,12 +418,12 @@ router.put('/:id', [
           processedBirthDate = new Date(birthDate);
           if (isNaN(processedBirthDate.getTime())) {
             return res.status(400).json({ 
-              error: 'Fecha de nacimiento inválida', 
-              message: 'La fecha proporcionada no es válida' 
+              error: 'Fecha de nacimiento invÃ¡lida', 
+              message: 'La fecha proporcionada no es vÃ¡lida' 
             });
           }
         } catch (error) {
-          console.error('Error procesando fecha en actualización:', error);
+          console.error('Error procesando fecha en actualizaciÃ³n:', error);
           processedBirthDate = null;
         }
       }
@@ -425,17 +431,17 @@ router.put('/:id', [
     }
 
     if (notes !== undefined) updateData.notes = notes ? notes.trim() : null;
-    console.log('📋 Datos de actualización procesados:', updateData);
+    console.log('ð Datos de actualizaciÃ³n procesados:', updateData);
 
     const patient = await getDb(req).patients.update({ 
       where: { id }, 
       data: updateData 
     });
     
-    console.log('✅ Paciente actualizado exitosamente:', patient);
+    console.log('â Paciente actualizado exitosamente:', patient);
     res.json(patient);
   } catch (error) {
-    console.error('❌ Error al actualizar paciente:', error);
+    console.error('â Error al actualizar paciente:', error);
     if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
       return res.status(400).json({ 
         error: 'Email duplicado', 
@@ -448,7 +454,7 @@ router.put('/:id', [
 
 // DELETE /api/patients/:id - Eliminar paciente
 router.delete('/:id', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -486,7 +492,7 @@ router.delete('/:id', [
 
 // POST /api/patients/:id/files - Subir archivos
 router.post('/:id/files', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido')
 ], validate, upload.array('files', 5), async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -534,7 +540,7 @@ router.post('/:id/files', [
 
 // GET /api/patients/:id/files - Listar archivos del paciente
 router.get('/:id/files', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -550,8 +556,8 @@ router.get('/:id/files', [
 
 // GET /api/patients/:id/files/:fileId/download - Descargar archivo
 router.get('/:id/files/:fileId/download', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido'), 
-  param('fileId').isUUID().withMessage('ID de archivo debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido'), 
+  param('fileId').isUUID().withMessage('ID de archivo debe ser un UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id, fileId } = req.params;
@@ -572,7 +578,7 @@ router.get('/:id/files/:fileId/download', [
     }
     
     if (!fs.existsSync(file.storedPath)) {
-      return res.status(404).json({ error: 'Archivo físico no encontrado' });
+      return res.status(404).json({ error: 'Archivo fÃ­sico no encontrado' });
     }
 
     res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
@@ -585,8 +591,8 @@ router.get('/:id/files/:fileId/download', [
 
 // DELETE /api/patients/:id/files/:fileId - Eliminar archivo
 router.delete('/:id/files/:fileId', [
-  param('id').isUUID().withMessage('ID debe ser un UUID válido'), 
-  param('fileId').isUUID().withMessage('ID de archivo debe ser un UUID válido')
+  param('id').isUUID().withMessage('ID debe ser un UUID vÃ¡lido'), 
+  param('fileId').isUUID().withMessage('ID de archivo debe ser un UUID vÃ¡lido')
 ], validate, async (req, res, next) => {
   try {
     const { id, fileId } = req.params;
@@ -603,13 +609,13 @@ router.delete('/:id/files/:fileId', [
         fs.unlinkSync(file.storedPath);
       }
     } catch (err) { 
-      console.warn(`No se pudo eliminar archivo físico: ${file.storedPath}`, err);
+      console.warn(`No se pudo eliminar archivo fÃ­sico: ${file.storedPath}`, err);
     }
     
     if (!req.prisma) {
       return res.status(503).json({ 
         error: 'Servicio degradado', 
-        message: 'No se puede eliminar archivos sin conexión a la base de datos' 
+        message: 'No se puede eliminar archivos sin conexiÃ³n a la base de datos' 
       });
     }
     
