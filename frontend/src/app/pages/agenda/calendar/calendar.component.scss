@@ -689,8 +689,7 @@
 }
 
 .time-slots {
-    max-height: 600px;
-    overflow-y: auto;
+    /* Sin scroll - mostrar todas las horas */
 }
 
 .time-slot-row {

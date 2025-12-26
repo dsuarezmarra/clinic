@@ -24,8 +24,8 @@
     </div>
 
     <!-- Encabezado del calendario -->
-    <div class="calendar-header">
-        <div *ngIf="!hideHeader" class="d-flex justify-content-between align-items-center mb-3">
+    <div class="calendar-header" *ngIf="!hideHeader">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="mb-0">Calendario de Citas</h2>
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-outline-primary" [class.active]="viewMode === 'month'"
@@ -37,8 +37,8 @@
             </div>
         </div>
 
-        <!-- Navegación de fechas solo si no se oculta el header -->
-        <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="!hideHeader && viewMode !== 'month'">
+        <!-- Navegación de fechas -->
+        <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="viewMode !== 'month'">
             <div class="d-flex gap-2">
                 <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Período anterior">
                     <i class="bi bi-chevron-left"></i>

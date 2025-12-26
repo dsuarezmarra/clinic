@@ -443,8 +443,7 @@
 }
 
 .unified-calendar-card .day-schedule {
-    max-height: 70vh;
-    overflow-y: auto;
+    /* Sin scroll - mostrar todas las horas */
 }
 
 .unified-calendar-card .time-slot-row {
