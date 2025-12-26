@@ -954,51 +954,66 @@ export class CalendarComponent implements OnInit {
 
     /**
      * Genera un enlace de WhatsApp para enviar recordatorio de cita
-     * Usa el número de la clínica para WhatsApp Business
+     * Usa el mismo formato de mensaje que el sistema de recordatorios
      */
     getWhatsAppReminderLink(appointment: Appointment): string {
         const patient = this.getPatientByAppointment(appointment);
         if (!patient?.phone) return '';
         
-        // Limpiar número de teléfono (quitar espacios, guiones, etc.)
-        let phone = patient.phone.replace(/[\s\-\(\)\.]/g, '');
-        
-        // Si empieza con 0, quitar el 0 y añadir +34
-        if (phone.startsWith('0')) {
-            phone = '+34' + phone.substring(1);
-        }
-        // Si no tiene prefijo internacional, añadir +34 (España)
-        if (!phone.startsWith('+')) {
-            phone = '+34' + phone;
-        }
+        // Formatear teléfono para WhatsApp
+        const phoneFormatted = this.formatPhoneForWhatsApp(patient.phone);
+        if (!phoneFormatted) return '';
         
         // Formatear fecha y hora de la cita
         const appointmentDate = new Date(appointment.start);
-        const dateStr = appointmentDate.toLocaleDateString('es-ES', {
+        const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
             weekday: 'long',
             day: 'numeric',
             month: 'long'
         });
-        const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
+        const formattedTime = appointmentDate.toLocaleTimeString('es-ES', {
             hour: '2-digit',
             minute: '2-digit'
         });
         
-        // Mensaje de recordatorio
-        const config = this.clientConfigService.getConfig();
-        const clinicName = config.info?.name || config.info?.shortName || 'la clínica';
-        const message = `¡Hola ${patient.firstName}! 👋
-
-Te recordamos tu cita en ${clinicName}:
-
-📅 *${dateStr}*
-🕐 *${timeStr}*
-
-¿Te viene bien? Confirma respondiendo a este mensaje.
-
-Un saludo 😊`;
+        // Emojis usando Unicode (igual que en WhatsAppReminderService)
+        const waveEmoji = '\u{1F44B}'; // 👋
+        const calendarEmoji = '\u{1F4C5}'; // 📅
+        const clockEmoji = '\u{1F552}'; // 🕒
+        const starEmoji = '\u{2B50}'; // ⭐
+        const thumbsUpEmoji = '\u{1F44D}'; // 👍
         
-        return `https://wa.me/${phone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+        // Mensaje de recordatorio (mismo formato que WhatsAppReminderService)
+        const message = `${waveEmoji} Hola ${patient.firstName}!\n\n${calendarEmoji} Te recuerdo tu cita de masaje para el ${formattedDate} a las ${clockEmoji} ${formattedTime}.\n\nSi necesitas cambiarla o no puedes venir, por favor escríbeme.\n\n${starEmoji} Gracias! ${thumbsUpEmoji}`;
+        
+        return `https://web.whatsapp.com/send?phone=${phoneFormatted}&text=${encodeURIComponent(message)}`;
+    }
+
+    /**
+     * Formatear teléfono para WhatsApp (añadir prefijo español si es necesario)
+     */
+    private formatPhoneForWhatsApp(phone: string): string {
+        if (!phone) return '';
+        
+        // Limpiar caracteres no numéricos
+        const cleaned = phone.replace(/\D/g, '');
+        
+        // Si tiene 9 dígitos, añadir prefijo español
+        if (cleaned.length === 9) {
+            return '34' + cleaned;
+        }
+        
+        // Si ya tiene prefijo español, devolverlo
+        if (cleaned.startsWith('34')) {
+            return cleaned;
+        }
+        
+        // Si empieza con 0034, quitar el 0
+        if (cleaned.startsWith('0034')) {
+            return cleaned.substring(2);
+        }
+        
+        return cleaned;
     }
 
     /**
