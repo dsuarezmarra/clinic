@@ -101,11 +101,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Agregar listeners globales de mouse
-    private addGlobalMouseListeners() {
+    // Agregar solo listener de mousemove (para detectar inicio de drag)
+    private addMouseMoveListener() {
         this.boundMouseMove = this.onGlobalMouseMove.bind(this);
-        this.boundMouseUp = this.onGlobalMouseUp.bind(this);
         document.addEventListener('mousemove', this.boundMouseMove);
+    }
+
+    // Agregar listener de mouseup (solo cuando hay drag real)
+    private addMouseUpListener() {
+        this.boundMouseUp = this.onGlobalMouseUp.bind(this);
         document.addEventListener('mouseup', this.boundMouseUp);
     }
 
@@ -136,6 +140,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
             document.body.style.cursor = 'grabbing';
             document.body.style.userSelect = 'none';
             event.preventDefault(); // Prevenir selección solo cuando hay drag real
+            // Agregar listener de mouseup solo cuando hay drag real
+            this.addMouseUpListener();
             this.createDragGhost(this.draggedAppointment, event.clientX, event.clientY);
         }
 
@@ -1446,8 +1452,20 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.draggedAppointment = appointment;
         this.wasRealDrag = false;
         
-        // Agregar listeners globales
-        this.addGlobalMouseListeners();
+        // Solo agregar listener de mousemove para detectar si hay movimiento
+        this.addMouseMoveListener();
+        
+        // Agregar un listener temporal de mouseup para limpiar si se suelta sin mover
+        const cleanupOnMouseUp = () => {
+            document.removeEventListener('mouseup', cleanupOnMouseUp);
+            // Solo limpiar si NO estamos en un drag real
+            if (!this.isDragging) {
+                this.removeGlobalMouseListeners();
+                this.dragStartPos = null;
+                this.draggedAppointment = null;
+            }
+        };
+        document.addEventListener('mouseup', cleanupOnMouseUp, { once: true });
     }
 
     /**
