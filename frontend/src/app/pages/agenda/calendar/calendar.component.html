@@ -38,14 +38,8 @@
         </div>
 
         <!-- Navegación de fechas -->
-        <div class="d-flex justify-content-between align-items-center mb-4" *ngIf="viewMode !== 'month'">
-            <div class="d-flex gap-2">
-                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Período anterior">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
-            </div>
-
-            <h3 class="calendar-title mb-0">
+        <div class="d-flex flex-column align-items-center mb-4" *ngIf="viewMode !== 'month'">
+            <h3 class="calendar-title mb-2 text-center">
                 <span *ngIf="viewMode === 'week'">
                     Semana del {{ formatDate(getWeekDays()[0]) }}
                     <small class="text-muted ms-2">(Total semana: {{ formatPriceCents(getWeekTotal()) }})</small>
@@ -56,7 +50,10 @@
                 </span>
             </h3>
 
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 justify-content-center">
+                <button class="btn btn-outline-secondary btn-nav" (click)="previousPeriod()" title="Período anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
                 <button class="btn btn-outline-primary" (click)="goToToday()">Hoy</button>
                 <button class="btn btn-outline-secondary btn-nav" (click)="nextPeriod()" title="Período siguiente">
                     <i class="bi bi-chevron-right"></i>
