@@ -1,5 +1,6 @@
 // Vercel Serverless Function Entry Point
 // Este archivo adapta nuestra aplicación Express para funcionar en Vercel
+// Last updated: 2025-12-26 - WhatsApp reminders system
 
 // ?? SSL bypass SOLO para desarrollo local (nunca en producción)
 if (process.env.NODE_ENV !== 'production' && process.env.DISABLE_TLS_CHECK === 'true') {
