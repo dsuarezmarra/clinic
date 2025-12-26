@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "generate:manifest": "node scripts/generate-manifest.js",
-    "build:client": "npm run generate:manifest && cd frontend && npm run build",
-    "build:masajecorporal": "cross-env VITE_CLIENT_ID=masajecorporaldeportivo npm run build:client",
-    "build:actifisio": "cross-env VITE_CLIENT_ID=actifisio npm run build:client"
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build:masajecorporal": "cd frontend && cross-env VITE_CLIENT_ID=masajecorporaldeportivo npm run build",
+    "build:actifisio": "cd frontend && cross-env VITE_CLIENT_ID=actifisio npm run build"
   },
   "devDependencies": {
     "cross-env": "^7.0.3"

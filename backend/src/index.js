@@ -16,6 +16,9 @@ const backupRoutes = require('./routes/backup');
 const filesRoutes = require('./routes/files');
 const reportsRoutes = require('./routes/reports');
 const statsRoutes = require('./routes/stats');
+const invoicesRoutes = require('./routes/invoices');
+const emailRoutes = require('./routes/email');
+const whatsappRemindersRoutes = require('./routes/whatsapp-reminders');
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -80,6 +83,9 @@ app.use('/api/backup', backupRoutes);
 app.use('/api/files', filesRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/invoices', invoicesRoutes);
+app.use('/api/email', emailRoutes);
+app.use('/api/whatsapp-reminders', whatsappRemindersRoutes);
 
 // Health check
 app.get('/health', async (req, res) => {
