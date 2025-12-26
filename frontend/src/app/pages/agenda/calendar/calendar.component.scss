@@ -362,9 +362,14 @@
     transition: all 0.15s ease;
     position: relative;
     display: flex;
-    align-items: flex-start;
-    padding: 4px;
-    overflow: hidden;
+    align-items: stretch;
+    padding: 2px;
+    overflow: visible;
+}
+
+/* Cuando el time-slot tiene una cita, no debe capturar eventos de pointer */
+.time-slot:has(.appointment-block) {
+    cursor: default;
 }
 
 .time-slot:hover {
@@ -394,9 +399,23 @@
 
 .appointment-block[draggable="true"] {
     cursor: grab;
+    /* Asegurar que el bloque de cita capture todos los eventos de pointer */
+    pointer-events: auto;
+    /* Z-index alto para estar encima del time-slot */
+    z-index: 10;
+    /* Ocupar todo el ancho disponible */
+    width: 100%;
+    height: 100%;
+    min-height: 36px;
+    box-sizing: border-box;
     
     &:active {
         cursor: grabbing;
+    }
+    
+    &:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 }
 
@@ -435,7 +454,8 @@
 /* Position appointment blocks to fit within the slot */
 .time-slot {
     position: relative;
-    overflow: hidden;
+    /* overflow: visible es necesario para que el bloque de cita sea clickable */
+    overflow: visible;
 }
 
 
@@ -443,7 +463,7 @@
     position: relative;
     width: 100%;
     box-sizing: border-box;
-    z-index: 2;
+    z-index: 10;
     border-radius: 4px;
     display: flex;
     align-items: center;
