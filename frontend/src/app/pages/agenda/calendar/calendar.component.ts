@@ -142,6 +142,57 @@ export class CalendarComponent implements OnInit, OnDestroy {
         }
     };
 
+    // ========================================
+    // TOUCH EVENT HANDLERS (Mobile Support)
+    // ========================================
+
+    // Handler de touchmove durante drag
+    private onTouchMoveDuringDrag = (event: TouchEvent) => {
+        if (!this.dragStartPos || !this.draggedAppointment || !event.touches.length) return;
+
+        const touch = event.touches[0];
+        const dx = touch.clientX - this.dragStartPos.x;
+        const dy = touch.clientY - this.dragStartPos.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Si no hemos superado el threshold, no hacer nada
+        if (!this.isDragging && distance >= this.dragThreshold) {
+            // Iniciar drag visual
+            this.isDragging = true;
+            this.createDragGhost(this.draggedAppointment, touch.clientX, touch.clientY);
+        }
+
+        if (this.isDragging) {
+            // Prevenir scroll mientras arrastramos
+            event.preventDefault();
+            this.updateDragGhost(touch.clientX, touch.clientY);
+            this.updateDropTarget(touch.clientX, touch.clientY);
+        }
+    };
+
+    // Handler de touchend durante drag
+    private onTouchEndDuringDrag = (event: TouchEvent) => {
+        // Remover listeners
+        document.removeEventListener('touchmove', this.onTouchMoveDuringDrag);
+        document.removeEventListener('touchend', this.onTouchEndDuringDrag);
+        document.removeEventListener('touchcancel', this.onTouchEndDuringDrag);
+
+        // Guardar referencia a la cita antes de resetear
+        const appointmentToEdit = this.draggedAppointment;
+
+        if (this.isDragging && this.draggedAppointment && this.dropTargetSlot) {
+            // Hubo drag real con destino válido -> ejecutar drop
+            this.executeDrop();
+        } else if (!this.isDragging && appointmentToEdit) {
+            // NO hubo drag (tap simple) -> abrir modal de edición
+            this.resetDragState();
+            this.openEditAppointmentModal(appointmentToEdit);
+        } else {
+            // Cancelado o sin destino válido
+            this.resetDragState();
+        }
+    };
+
     // Buscar slot de destino bajo el cursor
     private updateDropTarget(x: number, y: number) {
         // Limpiar destino anterior
@@ -207,10 +258,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.moveAppointment(appointmentId, newStart, newEnd);
     }
 
-    // Cancelar el drag
+    // Cancelar el drag (mouse y touch)
     private cancelDrag() {
+        // Remover listeners de mouse
         document.removeEventListener('mousemove', this.onMouseMoveDuringDrag);
         document.removeEventListener('mouseup', this.onMouseUpDuringDrag);
+        // Remover listeners de touch
+        document.removeEventListener('touchmove', this.onTouchMoveDuringDrag);
+        document.removeEventListener('touchend', this.onTouchEndDuringDrag);
+        document.removeEventListener('touchcancel', this.onTouchEndDuringDrag);
         this.resetDragState();
     }
 
@@ -1432,6 +1488,29 @@ export class CalendarComponent implements OnInit, OnDestroy {
         // Agregar listeners para detectar drag
         document.addEventListener('mousemove', this.onMouseMoveDuringDrag);
         document.addEventListener('mouseup', this.onMouseUpDuringDrag);
+    }
+
+    /**
+     * Iniciar posible arrastre de una cita (touchstart) - Soporte móvil
+     * Solo prepara el estado, el drag real inicia al mover el dedo
+     */
+    onAppointmentTouchStart(event: TouchEvent, appointment: Appointment, day: Date, timeSlot: string) {
+        // Solo permitir arrastrar desde el slot de inicio de la cita
+        if (!this.isAppointmentStart(appointment, day, timeSlot)) {
+            return;
+        }
+
+        // No prevenir default aquí para permitir tap/scroll normal hasta que inicie el drag
+        const touch = event.touches[0];
+        
+        // Guardar posición inicial y cita
+        this.dragStartPos = { x: touch.clientX, y: touch.clientY };
+        this.draggedAppointment = appointment;
+        
+        // Agregar listeners para detectar drag
+        document.addEventListener('touchmove', this.onTouchMoveDuringDrag, { passive: false });
+        document.addEventListener('touchend', this.onTouchEndDuringDrag);
+        document.addEventListener('touchcancel', this.onTouchEndDuringDrag);
     }
 
     /**

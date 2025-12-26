@@ -333,9 +333,12 @@ export class PacientesComponent implements OnInit, OnDestroy {
       console.log('🆕 Creando nuevo paciente');
       this.patientService.createPatient(this.patientFormData).subscribe({
         next: (newPatient: Patient) => {
-          // Añadir a ambas listas directamente
-          this.patients.unshift(newPatient); // Al principio para que sea visible
-          this.filteredPatients.unshift(newPatient);
+          // Añadir solo a patients (filteredPatients se actualiza aparte si es diferente)
+          this.patients.unshift(newPatient);
+          // Solo añadir a filteredPatients si es un array diferente (hay filtro activo)
+          if (this.filteredPatients !== this.patients) {
+            this.filteredPatients.unshift(newPatient);
+          }
           this.totalPatients++;
           
           // Forzar detección de cambios

@@ -154,6 +154,7 @@
                         }" 
                         [class.dragging]="isDragging && draggedAppointment?.id === appointment.id"
                         (mousedown)="onAppointmentMouseDown($event, appointment, day, timeSlot)"
+                        (touchstart)="onAppointmentTouchStart($event, appointment, day, timeSlot)"
                         (click)="onAppointmentClick($event, appointment)">
                         <ng-container *ngIf="isAppointmentStart(appointment, day, timeSlot); else occupiedSlot">
                             <div class="appointment-content">
@@ -205,6 +206,7 @@
                             }" 
                             [class.dragging]="isDragging && draggedAppointment?.id === appointment.id"
                             (mousedown)="onAppointmentMouseDown($event, appointment, currentDate, timeSlot)"
+                            (touchstart)="onAppointmentTouchStart($event, appointment, currentDate, timeSlot)"
                             (click)="onAppointmentClick($event, appointment)">
 
                             <div class="d-flex justify-content-between align-items-start">
