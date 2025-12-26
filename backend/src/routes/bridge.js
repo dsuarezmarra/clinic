@@ -2732,7 +2732,7 @@ router.get('/whatsapp-reminders/pending', loadTenant, async (req, res) => {
     const in25Hours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
     // Buscar citas entre 23 y 25 horas en el futuro
-    const appointmentsData = await supabaseFetch(
+    const { data: appointmentsData } = await supabaseFetch(
       `${appointmentsTable}?select=*,patient:${patientsTable}(*)&start=gte.${in23Hours.toISOString()}&start=lte.${in25Hours.toISOString()}&order=start.asc`
     );
 
@@ -2812,7 +2812,7 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
     }
 
     // Obtener todos los tenants activos
-    const tenantsData = await supabaseFetch('tenants?is_active=eq.true');
+    const { data: tenantsData } = await supabaseFetch('tenants?is_active=eq.true');
     
     if (!tenantsData || tenantsData.length === 0) {
       return res.json({
@@ -2837,7 +2837,7 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
         const in25Hours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
         // Buscar citas que necesitan recordatorio
-        const appointments = await supabaseFetch(
+        const { data: appointments } = await supabaseFetch(
           `${appointmentsTable}?select=*,patient:${patientsTable}(*)&start=gte.${in23Hours.toISOString()}&start=lte.${in25Hours.toISOString()}&whatsappReminderSent=eq.false&order=start.asc`
         );
 
