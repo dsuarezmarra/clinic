@@ -10,6 +10,7 @@ import { EventBusService } from '../../../services/event-bus.service';
 import { NotificationService } from '../../../services/notification.service';
 import { PatientService } from '../../../services/patient.service';
 import { DashboardStats, StatsPeriod, StatsService } from '../../../services/stats.service';
+import { WhatsAppReminder, WhatsAppReminderService } from '../../../services/whatsapp-reminder.service';
 import { CalendarComponent } from '../../agenda/calendar/calendar.component';
 
 @Component({
@@ -28,6 +29,12 @@ export class DashboardComponent implements OnInit {
     statsLoading = false;
     statsPeriod: StatsPeriod = 'month';
     showStats = true;
+
+    // WhatsApp reminders
+    whatsappReminders: WhatsAppReminder[] = [];
+    whatsappRemindersCount = 0;
+    showWhatsAppModal = false;
+    whatsappLoading = false;
 
     previousPeriod() {
         if (this.calendarComponent) {
@@ -73,7 +80,8 @@ export class DashboardComponent implements OnInit {
         private cdr: ChangeDetectorRef,
         private creditService: CreditService,
         private eventBusService: EventBusService,
-        private statsService: StatsService
+        private statsService: StatsService,
+        private whatsappReminderService: WhatsAppReminderService
     ) { }
     // export controls removed — use calendar monthly export
     ngAfterViewInit() {
@@ -85,6 +93,7 @@ export class DashboardComponent implements OnInit {
         this.loadPatients();
         this.generateTimeSlots();
         this.loadStats();
+        this.loadWhatsAppReminders();
         
         // Suscribirse a cambios de estado de pago
         this.eventBusService.packPaymentStatusChanged$.subscribe(change => {
@@ -92,6 +101,40 @@ export class DashboardComponent implements OnInit {
             // Actualizar las citas que usan este pack
             this.updateAppointmentPaymentStatus(change.packId, change.paid);
         });
+    }
+
+    // Cargar recordatorios de WhatsApp pendientes
+    loadWhatsAppReminders() {
+        this.whatsappLoading = true;
+        this.whatsappReminderService.getPendingReminders().subscribe({
+            next: (response) => {
+                this.whatsappReminders = response.appointments;
+                this.whatsappRemindersCount = response.eligibleForReminder;
+                this.whatsappLoading = false;
+            },
+            error: (error) => {
+                console.error('Error loading WhatsApp reminders:', error);
+                this.whatsappLoading = false;
+            }
+        });
+    }
+
+    // Abrir modal de WhatsApp
+    openWhatsAppModal() {
+        this.loadWhatsAppReminders();
+        this.showWhatsAppModal = true;
+    }
+
+    // Cerrar modal de WhatsApp
+    closeWhatsAppModal() {
+        this.showWhatsAppModal = false;
+    }
+
+    // Abrir enlace de WhatsApp
+    openWhatsAppLink(reminder: WhatsAppReminder) {
+        if (reminder.whatsappLink) {
+            window.open(reminder.whatsappLink, '_blank');
+        }
     }
 
     // Cargar estadísticas del dashboard

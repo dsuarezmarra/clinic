@@ -631,3 +631,265 @@
         box-shadow: none !important;
     }
 }
+
+/* ========================================
+   WHATSAPP FLOATING ACTION BUTTON
+   ======================================== */
+
+.whatsapp-fab-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+}
+
+.whatsapp-fab {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    border: none;
+    color: white;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    
+    &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5);
+    }
+    
+    &:active {
+        transform: scale(0.95);
+    }
+    
+    i {
+        line-height: 1;
+    }
+}
+
+.whatsapp-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
+    color: #000;
+    font-size: 12px;
+    font-weight: 700;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.5);
+    animation: pulse-badge 2s infinite;
+}
+
+@keyframes pulse-badge {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* ========================================
+   WHATSAPP MODAL STYLES
+   ======================================== */
+
+.whatsapp-modal {
+    .modal-content {
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+}
+
+.whatsapp-modal-header {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    color: white;
+    border-bottom: none;
+    padding: 16px 20px;
+    
+    .whatsapp-header-icon {
+        font-size: 24px;
+    }
+    
+    .modal-title {
+        font-weight: 600;
+    }
+}
+
+.whatsapp-modal-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.whatsapp-modal-footer {
+    border-top: 1px solid #e9ecef;
+    padding: 12px 20px;
+}
+
+/* Lista de recordatorios */
+.whatsapp-reminders-list {
+    .reminder-card {
+        background: #f8f9fa;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        border: 1px solid #e9ecef;
+        transition: all 0.2s ease;
+        
+        &:hover {
+            border-color: #25D366;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
+        }
+        
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+}
+
+.reminder-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.reminder-patient {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: #2c3e50;
+    
+    i {
+        font-size: 20px;
+        color: var(--primary-color, #007bff);
+    }
+}
+
+.reminder-number {
+    background: var(--primary-color, #007bff);
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.reminder-details {
+    margin-bottom: 16px;
+}
+
+.reminder-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: #495057;
+    
+    i {
+        font-size: 16px;
+    }
+}
+
+.reminder-message {
+    background: white;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.message-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.message-preview {
+    font-size: 14px;
+    color: #2c3e50;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.reminder-actions {
+    margin-top: 12px;
+}
+
+.btn-whatsapp {
+    background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    &:hover {
+        background: linear-gradient(135deg, #22c55e 0%, #0f766e 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3);
+    }
+    
+    &:active {
+        transform: translateY(0);
+    }
+    
+    i {
+        font-size: 20px;
+    }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .whatsapp-fab-container {
+        bottom: 16px;
+        right: 16px;
+    }
+    
+    .whatsapp-fab {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+    }
+    
+    .reminder-info {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .whatsapp-modal-body {
+        padding: 16px;
+    }
+}

@@ -1,4 +1,14 @@
-﻿<!-- Panel de Estadisticas -->
+﻿<!-- Botón flotante de WhatsApp -->
+<div class="whatsapp-fab-container">
+    <button class="whatsapp-fab" (click)="openWhatsAppModal()" title="Recordatorios WhatsApp">
+        <i class="bi bi-whatsapp"></i>
+        <span class="whatsapp-badge" *ngIf="whatsappRemindersCount > 0">
+            {{ whatsappRemindersCount > 9 ? '9+' : whatsappRemindersCount }}
+        </span>
+    </button>
+</div>
+
+<!-- Panel de Estadisticas -->
 <div class="stats-panel mb-4" *ngIf="showStats">
     <!-- Header con selector de periodo -->
     <div class="stats-header d-flex justify-content-between align-items-center mb-3">
@@ -240,5 +250,92 @@
 </div>
 
 <!-- Backdrop para modales -->
-<div class="modal-backdrop fade" [class.show]="showPatientModal || showEditModal"
-    *ngIf="showPatientModal || showEditModal"></div>
+<div class="modal-backdrop fade" [class.show]="showPatientModal || showEditModal || showWhatsAppModal"
+    *ngIf="showPatientModal || showEditModal || showWhatsAppModal"></div>
+
+<!-- Modal de Recordatorios WhatsApp -->
+<div class="modal fade whatsapp-modal" [class.show]="showWhatsAppModal" [style.display]="showWhatsAppModal ? 'block' : 'none'"
+    tabindex="-1" role="dialog" aria-labelledby="whatsappModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header whatsapp-modal-header">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-whatsapp whatsapp-header-icon me-2"></i>
+                    <h5 class="modal-title mb-0" id="whatsappModalLabel">Recordatorios WhatsApp</h5>
+                </div>
+                <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="closeWhatsAppModal()"></button>
+            </div>
+            <div class="modal-body whatsapp-modal-body">
+                <!-- Loading state -->
+                <div *ngIf="whatsappLoading" class="text-center py-4">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Cargando recordatorios...</p>
+                </div>
+
+                <!-- Empty state -->
+                <div *ngIf="!whatsappLoading && whatsappReminders.length === 0" class="text-center py-5">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">¡Todo al día!</h5>
+                    <p class="text-muted">No hay recordatorios pendientes de enviar en las próximas 24 horas.</p>
+                </div>
+
+                <!-- Lista de recordatorios -->
+                <div *ngIf="!whatsappLoading && whatsappReminders.length > 0" class="whatsapp-reminders-list">
+                    <p class="text-muted mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Tienes <strong>{{ whatsappRemindersCount }}</strong> {{ whatsappRemindersCount === 1 ? 'recordatorio pendiente' : 'recordatorios pendientes' }} para las próximas 24 horas.
+                    </p>
+                    
+                    <div class="reminder-card" *ngFor="let reminder of whatsappReminders; let i = index">
+                        <div class="reminder-header">
+                            <div class="reminder-patient">
+                                <i class="bi bi-person-circle me-2"></i>
+                                <strong>{{ reminder.patientName }}</strong>
+                            </div>
+                            <span class="reminder-number">#{{ i + 1 }}</span>
+                        </div>
+                        
+                        <div class="reminder-details">
+                            <div class="reminder-info">
+                                <div class="info-item">
+                                    <i class="bi bi-calendar-event text-primary"></i>
+                                    <span>{{ reminder.formattedDate }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="bi bi-clock text-primary"></i>
+                                    <span>{{ reminder.formattedTime }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class="bi bi-telephone text-primary"></i>
+                                    <span>{{ reminder.phone }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="reminder-message">
+                                <label class="message-label">
+                                    <i class="bi bi-chat-dots me-1"></i>Mensaje:
+                                </label>
+                                <div class="message-preview">{{ reminder.message }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="reminder-actions">
+                            <a [href]="reminder.whatsappLink" target="_blank" class="btn btn-whatsapp btn-lg w-100">
+                                <i class="bi bi-whatsapp me-2"></i>
+                                Enviar por WhatsApp
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer whatsapp-modal-footer">
+                <button type="button" class="btn btn-outline-secondary" (click)="loadWhatsAppReminders()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar
+                </button>
+                <button type="button" class="btn btn-secondary" (click)="closeWhatsAppModal()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
