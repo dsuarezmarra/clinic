@@ -74,8 +74,14 @@ export class WhatsAppReminderService {
     // Obtener solo el primer nombre
     const firstName = reminder.patientName.split(' ')[0];
     
-    // Crear mensaje personalizado
-    reminder.message = `¡Hola ${firstName}! 👋 Te recuerdo tu cita de masaje para ${reminder.formattedDate} a las ${reminder.formattedTime}. Si necesitas cambiarla o no puedes venir, por favor escríbeme. ¡Gracias!`;
+    // Crear mensaje personalizado con emojis compatibles con WhatsApp
+    reminder.message = `Hola ${firstName}! 🙋‍♂️
+
+Te recuerdo tu cita de masaje para el ${reminder.formattedDate} a las ${reminder.formattedTime} ⏰
+
+Si necesitas cambiarla o no puedes venir, por favor escríbeme.
+
+Gracias! 😊`;
     
     // Crear enlace de WhatsApp
     const phoneFormatted = this.formatPhoneForWhatsApp(reminder.phone);
