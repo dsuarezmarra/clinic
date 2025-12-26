@@ -2733,7 +2733,7 @@ router.get('/whatsapp-reminders/pending', loadTenant, async (req, res) => {
 
     // Buscar citas entre 23 y 25 horas en el futuro
     const appointmentsData = await supabaseFetch(
-      `${appointmentsTable}?select=*,patient:${patientsTable}(*)&dateTime=gte.${in23Hours.toISOString()}&dateTime=lte.${in25Hours.toISOString()}&order=dateTime.asc`
+      `${appointmentsTable}?select=*,patient:${patientsTable}(*)&start=gte.${in23Hours.toISOString()}&start=lte.${in25Hours.toISOString()}&order=start.asc`
     );
 
     // Filtrar solo los que tienen móvil español y recordatorios activados
@@ -2749,7 +2749,7 @@ router.get('/whatsapp-reminders/pending', loadTenant, async (req, res) => {
       eligibleForReminder: eligibleReminders.length,
       appointments: eligibleReminders.map(apt => ({
         id: apt.id,
-        dateTime: apt.dateTime,
+        dateTime: apt.start,
         patientName: apt.patient ? `${apt.patient.firstName} ${apt.patient.lastName}` : 'Unknown',
         phone: apt.patient?.phone,
         whatsappReminders: apt.patient?.whatsappReminders
@@ -2838,7 +2838,7 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
 
         // Buscar citas que necesitan recordatorio
         const appointments = await supabaseFetch(
-          `${appointmentsTable}?select=*,patient:${patientsTable}(*)&dateTime=gte.${in23Hours.toISOString()}&dateTime=lte.${in25Hours.toISOString()}&whatsappReminderSent=eq.false&order=dateTime.asc`
+          `${appointmentsTable}?select=*,patient:${patientsTable}(*)&start=gte.${in23Hours.toISOString()}&start=lte.${in25Hours.toISOString()}&whatsappReminderSent=eq.false&order=start.asc`
         );
 
         if (!appointments || appointments.length === 0) {
