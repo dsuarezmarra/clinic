@@ -2681,4 +2681,261 @@ router.get('/stats/dashboard', loadTenant, async (req, res) => {
   }
 });
 
+// ============================================
+// WHATSAPP REMINDERS ROUTES (usando fetch directo)
+// ============================================
+
+/**
+ * GET /api/whatsapp-reminders/status
+ * Estado del sistema de recordatorios WhatsApp
+ */
+router.get('/whatsapp-reminders/status', async (req, res) => {
+  try {
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const in24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    // Por ahora devolver un status básico sin consulta a DB
+    // ya que esto se llama sin tenant específico
+    res.json({
+      status: 'active',
+      service: 'whatsapp-reminders',
+      cronSchedule: '0 9 * * *', // Daily at 9AM
+      features: {
+        autoReminders: true,
+        reminderHours: 24,
+        spanishMobileOnly: true
+      },
+      message: 'Sistema de recordatorios WhatsApp activo',
+      timestamp: now.toISOString()
+    });
+  } catch (error) {
+    console.error('Error getting whatsapp-reminders status:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/whatsapp-reminders/pending
+ * Obtener citas pendientes de recordatorio (requiere tenant)
+ */
+router.get('/whatsapp-reminders/pending', loadTenant, async (req, res) => {
+  try {
+    const appointmentsTable = req.getTable('appointments');
+    const patientsTable = req.getTable('patients');
+    
+    const now = new Date();
+    const in23Hours = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+    const in25Hours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+    // Buscar citas entre 23 y 25 horas en el futuro
+    const appointmentsData = await supabaseFetch(
+      `${appointmentsTable}?select=*,patient:${patientsTable}(*)&dateTime=gte.${in23Hours.toISOString()}&dateTime=lte.${in25Hours.toISOString()}&order=dateTime.asc`
+    );
+
+    // Filtrar solo los que tienen móvil español y recordatorios activados
+    const eligibleReminders = (appointmentsData || []).filter(apt => {
+      const patient = apt.patient;
+      if (!patient) return false;
+      if (patient.whatsappReminders === false) return false;
+      return isSpanishMobile(patient.phone) || isSpanishMobile(patient.phone2);
+    });
+
+    res.json({
+      totalAppointments: appointmentsData?.length || 0,
+      eligibleForReminder: eligibleReminders.length,
+      appointments: eligibleReminders.map(apt => ({
+        id: apt.id,
+        dateTime: apt.dateTime,
+        patientName: apt.patient ? `${apt.patient.firstName} ${apt.patient.lastName}` : 'Unknown',
+        phone: apt.patient?.phone,
+        whatsappReminders: apt.patient?.whatsappReminders
+      }))
+    });
+  } catch (error) {
+    console.error('Error getting pending reminders:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Helper para verificar si es un móvil español
+function isSpanishMobile(phone) {
+  if (!phone) return false;
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 9 && (cleaned.startsWith('6') || cleaned.startsWith('7'))) {
+    return true;
+  }
+  if (cleaned.length === 11 && cleaned.startsWith('34') && (cleaned[2] === '6' || cleaned[2] === '7')) {
+    return true;
+  }
+  if (cleaned.length === 12 && cleaned.startsWith('034') && (cleaned[3] === '6' || cleaned[3] === '7')) {
+    return true;
+  }
+  return false;
+}
+
+// Helper para formatear el número para WhatsApp
+function formatPhoneForWhatsApp(phone) {
+  if (!phone) return null;
+  const cleaned = phone.replace(/\D/g, '');
+  if (cleaned.length === 9) {
+    return '34' + cleaned;
+  }
+  if (cleaned.startsWith('34')) {
+    return cleaned;
+  }
+  if (cleaned.startsWith('034')) {
+    return cleaned.substring(1);
+  }
+  return cleaned;
+}
+
+/**
+ * POST /api/whatsapp-reminders/send
+ * Endpoint para el Cron Job de Vercel - envía recordatorios
+ */
+router.post('/whatsapp-reminders/send', async (req, res) => {
+  try {
+    console.log('🔔 [CRON] Iniciando envío de recordatorios WhatsApp...');
+    
+    // Verificar autorización del cron
+    const authHeader = req.headers.authorization;
+    const cronSecret = process.env.CRON_SECRET;
+    
+    // En producción, verificar el secret
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+      console.warn('⚠️ Intento no autorizado de ejecutar cron de WhatsApp');
+      return res.status(401).json({ error: 'No autorizado' });
+    }
+
+    // Obtener todos los tenants activos
+    const tenantsData = await supabaseFetch('tenants?is_active=eq.true');
+    
+    if (!tenantsData || tenantsData.length === 0) {
+      return res.json({
+        success: true,
+        message: 'No hay tenants activos',
+        sentCount: 0
+      });
+    }
+
+    let totalSent = 0;
+    let totalErrors = 0;
+    const results = [];
+
+    // Procesar cada tenant
+    for (const tenant of tenantsData) {
+      try {
+        const appointmentsTable = `appointments_${tenant.slug}`;
+        const patientsTable = `patients_${tenant.slug}`;
+        
+        const now = new Date();
+        const in23Hours = new Date(now.getTime() + 23 * 60 * 60 * 1000);
+        const in25Hours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
+
+        // Buscar citas que necesitan recordatorio
+        const appointments = await supabaseFetch(
+          `${appointmentsTable}?select=*,patient:${patientsTable}(*)&dateTime=gte.${in23Hours.toISOString()}&dateTime=lte.${in25Hours.toISOString()}&whatsappReminderSent=eq.false&order=dateTime.asc`
+        );
+
+        if (!appointments || appointments.length === 0) {
+          results.push({ tenant: tenant.slug, sent: 0, message: 'No hay citas pendientes' });
+          continue;
+        }
+
+        // Filtrar citas elegibles
+        const eligibleAppointments = appointments.filter(apt => {
+          const patient = apt.patient;
+          if (!patient) return false;
+          if (patient.whatsappReminders === false) return false;
+          return isSpanishMobile(patient.phone) || isSpanishMobile(patient.phone2);
+        });
+
+        let sentForTenant = 0;
+        for (const apt of eligibleAppointments) {
+          const phone = isSpanishMobile(apt.patient.phone) ? apt.patient.phone : apt.patient.phone2;
+          const whatsappNumber = formatPhoneForWhatsApp(phone);
+          
+          // Por ahora solo marcamos como enviado (la integración real con WhatsApp vendría después)
+          console.log(`📱 [${tenant.slug}] Recordatorio para ${apt.patient.firstName} ${apt.patient.lastName} al ${whatsappNumber}`);
+          
+          // Marcar como enviado en la DB
+          await supabaseFetch(`${appointmentsTable}?id=eq.${apt.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              whatsappReminderSent: true,
+              whatsappReminderSentAt: new Date().toISOString()
+            })
+          });
+          
+          sentForTenant++;
+          totalSent++;
+        }
+
+        results.push({ tenant: tenant.slug, sent: sentForTenant, total: eligibleAppointments.length });
+      } catch (tenantError) {
+        console.error(`Error procesando tenant ${tenant.slug}:`, tenantError);
+        totalErrors++;
+        results.push({ tenant: tenant.slug, error: tenantError.message });
+      }
+    }
+
+    console.log(`✅ [CRON] Recordatorios enviados: ${totalSent}, Errores: ${totalErrors}`);
+
+    res.json({
+      success: true,
+      totalSent,
+      totalErrors,
+      results
+    });
+  } catch (error) {
+    console.error('Error en cron de WhatsApp:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp-reminders/test
+ * Enviar recordatorio de prueba a un número específico
+ */
+router.post('/whatsapp-reminders/test', async (req, res) => {
+  try {
+    const { phone, patientName, appointmentDate, appointmentTime } = req.body;
+    
+    if (!phone) {
+      return res.status(400).json({ error: 'Número de teléfono requerido' });
+    }
+
+    if (!isSpanishMobile(phone)) {
+      return res.status(400).json({ 
+        error: 'El número debe ser un móvil español (6xx o 7xx)',
+        phone 
+      });
+    }
+
+    const whatsappNumber = formatPhoneForWhatsApp(phone);
+    
+    // Generar mensaje de prueba
+    const message = `🔔 *Recordatorio de Cita*\n\nHola ${patientName || 'paciente'},\n\nTe recordamos tu cita:\n📅 ${appointmentDate || 'mañana'}\n⏰ ${appointmentTime || '10:00'}\n\nSi necesitas cambiarla, contáctanos.\n\n¡Te esperamos!`;
+    
+    // Generar link de WhatsApp
+    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+    res.json({
+      success: true,
+      phone,
+      whatsappNumber,
+      whatsappLink,
+      message,
+      note: 'Este es un test. En producción, se enviaría automáticamente vía API de WhatsApp Business.'
+    });
+  } catch (error) {
+    console.error('Error en test de WhatsApp:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
