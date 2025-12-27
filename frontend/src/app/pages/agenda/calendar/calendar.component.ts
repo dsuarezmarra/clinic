@@ -221,27 +221,17 @@ export class CalendarComponent implements OnInit, OnDestroy {
         document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
         this.dropTargetSlot = null;
 
-        // Temporalmente ocultar el elemento arrastrado para que elementsFromPoint lo ignore
-        // Guardar el display original
-        let originalDisplay = '';
-        if (this.draggedElement) {
-            originalDisplay = this.draggedElement.style.display;
-            this.draggedElement.style.display = 'none';
-        }
-
         // Buscar el elemento bajo el cursor
         const elementsUnder = document.elementsFromPoint(x, y);
         
-        // Restaurar display inmediatamente
-        if (this.draggedElement) {
-            this.draggedElement.style.display = originalDisplay;
-        }
-        
-        // Buscar time-slot o time-slot-row (ignorando elementos con clase 'dragging')
+        // Buscar time-slot o time-slot-row, excluyendo el elemento arrastrado y sus hijos
         const timeSlotElement = elementsUnder.find(el => {
+            // Excluir el elemento arrastrado y cualquier elemento dentro de él
+            if (this.draggedElement && (el === this.draggedElement || this.draggedElement.contains(el))) {
+                return false;
+            }
             const isSlot = el.classList.contains('time-slot') || el.classList.contains('time-slot-row');
-            const isDragging = el.classList.contains('dragging');
-            return isSlot && !isDragging;
+            return isSlot;
         }) as HTMLElement;
 
         if (timeSlotElement) {
