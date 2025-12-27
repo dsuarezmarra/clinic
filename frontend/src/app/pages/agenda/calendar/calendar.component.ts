@@ -222,18 +222,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.dropTargetSlot = null;
 
         // Temporalmente ocultar el elemento arrastrado para que elementsFromPoint lo ignore
+        // Guardar el display original
+        let originalDisplay = '';
         if (this.draggedElement) {
-            this.draggedElement.style.visibility = 'hidden';
+            originalDisplay = this.draggedElement.style.display;
+            this.draggedElement.style.display = 'none';
         }
 
         // Buscar el elemento bajo el cursor
         const elementsUnder = document.elementsFromPoint(x, y);
         
-        console.log('[DropTarget] Elementos bajo cursor:', elementsUnder.length, elementsUnder.map(e => e.className).slice(0, 5));
-        
-        // Restaurar visibilidad
+        // Restaurar display inmediatamente
         if (this.draggedElement) {
-            this.draggedElement.style.visibility = 'visible';
+            this.draggedElement.style.display = originalDisplay;
         }
         
         // Buscar time-slot o time-slot-row (ignorando elementos con clase 'dragging')
@@ -243,11 +244,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
             return isSlot && !isDragging;
         }) as HTMLElement;
 
-        console.log('[DropTarget] Slot encontrado:', timeSlotElement?.className, timeSlotElement?.dataset);
-
         if (timeSlotElement) {
             timeSlotElement.classList.add('drop-target');
-            console.log('[DropTarget] Clase añadida, verificando:', timeSlotElement.classList.contains('drop-target'));
             
             // Obtener datos del slot desde atributos data-*
             const dateStr = timeSlotElement.dataset['date'];
