@@ -447,6 +447,10 @@
     height: 100%;
     min-height: 36px;
     box-sizing: border-box;
+    /* Touch support para drag en móviles */
+    touch-action: none;
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
     
     &:active {
         cursor: grabbing;
