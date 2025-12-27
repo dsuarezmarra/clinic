@@ -38,9 +38,4 @@ export class InicioComponent {
     goToSettings() {
         this.router.navigate(['/configuracion']);
     }
-
-    // Obtener el año actual
-    getCurrentYear(): number {
-        return new Date().getFullYear();
-    }
 }
