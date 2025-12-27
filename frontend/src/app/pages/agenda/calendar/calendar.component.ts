@@ -221,9 +221,18 @@ export class CalendarComponent implements OnInit, OnDestroy {
         document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
         this.dropTargetSlot = null;
 
+        // Temporalmente ocultar el elemento arrastrado para que elementsFromPoint lo ignore
+        if (this.draggedElement) {
+            this.draggedElement.style.visibility = 'hidden';
+        }
+
         // Buscar el elemento bajo el cursor
-        // elementsFromPoint devuelve todos los elementos en ese punto, ordenados de arriba a abajo
         const elementsUnder = document.elementsFromPoint(x, y);
+        
+        // Restaurar visibilidad
+        if (this.draggedElement) {
+            this.draggedElement.style.visibility = 'visible';
+        }
         
         // Buscar time-slot o time-slot-row (ignorando elementos con clase 'dragging')
         const timeSlotElement = elementsUnder.find(el => {
