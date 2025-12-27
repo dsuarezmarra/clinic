@@ -1534,8 +1534,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // Prevenir comportamiento por defecto del navegador (scroll, context menu, etc.)
-        event.preventDefault();
+        // NO preventDefault aquí - permitir que el tap funcione normalmente
         event.stopPropagation();
         
         const touch = event.touches[0];
