@@ -148,16 +148,22 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     // Handler de touchmove durante drag
     private onTouchMoveDuringDrag = (event: TouchEvent) => {
-        if (!this.dragStartPos || !this.draggedAppointment || !event.touches.length) return;
+        if (!this.dragStartPos || !this.draggedAppointment || !event.touches.length) {
+            console.log('[TouchMove] Sin datos iniciales, ignorando');
+            return;
+        }
 
         const touch = event.touches[0];
         const dx = touch.clientX - this.dragStartPos.x;
         const dy = touch.clientY - this.dragStartPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
+        console.log('[TouchMove] Distancia:', distance, 'isDragging:', this.isDragging);
+
         // Si se mueve un poco, iniciar el drag inmediatamente (sin esperar long press)
         if (!this.isDragging && distance >= 15) {
             this.isDragging = true;
+            console.log('[TouchMove] Iniciando drag!');
             
             // Feedback háptico
             if (navigator.vibrate) {
@@ -166,7 +172,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
             
             // Preparar el elemento para arrastrarlo
             if (this.touchedElement) {
+                console.log('[TouchMove] Llamando startDraggingElement');
                 this.startDraggingElement(this.touchedElement, touch.clientX, touch.clientY);
+            } else {
+                console.log('[TouchMove] ERROR: touchedElement es null!');
             }
         }
 
@@ -1517,19 +1526,27 @@ export class CalendarComponent implements OnInit, OnDestroy {
      * Toca y arrastra para mover, tap simple abre el modal
      */
     onAppointmentTouchStart(event: TouchEvent, appointment: Appointment, day: Date, timeSlot: string) {
+        console.log('[TouchStart] Iniciado en cita:', appointment.id, 'slot:', timeSlot);
+        
         // Solo permitir arrastrar desde el slot de inicio de la cita
         if (!this.isAppointmentStart(appointment, day, timeSlot)) {
+            console.log('[TouchStart] No es slot de inicio, ignorando');
             return;
         }
 
+        // Prevenir comportamiento por defecto del navegador (scroll, context menu, etc.)
+        event.preventDefault();
         event.stopPropagation();
         
         const touch = event.touches[0];
+        console.log('[TouchStart] Touch en posición:', touch.clientX, touch.clientY);
         
         // Guardar posición inicial, cita y elemento
         this.dragStartPos = { x: touch.clientX, y: touch.clientY };
         this.draggedAppointment = appointment;
         this.touchedElement = event.currentTarget as HTMLElement;
+        
+        console.log('[TouchStart] Elemento guardado:', this.touchedElement?.className);
         
         // Agregar listeners
         document.addEventListener('touchmove', this.onTouchMoveDuringDrag, { passive: false });
