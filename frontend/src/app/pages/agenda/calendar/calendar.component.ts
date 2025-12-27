@@ -155,8 +155,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const dy = touch.clientY - this.dragStartPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
+        // Threshold más alto para touch (12px vs 8px para mouse)
+        const touchThreshold = 12;
+        
         // Si no hemos superado el threshold, no hacer nada
-        if (!this.isDragging && distance >= this.dragThreshold) {
+        if (!this.isDragging && distance >= touchThreshold) {
             // Iniciar drag visual
             this.isDragging = true;
             this.createDragGhost(this.draggedAppointment, touch.clientX, touch.clientY);
@@ -200,10 +203,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.dropTargetSlot = null;
 
         // Buscar el elemento bajo el cursor
+        // elementsFromPoint devuelve todos los elementos en ese punto, ordenados de arriba a abajo
         const elementsUnder = document.elementsFromPoint(x, y);
-        const timeSlotElement = elementsUnder.find(el => 
-            el.classList.contains('time-slot') || el.classList.contains('time-slot-row')
-        ) as HTMLElement;
+        
+        // Buscar time-slot o time-slot-row (ignorando elementos con clase 'dragging')
+        const timeSlotElement = elementsUnder.find(el => {
+            const isSlot = el.classList.contains('time-slot') || el.classList.contains('time-slot-row');
+            const isDragging = el.classList.contains('dragging');
+            return isSlot && !isDragging;
+        }) as HTMLElement;
 
         if (timeSlotElement) {
             timeSlotElement.classList.add('drop-target');
