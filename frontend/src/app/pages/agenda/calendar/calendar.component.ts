@@ -149,7 +149,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // Handler de touchmove durante drag
     private onTouchMoveDuringDrag = (event: TouchEvent) => {
         if (!this.dragStartPos || !this.draggedAppointment || !event.touches.length) {
-            console.log('[TouchMove] Sin datos iniciales, ignorando');
             return;
         }
 
@@ -158,12 +157,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const dy = touch.clientY - this.dragStartPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        console.log('[TouchMove] Distancia:', distance, 'isDragging:', this.isDragging);
-
-        // Si se mueve un poco, iniciar el drag inmediatamente (sin esperar long press)
-        if (!this.isDragging && distance >= 15) {
+        // Si se mueve más de 10px, iniciar el drag
+        if (!this.isDragging && distance >= 10) {
+            // Prevenir scroll inmediatamente
+            event.preventDefault();
+            
             this.isDragging = true;
-            console.log('[TouchMove] Iniciando drag!');
             
             // Feedback háptico
             if (navigator.vibrate) {
@@ -172,16 +171,13 @@ export class CalendarComponent implements OnInit, OnDestroy {
             
             // Preparar el elemento para arrastrarlo
             if (this.touchedElement) {
-                console.log('[TouchMove] Llamando startDraggingElement');
                 this.startDraggingElement(this.touchedElement, touch.clientX, touch.clientY);
-            } else {
-                console.log('[TouchMove] ERROR: touchedElement es null!');
             }
         }
 
         // Si ya estamos en modo drag, mover el elemento
         if (this.isDragging) {
-            event.preventDefault(); // Solo prevenir scroll cuando estamos arrastrando
+            event.preventDefault();
             this.moveDraggingElement(touch.clientX, touch.clientY);
             this.updateDropTarget(touch.clientX, touch.clientY);
         }
@@ -408,10 +404,27 @@ export class CalendarComponent implements OnInit, OnDestroy {
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
+    
+    // Cache de días de la semana para evitar re-renders
+    private cachedWeekDays: Date[] = [];
+    private cachedWeekStartDate: string = '';
 
     getDayName(dayIndex: number): string {
         const dayMapping = [6, 0, 1, 2, 3, 4, 5];
         return this.weekDays[dayMapping[dayIndex]];
+    }
+    
+    // TrackBy functions para optimizar ngFor
+    trackByTimeSlot(index: number, timeSlot: string): string {
+        return timeSlot;
+    }
+    
+    trackByDay(index: number, day: Date): string {
+        return day.toISOString().split('T')[0];
+    }
+    
+    trackByAppointmentId(index: number, appointment: Appointment): string {
+        return appointment.id;
     }
 
     constructor(
@@ -609,16 +622,32 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
 
     getWeekDays(): Date[] {
+        // Calcular el inicio de la semana
         const startOfWeek = new Date(this.currentDate);
         const dayOfWeek = this.currentDate.getDay();
         const daysFromMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
         startOfWeek.setDate(this.currentDate.getDate() - daysFromMonday);
+        startOfWeek.setHours(0, 0, 0, 0);
+        
+        const weekStartKey = startOfWeek.toISOString().split('T')[0];
+        
+        // Usar cache si ya tenemos los días calculados para esta semana
+        if (this.cachedWeekStartDate === weekStartKey && this.cachedWeekDays.length === 7) {
+            return this.cachedWeekDays;
+        }
+        
+        // Calcular nuevos días
         const days: Date[] = [];
         for (let i = 0; i < 7; i++) {
             const day = new Date(startOfWeek);
             day.setDate(startOfWeek.getDate() + i);
             days.push(day);
         }
+        
+        // Guardar en cache
+        this.cachedWeekDays = days;
+        this.cachedWeekStartDate = weekStartKey;
+        
         return days;
     }
 
@@ -1526,31 +1555,24 @@ export class CalendarComponent implements OnInit, OnDestroy {
      * Toca y arrastra para mover, tap simple abre el modal
      */
     onAppointmentTouchStart(event: TouchEvent, appointment: Appointment, day: Date, timeSlot: string) {
-        console.log('[TouchStart] Iniciado en cita:', appointment.id, 'slot:', timeSlot);
-        
         // Solo permitir arrastrar desde el slot de inicio de la cita
         if (!this.isAppointmentStart(appointment, day, timeSlot)) {
-            console.log('[TouchStart] No es slot de inicio, ignorando');
             return;
         }
 
-        // NO preventDefault aquí - permitir que el tap funcione normalmente
         event.stopPropagation();
         
         const touch = event.touches[0];
-        console.log('[TouchStart] Touch en posición:', touch.clientX, touch.clientY);
         
         // Guardar posición inicial, cita y elemento
         this.dragStartPos = { x: touch.clientX, y: touch.clientY };
         this.draggedAppointment = appointment;
         this.touchedElement = event.currentTarget as HTMLElement;
         
-        console.log('[TouchStart] Elemento guardado:', this.touchedElement?.className);
-        
-        // Agregar listeners
+        // Agregar listeners con passive: false para poder llamar preventDefault
         document.addEventListener('touchmove', this.onTouchMoveDuringDrag, { passive: false });
-        document.addEventListener('touchend', this.onTouchEndDuringDrag);
-        document.addEventListener('touchcancel', this.onTouchEndDuringDrag);
+        document.addEventListener('touchend', this.onTouchEndDuringDrag, { passive: false });
+        document.addEventListener('touchcancel', this.onTouchEndDuringDrag, { passive: false });
     }
 
     /**

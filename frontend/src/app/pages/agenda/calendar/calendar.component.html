@@ -125,16 +125,16 @@
         <div class="week-grid">
             <!-- Encabezados de días -->
             <div class="time-column"></div>
-            <div *ngFor="let day of getWeekDays()" class="day-column-header" [class.weekend]="isWeekend(day)"
+            <div *ngFor="let day of getWeekDays(); trackBy: trackByDay" class="day-column-header" [class.weekend]="isWeekend(day)"
                 [class.today]="isToday(day)">
                 <div class="day-name">{{ getDayName(day.getDay()) }}</div>
                 <div class="day-date">{{ day.getDate() }}</div>
             </div>
 
             <!-- Filas de tiempo -->
-            <div *ngFor="let timeSlot of timeSlots" class="time-row">
+            <div *ngFor="let timeSlot of timeSlots; trackBy: trackByTimeSlot" class="time-row">
                 <div class="time-label">{{ timeSlot }}</div>
-                <div *ngFor="let day of getWeekDays()" 
+                <div *ngFor="let day of getWeekDays(); trackBy: trackByDay" 
                     class="time-slot" 
                     [class.weekend]="isWeekend(day)"
                     [class.drop-target]="isDropTarget(day, timeSlot)"
@@ -153,6 +153,7 @@
                             'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
                         }" 
                         [class.dragging]="isDragging && draggedAppointment?.id === appointment.id"
+                        style="touch-action: none;"
                         (mousedown)="onAppointmentMouseDown($event, appointment, day, timeSlot)"
                         (touchstart)="onAppointmentTouchStart($event, appointment, day, timeSlot)"
                         (click)="onAppointmentClick($event, appointment)">
@@ -186,7 +187,7 @@
         <div class="day-schedule">
 
             <div class="time-slots">
-                <div *ngFor="let timeSlot of timeSlots" 
+                <div *ngFor="let timeSlot of timeSlots; trackBy: trackByTimeSlot" 
                     class="time-slot-row"
                     [class.drop-target]="isDropTarget(currentDate, timeSlot)"
                     [attr.data-date]="currentDate.toISOString()"
@@ -205,6 +206,7 @@
                                 'status-paid': getAppointmentPaymentStatus(appointment) === 'paid'
                             }" 
                             [class.dragging]="isDragging && draggedAppointment?.id === appointment.id"
+                            style="touch-action: none;"
                             (mousedown)="onAppointmentMouseDown($event, appointment, currentDate, timeSlot)"
                             (touchstart)="onAppointmentTouchStart($event, appointment, currentDate, timeSlot)"
                             (click)="onAppointmentClick($event, appointment)">
