@@ -229,6 +229,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         // Buscar el elemento bajo el cursor
         const elementsUnder = document.elementsFromPoint(x, y);
         
+        console.log('[DropTarget] Elementos bajo cursor:', elementsUnder.length, elementsUnder.map(e => e.className).slice(0, 5));
+        
         // Restaurar visibilidad
         if (this.draggedElement) {
             this.draggedElement.style.visibility = 'visible';
@@ -241,8 +243,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
             return isSlot && !isDragging;
         }) as HTMLElement;
 
+        console.log('[DropTarget] Slot encontrado:', timeSlotElement?.className, timeSlotElement?.dataset);
+
         if (timeSlotElement) {
             timeSlotElement.classList.add('drop-target');
+            console.log('[DropTarget] Clase añadida, verificando:', timeSlotElement.classList.contains('drop-target'));
             
             // Obtener datos del slot desde atributos data-*
             const dateStr = timeSlotElement.dataset['date'];
