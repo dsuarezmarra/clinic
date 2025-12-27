@@ -430,10 +430,12 @@
 /* Drag & Drop en vista semanal (mouse events) */
 .time-slot.drop-target,
 .time-slot-row.drop-target {
-    background: rgba(102, 126, 234, 0.2) !important;
+    background: rgba(102, 126, 234, 0.35) !important;
     border: 2px dashed var(--primary-color) !important;
-    border-radius: 4px;
-    box-shadow: inset 0 0 10px rgba(102, 126, 234, 0.1);
+    border-radius: 6px;
+    box-shadow: inset 0 0 15px rgba(102, 126, 234, 0.25), 0 0 8px rgba(102, 126, 234, 0.3);
+    transform: scale(1.02);
+    transition: all 0.15s ease;
 }
 
 .appointment-block {
@@ -907,12 +909,15 @@
 
 /* Slot destino del drop */
 .time-slot-row.drop-target {
-    background: rgba(102, 126, 234, 0.15) !important;
+    background: rgba(102, 126, 234, 0.3) !important;
     border: 2px dashed var(--primary-color) !important;
     border-radius: 8px;
+    box-shadow: inset 0 0 15px rgba(102, 126, 234, 0.2), 0 0 8px rgba(102, 126, 234, 0.25);
+    transform: scale(1.01);
+    transition: all 0.15s ease;
     
     .slot-content {
-        background: rgba(102, 126, 234, 0.1);
+        background: rgba(102, 126, 234, 0.15);
     }
     
     .empty-slot {
