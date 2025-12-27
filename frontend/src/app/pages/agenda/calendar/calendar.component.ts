@@ -45,6 +45,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.draggedAppointment = null;
         this.dropTargetSlot = null;
         this.dragStartPos = null;
+        this.lastDropTargetElement = null;
         
         // Restaurar elemento arrastrado a su estado original
         if (this.draggedElement) {
@@ -215,27 +216,53 @@ export class CalendarComponent implements OnInit, OnDestroy {
         document.removeEventListener('touchcancel', this.onTouchEndDuringDrag);
     }
 
-    // Buscar slot de destino bajo el cursor
-    private updateDropTarget(x: number, y: number) {
-        // Limpiar destino anterior
-        document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-        this.dropTargetSlot = null;
+    // Cache del último drop target para optimización
+    private lastDropTargetElement: HTMLElement | null = null;
 
-        // Buscar el elemento bajo el cursor
-        const elementsUnder = document.elementsFromPoint(x, y);
+    // Buscar slot de destino bajo el cursor - versión optimizada
+    private updateDropTarget(x: number, y: number) {
+        // Ocultar temporalmente el elemento arrastrado con pointer-events
+        // Esto es más rápido que display:none porque no causa reflow
+        if (this.draggedElement) {
+            this.draggedElement.style.pointerEvents = 'none';
+        }
         
-        // Buscar time-slot o time-slot-row, excluyendo el elemento arrastrado y sus hijos
-        const timeSlotElement = elementsUnder.find(el => {
-            // Excluir el elemento arrastrado y cualquier elemento dentro de él
-            if (this.draggedElement && (el === this.draggedElement || this.draggedElement.contains(el))) {
-                return false;
+        // Obtener el elemento directamente bajo el punto
+        const elementUnder = document.elementFromPoint(x, y);
+        
+        // Restaurar pointer-events
+        if (this.draggedElement) {
+            this.draggedElement.style.pointerEvents = 'none'; // mantener none para el drag
+        }
+        
+        // Buscar el time-slot más cercano subiendo por el árbol DOM
+        let timeSlotElement: HTMLElement | null = null;
+        let current = elementUnder;
+        
+        while (current && current !== document.body) {
+            if (current.classList.contains('time-slot') || current.classList.contains('time-slot-row')) {
+                timeSlotElement = current as HTMLElement;
+                break;
             }
-            const isSlot = el.classList.contains('time-slot') || el.classList.contains('time-slot-row');
-            return isSlot;
-        }) as HTMLElement;
+            current = current.parentElement;
+        }
+        
+        // Si encontramos el mismo slot que antes, no hacer nada (optimización)
+        if (timeSlotElement === this.lastDropTargetElement) {
+            return;
+        }
+        
+        // Limpiar el anterior
+        if (this.lastDropTargetElement) {
+            this.lastDropTargetElement.classList.remove('drop-target');
+        }
+        
+        this.dropTargetSlot = null;
+        this.lastDropTargetElement = null;
 
         if (timeSlotElement) {
             timeSlotElement.classList.add('drop-target');
+            this.lastDropTargetElement = timeSlotElement;
             
             // Obtener datos del slot desde atributos data-*
             const dateStr = timeSlotElement.dataset['date'];
