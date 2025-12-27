@@ -1500,7 +1500,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // No prevenir default aquí para permitir tap/scroll normal hasta que inicie el drag
+        // Prevenir comportamiento por defecto (menú contextual, selección de texto)
+        event.preventDefault();
+        event.stopPropagation();
+        
         const touch = event.touches[0];
         
         // Guardar posición inicial y cita

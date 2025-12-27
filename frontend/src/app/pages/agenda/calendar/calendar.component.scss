@@ -447,10 +447,14 @@
     height: 100%;
     min-height: 36px;
     box-sizing: border-box;
-    /* Touch support para drag en móviles */
+    /* Touch support para drag en móviles - prevenir menú contextual y selección */
     touch-action: none;
     -webkit-user-drag: none;
     -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
     
     &:active {
         cursor: grabbing;
