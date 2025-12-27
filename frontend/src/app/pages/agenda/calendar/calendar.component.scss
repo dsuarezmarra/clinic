@@ -469,10 +469,12 @@
 .appointment-block.dragging,
 .appointment-block-continued.dragging,
 .appointment-card.dragging {
-    /* Hacer INVISIBLE el elemento original mientras se arrastra */
-    /* Solo el ghost flotante será visible */
-    opacity: 0 !important;
+    /* El elemento original se vuelve translúcido y sigue el dedo */
+    opacity: 0.75 !important;
     pointer-events: none !important;
+    z-index: 10000 !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35) !important;
+    transform: scale(1.02);
 }
 
 /* Prevenir selección durante drag en vista semanal */

@@ -28,7 +28,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // Estado del drag
     private dragStartPos: { x: number; y: number } | null = null;
     private dragThreshold = 8; // píxeles mínimos para considerar un drag
-    private dragGhostElement: HTMLElement | null = null;
+    private draggedElement: HTMLElement | null = null; // Elemento DOM que se arrastra
+    private draggedElementOriginalStyles: string = ''; // Estilos originales para restaurar
 
     // HostListener para resetear estado de drag cuando se presiona Escape
     @HostListener('document:keydown.escape')
@@ -44,55 +45,51 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.draggedAppointment = null;
         this.dropTargetSlot = null;
         this.dragStartPos = null;
-        this.removeDragGhost();
+        
+        // Restaurar elemento arrastrado a su estado original
+        if (this.draggedElement) {
+            this.draggedElement.style.cssText = this.draggedElementOriginalStyles;
+            this.draggedElement.classList.remove('dragging');
+            this.draggedElement = null;
+            this.draggedElementOriginalStyles = '';
+        }
+        
         document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
     }
 
-    // Crear elemento fantasma para visualizar el drag
-    private createDragGhost(appointment: Appointment, x: number, y: number) {
-        this.removeDragGhost();
+    // Preparar elemento para arrastrar (hacerlo fixed y seguir el dedo/mouse)
+    private startDraggingElement(element: HTMLElement, x: number, y: number) {
+        // Guardar estilos originales
+        this.draggedElementOriginalStyles = element.style.cssText;
+        this.draggedElement = element;
         
-        const ghost = document.createElement('div');
-        ghost.className = 'drag-ghost';
-        ghost.innerHTML = `
-            <strong>${this.getPatientName(appointment)}</strong>
-            <small>${this.formatTimeRange(appointment.start, appointment.end)}</small>
+        // Obtener dimensiones del elemento
+        const rect = element.getBoundingClientRect();
+        
+        // Hacer el elemento fixed y posicionarlo donde está
+        element.style.cssText = `
+            position: fixed !important;
+            left: ${x}px !important;
+            top: ${y}px !important;
+            width: ${rect.width}px !important;
+            height: ${rect.height}px !important;
+            transform: translate(-50%, -50%) !important;
+            z-index: 10000 !important;
+            opacity: 0.85 !important;
+            pointer-events: none !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+            transition: none !important;
         `;
-        ghost.style.cssText = `
-            position: fixed;
-            left: ${x}px;
-            top: ${y}px;
-            background: var(--primary-color, #667eea);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            pointer-events: none;
-            z-index: 10000;
-            font-size: 12px;
-            transform: translate(-50%, -50%);
-            opacity: 0.9;
-            max-width: 200px;
-        `;
-        document.body.appendChild(ghost);
-        this.dragGhostElement = ghost;
+        element.classList.add('dragging');
     }
-
-    // Actualizar posición del fantasma
-    private updateDragGhost(x: number, y: number) {
-        if (this.dragGhostElement) {
-            this.dragGhostElement.style.left = `${x}px`;
-            this.dragGhostElement.style.top = `${y}px`;
-        }
-    }
-
-    // Eliminar elemento fantasma
-    private removeDragGhost() {
-        if (this.dragGhostElement) {
-            this.dragGhostElement.remove();
-            this.dragGhostElement = null;
+    
+    // Mover elemento arrastrado
+    private moveDraggingElement(x: number, y: number) {
+        if (this.draggedElement) {
+            this.draggedElement.style.left = `${x}px`;
+            this.draggedElement.style.top = `${y}px`;
         }
     }
 
@@ -110,12 +107,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
             this.isDragging = true;
             document.body.style.cursor = 'grabbing';
             document.body.style.userSelect = 'none';
-            this.createDragGhost(this.draggedAppointment, event.clientX, event.clientY);
+            // El elemento ya fue preparado en mousedown, solo actualizamos posición
         }
 
         if (this.isDragging) {
             event.preventDefault();
-            this.updateDragGhost(event.clientX, event.clientY);
+            this.moveDraggingElement(event.clientX, event.clientY);
             this.updateDropTarget(event.clientX, event.clientY);
         }
     };
@@ -146,10 +143,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // TOUCH EVENT HANDLERS (Mobile Support)
     // ========================================
     
-    // Timer para detectar long press
-    private longPressTimer: any = null;
-    private longPressDelay = 300; // ms para considerar long press
-    private touchStarted = false;
+    // Referencia al elemento touch
+    private touchedElement: HTMLElement | null = null;
 
     // Handler de touchmove durante drag
     private onTouchMoveDuringDrag = (event: TouchEvent) => {
@@ -160,31 +155,31 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const dy = touch.clientY - this.dragStartPos.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        // Si se mueve antes del long press, cancelar el timer (es un scroll)
-        if (!this.isDragging && this.longPressTimer && distance > 10) {
-            clearTimeout(this.longPressTimer);
-            this.longPressTimer = null;
-            this.cleanupTouchListeners();
-            this.resetDragState();
-            return;
+        // Si se mueve un poco, iniciar el drag inmediatamente (sin esperar long press)
+        if (!this.isDragging && distance >= 15) {
+            this.isDragging = true;
+            
+            // Feedback háptico
+            if (navigator.vibrate) {
+                navigator.vibrate(30);
+            }
+            
+            // Preparar el elemento para arrastrarlo
+            if (this.touchedElement) {
+                this.startDraggingElement(this.touchedElement, touch.clientX, touch.clientY);
+            }
         }
 
         // Si ya estamos en modo drag, mover el elemento
         if (this.isDragging) {
             event.preventDefault(); // Solo prevenir scroll cuando estamos arrastrando
-            this.updateDragGhost(touch.clientX, touch.clientY);
+            this.moveDraggingElement(touch.clientX, touch.clientY);
             this.updateDropTarget(touch.clientX, touch.clientY);
         }
     };
 
     // Handler de touchend durante drag
     private onTouchEndDuringDrag = (event: TouchEvent) => {
-        // Limpiar timer si existe
-        if (this.longPressTimer) {
-            clearTimeout(this.longPressTimer);
-            this.longPressTimer = null;
-        }
-        
         this.cleanupTouchListeners();
 
         // Guardar referencia a la cita antes de resetear
@@ -197,15 +192,15 @@ export class CalendarComponent implements OnInit, OnDestroy {
         } else if (wasDragging) {
             // Drag sin destino válido - cancelar
             this.resetDragState();
-        } else if (!wasDragging && appointmentToEdit && this.touchStarted) {
-            // Fue un tap simple (no long press) -> abrir modal de edición
+        } else if (!wasDragging && appointmentToEdit) {
+            // Fue un tap simple -> abrir modal de edición
             this.resetDragState();
             this.openEditAppointmentModal(appointmentToEdit);
         } else {
             this.resetDragState();
         }
         
-        this.touchStarted = false;
+        this.touchedElement = null;
     };
     
     // Limpiar listeners de touch
@@ -214,22 +209,6 @@ export class CalendarComponent implements OnInit, OnDestroy {
         document.removeEventListener('touchend', this.onTouchEndDuringDrag);
         document.removeEventListener('touchcancel', this.onTouchEndDuringDrag);
     }
-    
-    // Iniciar el drag después del long press
-    private startTouchDrag = () => {
-        if (!this.draggedAppointment || !this.dragStartPos) return;
-        
-        this.longPressTimer = null;
-        this.isDragging = true;
-        
-        // Feedback háptico si está disponible
-        if (navigator.vibrate) {
-            navigator.vibrate(50);
-        }
-        
-        // Crear el ghost en la posición actual
-        this.createDragGhost(this.draggedAppointment, this.dragStartPos.x, this.dragStartPos.y);
-    };
 
     // Buscar slot de destino bajo el cursor
     private updateDropTarget(x: number, y: number) {
@@ -1535,7 +1514,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
     /**
      * Iniciar posible arrastre de una cita (touchstart) - Soporte móvil
-     * Usa long-press para iniciar drag, tap simple abre el modal
+     * Toca y arrastra para mover, tap simple abre el modal
      */
     onAppointmentTouchStart(event: TouchEvent, appointment: Appointment, day: Date, timeSlot: string) {
         // Solo permitir arrastrar desde el slot de inicio de la cita
@@ -1543,18 +1522,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // NO preventDefault aquí - permitir tap normal
         event.stopPropagation();
         
         const touch = event.touches[0];
         
-        // Guardar posición inicial y cita
+        // Guardar posición inicial, cita y elemento
         this.dragStartPos = { x: touch.clientX, y: touch.clientY };
         this.draggedAppointment = appointment;
-        this.touchStarted = true;
-        
-        // Iniciar timer para long press
-        this.longPressTimer = setTimeout(this.startTouchDrag, this.longPressDelay);
+        this.touchedElement = event.currentTarget as HTMLElement;
         
         // Agregar listeners
         document.addEventListener('touchmove', this.onTouchMoveDuringDrag, { passive: false });
