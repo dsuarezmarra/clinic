@@ -28,7 +28,7 @@ export class DashboardComponent implements OnInit {
     stats: DashboardStats | null = null;
     statsLoading = false;
     statsPeriod: StatsPeriod = 'month';
-    showStats = true;
+    showStats = false;
 
     // WhatsApp reminders
     whatsappReminders: WhatsAppReminder[] = [];
