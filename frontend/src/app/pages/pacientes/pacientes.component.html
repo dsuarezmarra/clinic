@@ -110,7 +110,7 @@
                             <div class="col-md-4 mb-3">
                                 <label for="cp" class="form-label">CP</label>
                                 <input type="text" class="form-control" id="cp" name="cp" maxlength="5"
-                                    [(ngModel)]="patientFormData.cp" (ngModelChange)="onCpChange($event)"
+                                    [(ngModel)]="patientFormData.cp" (ngModelChange)="onCpChange($any($event))"
                                     pattern="\\d{5}" placeholder="Ej: 28001" tabindex="0" style="z-index: 1060;">
                             </div>
 
@@ -127,7 +127,7 @@
                             <div class="col-md-4 mb-3">
                                 <label for="province" class="form-label">Provincia</label>
                                 <select class="form-select" id="province" name="province"
-                                    [(ngModel)]="patientFormData.province" (ngModelChange)="onProvinceChange($event)"
+                                    [(ngModel)]="patientFormData.province" (ngModelChange)="onProvinceChange($any($event))"
                                     tabindex="0" style="z-index: 1060;">
                                     <option value="" disabled *ngIf="!patientFormData.province">Seleccione
                                         una provincia</option>

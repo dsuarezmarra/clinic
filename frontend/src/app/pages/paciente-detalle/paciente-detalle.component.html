@@ -48,53 +48,53 @@
                                 <label class="form-label text-muted small">NOMBRE COMPLETO</label>
                                 <div class="fw-medium">{{ getFullName() }}</div>
                             </div>
-                            <div class="col-md-6 mb-3" *ngIf="patient.phone">
+                            <div class="col-md-6 mb-3" *ngIf="patient!.phone">
                                 <label class="form-label text-muted small">TELÉFONO</label>
                                 <div>
-                                    <a href="tel:{{ patient.phone }}" class="text-decoration-none">
+                                    <a href="tel:{{ patient!.phone }}" class="text-decoration-none">
                                         <i class="bi bi-telephone me-1"></i>
-                                        {{ patient.phone }}
+                                        {{ patient!.phone }}
                                     </a>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3" *ngIf="patient.phone2">
+                            <div class="col-md-6 mb-3" *ngIf="patient!.phone2">
                                 <label class="form-label text-muted small">TELÉFONO 2</label>
                                 <div>
-                                    <a href="tel:{{ patient.phone2 }}" class="text-decoration-none">
+                                    <a href="tel:{{ patient!.phone2 }}" class="text-decoration-none">
                                         <i class="bi bi-telephone me-1"></i>
-                                        {{ patient.phone2 }}
+                                        {{ patient!.phone2 }}
                                     </a>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3" *ngIf="patient.email">
+                            <div class="col-md-6 mb-3" *ngIf="patient!.email">
                                 <label class="form-label text-muted small">EMAIL</label>
                                 <div>
-                                    <a href="mailto:{{ patient.email }}" class="text-decoration-none">
+                                    <a href="mailto:{{ patient!.email }}" class="text-decoration-none">
                                         <i class="bi bi-envelope me-1"></i>
-                                        {{ patient.email }}
+                                        {{ patient!.email }}
                                     </a>
                                 </div>
                             </div>
-                            <div class="col-md-6 mb-3" *ngIf="patient.family_contact">
+                            <div class="col-md-6 mb-3" *ngIf="patient!.family_contact">
                                 <label class="form-label text-muted small">CONTACTO FAMILIAR</label>
                                 <div>
                                     <i class="bi bi-people me-1"></i>
-                                    {{ patient.family_contact }}
+                                    {{ patient!.family_contact }}
                                 </div>
                             </div>
                             <!-- DNI mostrado junto a la información de contacto -->
-                            <div class="col-md-6 mb-3" *ngIf="patient.dni">
+                            <div class="col-md-6 mb-3" *ngIf="patient!.dni">
                                 <label class="form-label text-muted small">DNI</label>
                                 <div>
-                                    {{ patient.dni }}
+                                    {{ patient!.dni }}
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row" *ngIf="patient.birthDate">
+                        <div class="row" *ngIf="patient!.birthDate">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted small">FECHA DE NACIMIENTO</label>
-                                <div>{{ formatDate(patient.birthDate) }}</div>
+                                <div>{{ formatDate(patient!.birthDate!) }}</div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-muted small">EDAD</label>
@@ -102,33 +102,33 @@
                             </div>
                         </div>
 
-                        <div class="row" *ngIf="patient.address">
+                        <div class="row" *ngIf="patient!.address">
                             <div class="col-12 mb-3">
                                 <label class="form-label text-muted small">DIRECCIÓN</label>
                                 <div>
                                     <i class="bi bi-geo-alt me-1"></i>
-                                    {{ patient.address }}
+                                    {{ patient!.address }}
                                 </div>
                             </div>
                             <!-- Mostrar CP / Provincia / Localidad después de la dirección -->
                             <div class="col-md-4 mb-2">
                                 <label class="form-label text-muted small">CP</label>
-                                <div>{{ patient.cp || '-' }}</div>
+                                <div>{{ patient!.cp || '-' }}</div>
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label text-muted small">LOCALIDAD</label>
-                                <div>{{ patient.city || '-' }}</div>
+                                <div>{{ patient!.city || '-' }}</div>
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label text-muted small">PROVINCIA</label>
-                                <div>{{ patient.province || '-' }}</div>
+                                <div>{{ patient!.province || '-' }}</div>
                             </div>
                         </div>
 
-                        <div class="row" *ngIf="patient.notes">
+                        <div class="row" *ngIf="patient!.notes">
                             <div class="col-12">
                                 <label class="form-label text-muted small">NOTAS</label>
-                                <div class="bg-light p-3 rounded">{{ patient.notes }}</div>
+                                <div class="bg-light p-3 rounded">{{ patient!.notes }}</div>
                             </div>
                         </div>
                     </div>
@@ -182,12 +182,12 @@
                         <div class="mb-2">
                             <small class="text-muted">Registrado:</small>
                             <br>
-                            <span class="small">{{ formatDateTime(patient.createdAt) }}</span>
+                            <span class="small">{{ formatDateTime(patient!.createdAt) }}</span>
                         </div>
-                        <div *ngIf="patient.updatedAt !== patient.createdAt">
+                        <div *ngIf="patient!.updatedAt !== patient!.createdAt">
                             <small class="text-muted">Última actualización:</small>
                             <br>
-                            <span class="small">{{ formatDateTime(patient.updatedAt) }}</span>
+                            <span class="small">{{ formatDateTime(patient!.updatedAt) }}</span>
                         </div>
                     </div>
                 </div>
@@ -436,7 +436,7 @@
                                         <div class="d-flex justify-content-between align-items-center">
                                             <div *ngIf="selectedFile" class="text-muted">
                                                 <i class="bi bi-file-earmark me-2"></i>
-                                                {{ selectedFile.name }} ({{ formatFileSize(selectedFile.size) }})
+                                                {{ selectedFile!.name }} ({{ formatFileSize(selectedFile!.size) }})
                                             </div>
                                             <button type="button" class="btn btn-primary"
                                                 [disabled]="!selectedFile || uploading" (click)="uploadFile()">
@@ -767,14 +767,14 @@
         <!-- Header del modal -->
         <div class="preview-modal-header">
             <div class="preview-file-info">
-                <i [class]="'bi ' + getFileIcon(previewFile.mimeType) + ' me-2'"></i>
-                <span class="preview-file-name">{{ previewFile.originalName }}</span>
-                <span class="badge ms-2" [class]="getCategoryColor(previewFile.category) + ' bg-opacity-10 border'">
-                    {{ getCategoryName(previewFile.category) }}
+                <i [class]="'bi ' + getFileIcon(previewFile!.mimeType) + ' me-2'"></i>
+                <span class="preview-file-name">{{ previewFile!.originalName }}</span>
+                <span class="badge ms-2" [class]="getCategoryColor(previewFile!.category) + ' bg-opacity-10 border'">
+                    {{ getCategoryName(previewFile!.category) }}
                 </span>
             </div>
             <div class="preview-actions">
-                <button type="button" class="btn btn-sm btn-outline-light me-2" (click)="downloadFile(previewFile)" title="Descargar">
+                <button type="button" class="btn btn-sm btn-outline-light me-2" (click)="downloadFile(previewFile!)" title="Descargar">
                     <i class="bi bi-download"></i>
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-light" (click)="closeFilePreview()" title="Cerrar">
@@ -786,24 +786,24 @@
         <!-- Contenido del preview -->
         <div class="preview-modal-body">
             <!-- Preview de imagen -->
-            <img *ngIf="isImageFile(previewFile.mimeType)"
-                [src]="getFilePreviewUrl(previewFile.id)"
-                [alt]="previewFile.originalName"
+            <img *ngIf="isImageFile(previewFile!.mimeType)"
+                [src]="getFilePreviewUrl(previewFile!.id)"
+                [alt]="previewFile!.originalName"
                 class="preview-image"
                 (error)="onImageError($event)">
             
             <!-- Preview de PDF -->
-            <iframe *ngIf="isPdfFile(previewFile.mimeType)"
-                [src]="getFilePreviewUrl(previewFile.id) | safeUrl"
+            <iframe *ngIf="isPdfFile(previewFile!.mimeType)"
+                [src]="getFilePreviewUrl(previewFile!.id) | safeUrl"
                 class="preview-pdf"
-                [title]="previewFile.originalName">
+                [title]="previewFile!.originalName">
             </iframe>
             
             <!-- Archivo sin preview disponible -->
-            <div *ngIf="!isImageFile(previewFile.mimeType) && !isPdfFile(previewFile.mimeType)" class="no-preview">
-                <i [class]="'bi ' + getFileIcon(previewFile.mimeType) + ' display-1 text-muted'"></i>
+            <div *ngIf="!isImageFile(previewFile!.mimeType) && !isPdfFile(previewFile!.mimeType)" class="no-preview">
+                <i [class]="'bi ' + getFileIcon(previewFile!.mimeType) + ' display-1 text-muted'"></i>
                 <p class="mt-3 text-muted">Vista previa no disponible para este tipo de archivo</p>
-                <button type="button" class="btn btn-primary" (click)="downloadFile(previewFile)">
+                <button type="button" class="btn btn-primary" (click)="downloadFile(previewFile!)">
                     <i class="bi bi-download me-2"></i>
                     Descargar archivo
                 </button>
@@ -814,11 +814,11 @@
         <div class="preview-modal-footer">
             <span class="text-muted small">
                 <i class="bi bi-calendar3 me-1"></i>
-                {{ previewFile.uploadDate | date:'dd/MM/yyyy HH:mm' }}
+                {{ previewFile!.uploadDate | date:'dd/MM/yyyy HH:mm' }}
             </span>
             <span class="text-muted small ms-3">
                 <i class="bi bi-file-earmark me-1"></i>
-                {{ formatFileSize(previewFile.fileSize) }}
+                {{ formatFileSize(previewFile!.fileSize) }}
             </span>
         </div>
     </div>
