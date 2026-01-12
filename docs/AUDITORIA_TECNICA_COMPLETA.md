@@ -1,4 +1,5 @@
 # ?? AUDITORÍA TÉCNICA COMPLETA
+
 ## Sistema de Gestión para Clínicas de Fisioterapia
 
 **Fecha:** 12 de enero de 2026  
@@ -9,19 +10,20 @@
 ## ?? RESUMEN EJECUTIVO
 
 ### Descripción del Sistema
+
 Sistema web completo para gestión de clínicas de fisioterapia con arquitectura multi-tenant, desarrollado con tecnologías modernas y escalables.
 
 ### Métricas Clave
 
-| Métrica | Valor |
-|---------|-------|
-| **Líneas de código (Frontend)** | ~15,000+ |
-| **Líneas de código (Backend)** | ~5,000+ |
-| **Componentes Angular** | 12+ |
-| **Servicios Angular** | 15 |
-| **Endpoints API REST** | 45+ |
-| **Modelos de datos** | 8 |
-| **Horas de desarrollo estimadas** | 370+ |
+| Métrica                           | Valor    |
+| --------------------------------- | -------- |
+| **Líneas de código (Frontend)**   | ~15,000+ |
+| **Líneas de código (Backend)**    | ~5,000+  |
+| **Componentes Angular**           | 12+      |
+| **Servicios Angular**             | 15       |
+| **Endpoints API REST**            | 45+      |
+| **Modelos de datos**              | 8        |
+| **Horas de desarrollo estimadas** | 370+     |
 
 ---
 
@@ -30,6 +32,7 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ### Stack Tecnológico
 
 #### Frontend
+
 - **Framework:** Angular 20.2.4 (última versión estable)
 - **UI Framework:** Bootstrap 5.3.7 + Bootstrap Icons
 - **Calendario:** FullCalendar 6.1.19 (componentes completos)
@@ -39,6 +42,7 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 - **HTTP Client:** Angular HttpClient
 
 #### Backend
+
 - **Runtime:** Node.js 18+
 - **Framework:** Express 4.18.2
 - **Validación:** express-validator 7.0.1
@@ -47,11 +51,13 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 - **Fechas:** moment-timezone 0.5.43
 
 #### Base de Datos
+
 - **Servicio:** Supabase (PostgreSQL gestionado)
 - **ORM/Client:** Supabase JS SDK 2.89
 - **Arquitectura:** Multi-tenant con aislamiento por tablas
 
 #### Infraestructura
+
 - **Hosting Frontend:** Vercel (Edge Network)
 - **Hosting Backend:** Vercel (Serverless Functions)
 - **CDN:** Vercel Edge Network (global)
@@ -62,12 +68,15 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ## ?? MÓDULOS Y FUNCIONALIDADES DETALLADAS
 
 ### 1. CALENDARIO DE CITAS (Complejidad: ALTA)
-**Archivos principales:** 
+
+**Archivos principales:**
+
 - `calendar.component.ts` (1,651 líneas)
 - `calendar.component.html` (497 líneas)
 - `calendar.component.scss`
 
 **Funcionalidades:**
+
 - ? Vista mensual compacta con mini-calendarios
 - ? Vista semanal con slots de 30 minutos
 - ? Vista diaria detallada
@@ -86,12 +95,15 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 2. GESTIÓN DE PACIENTES (Complejidad: ALTA)
+
 **Archivos principales:**
+
 - `pacientes.component.ts` (808 líneas)
 - `paciente-detalle.component.ts` (727 líneas)
 - `patient.service.ts` (130 líneas)
 
 **Funcionalidades:**
+
 - ? Listado paginado con búsqueda inteligente
 - ? Búsqueda accent-insensitive (María = Maria)
 - ? Ficha completa del paciente (15+ campos)
@@ -110,11 +122,14 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 3. SISTEMA DE BONOS/SESIONES (Complejidad: ALTA)
+
 **Archivos principales:**
+
 - `credit.service.ts` (130 líneas)
 - `credits.js` (756 líneas - backend)
 
 **Funcionalidades:**
+
 - ? Sesiones individuales (30 o 60 minutos)
 - ? Bonos de 5 sesiones (30 o 60 minutos)
 - ? Consumo automático al crear citas
@@ -132,11 +147,14 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 4. GESTIÓN DE ARCHIVOS (Complejidad: MEDIA)
+
 **Archivos principales:**
+
 - `file.service.ts` (110 líneas)
 - `files.js` (309 líneas - backend)
 
 **Funcionalidades:**
+
 - ? Subida de archivos (imágenes, PDF, Word)
 - ? Límite de 10MB por archivo
 - ? Categorización (radiografía, ecografía, analítica, informe)
@@ -152,11 +170,14 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 5. RECORDATORIOS WHATSAPP (Complejidad: MEDIA)
+
 **Archivos principales:**
+
 - `whatsapp-reminder.service.ts` (204 líneas)
 - `whatsapp-reminders.js` (backend)
 
 **Funcionalidades:**
+
 - ? Citas del día siguiente con recordatorio
 - ? Mensajes personalizados con emojis
 - ? Enlace directo a WhatsApp Web
@@ -171,12 +192,15 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 6. SISTEMA DE BACKUP (Complejidad: MEDIA)
+
 **Archivos principales:**
+
 - `backup.service.ts` (130 líneas)
 - `backup.js` (281 líneas - backend)
 - `scripts/backup.js` (600+ líneas)
 
 **Funcionalidades:**
+
 - ? Backup automático diario (Vercel Cron)
 - ? Backup manual desde UI
 - ? Listado de backups disponibles
@@ -192,11 +216,14 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 7. INFORMES Y FACTURACIÓN (Complejidad: MEDIA)
+
 **Archivos principales:**
+
 - `reports.js` (30 líneas)
 - `reportService.js` (backend)
 
 **Funcionalidades:**
+
 - ? Exportación CSV mensual
 - ? Agrupación por cita individual
 - ? Agrupación por paciente
@@ -210,11 +237,14 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 8. CONFIGURACIÓN DEL SISTEMA (Complejidad: BAJA)
+
 **Archivos principales:**
+
 - `configuracion.component.ts` (880 líneas)
 - `config.service.ts` (130 líneas)
 
 **Funcionalidades:**
+
 - ? Datos de la clínica (nombre, dirección, contacto)
 - ? Precios por tipo de sesión/bono
 - ? Horarios de trabajo por día
@@ -228,13 +258,16 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 9. SISTEMA MULTI-CLIENTE (Complejidad: ALTA)
+
 **Archivos principales:**
+
 - `client-config.interface.ts`
 - `config.loader.ts`
 - `clients/*.config.ts`
 - `client-config.service.ts`
 
 **Funcionalidades:**
+
 - ? Configuración por cliente (2 clientes activos)
 - ? Temas personalizados (colores, gradientes)
 - ? Logos y assets por cliente
@@ -249,12 +282,15 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ---
 
 ### 10. PWA E INFRAESTRUCTURA (Complejidad: MEDIA)
+
 **Archivos principales:**
+
 - `pwa-update.service.ts`
 - `ngsw-config.json`
 - `manifest.template.json`
 
 **Funcionalidades:**
+
 - ? Instalable en dispositivos móviles
 - ? Service Worker para caché
 - ? Actualizaciones automáticas
@@ -270,12 +306,14 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ## ?? SEGURIDAD IMPLEMENTADA
 
 ### Frontend
+
 - ? Sanitización de inputs
 - ? Validación de formularios
 - ? Interceptors HTTP con headers seguros
 - ? Protección CSRF implícita (SameSite cookies)
 
 ### Backend
+
 - ? Helmet.js (headers de seguridad)
 - ? CORS configurado
 - ? Validación con express-validator
@@ -286,6 +324,7 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 - ? Tipos MIME permitidos
 
 ### Base de Datos
+
 - ? Row Level Security (RLS) en Supabase
 - ? Aislamiento por tenant
 - ? Claves API seguras
@@ -295,6 +334,7 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 ## ?? COMPATIBILIDAD
 
 ### Navegadores Soportados
+
 - ? Chrome 80+
 - ? Firefox 75+
 - ? Safari 13+
@@ -303,6 +343,7 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 - ? Safari iOS
 
 ### Dispositivos
+
 - ? Desktop (Windows, Mac, Linux)
 - ? Tablet (iPad, Android tablets)
 - ? Móvil (iPhone, Android)
@@ -314,36 +355,38 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 
 ### Coste de Desarrollo Equivalente
 
-| Concepto | Horas | Tarifa/hora | Total |
-|----------|-------|-------------|-------|
-| Desarrollo Frontend | 200h | 50? | 10,000? |
-| Desarrollo Backend | 100h | 55? | 5,500? |
-| Diseño UI/UX | 40h | 45? | 1,800? |
-| Testing y QA | 30h | 40? | 1,200? |
-| Infraestructura | 20h | 60? | 1,200? |
-| Documentación | 15h | 35? | 525? |
-| **TOTAL** | **405h** | - | **20,225?** |
+| Concepto            | Horas    | Tarifa/hora | Total       |
+| ------------------- | -------- | ----------- | ----------- |
+| Desarrollo Frontend | 200h     | 50?         | 10,000?     |
+| Desarrollo Backend  | 100h     | 55?         | 5,500?      |
+| Diseño UI/UX        | 40h      | 45?         | 1,800?      |
+| Testing y QA        | 30h      | 40?         | 1,200?      |
+| Infraestructura     | 20h      | 60?         | 1,200?      |
+| Documentación       | 15h      | 35?         | 525?        |
+| **TOTAL**           | **405h** | -           | **20,225?** |
 
 ### Costes Operativos Mensuales (Referencia)
 
-| Servicio | Coste |
-|----------|-------|
-| Hosting Vercel (Pro) | 20?/mes |
-| Supabase (Free/Pro) | 0-25?/mes |
-| Dominio | 1?/mes |
-| **Total mínimo** | **21?/mes** |
+| Servicio             | Coste       |
+| -------------------- | ----------- |
+| Hosting Vercel (Pro) | 20?/mes     |
+| Supabase (Free/Pro)  | 0-25?/mes   |
+| Dominio              | 1?/mes      |
+| **Total mínimo**     | **21?/mes** |
 
 ---
 
 ## ?? ESCALABILIDAD
 
 ### Capacidad Actual
+
 - Pacientes: Ilimitados (paginación implementada)
 - Citas: Ilimitadas
 - Archivos: Limitado por almacenamiento (escalable)
 - Clientes (tenants): 2 activos, escalable a N
 
 ### Para Escalar
+
 - Vercel soporta millones de requests
 - Supabase escala automáticamente
 - Arquitectura preparada para más clientes
@@ -352,16 +395,16 @@ Sistema web completo para gestión de clínicas de fisioterapia con arquitectura m
 
 ## ? ESTADO DEL PROYECTO
 
-| Aspecto | Estado |
-|---------|--------|
-| Funcionalidades core | ? 100% completas |
-| Multi-tenancy | ? Implementado |
-| PWA | ? Funcional |
-| Responsive design | ? Completo |
-| Testing en producción | ? Validado |
-| Documentación | ? Extensa |
-| Seguridad | ? Implementada |
-| Performance | ? Optimizado |
+| Aspecto               | Estado            |
+| --------------------- | ----------------- |
+| Funcionalidades core  | ? 100% completas |
+| Multi-tenancy         | ? Implementado   |
+| PWA                   | ? Funcional      |
+| Responsive design     | ? Completo       |
+| Testing en producción | ? Validado       |
+| Documentación         | ? Extensa        |
+| Seguridad             | ? Implementada   |
+| Performance           | ? Optimizado     |
 
 ---
 
@@ -373,4 +416,4 @@ Este sistema representa una solución empresarial completa y madura, con más de *
 
 ---
 
-*Documento generado automáticamente el 12 de enero de 2026*
+_Documento generado automáticamente el 12 de enero de 2026_
