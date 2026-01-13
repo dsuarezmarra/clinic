@@ -536,10 +536,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
                 // Convertir euros a céntimos
                 this.sessionPrice30Cents = Math.round((prices.sessionPrice30 || 35) * 100);
                 this.sessionPrice60Cents = Math.round((prices.sessionPrice60 || 65) * 100);
+                this.bonoPrice30Cents = Math.round((prices.bonoPrice30 || 155) * 100);
+                this.bonoPrice60Cents = Math.round((prices.bonoPrice60 || 290) * 100);
                 this.pricesLoaded = true;
                 console.log('📊 Precios cargados para cálculos:', {
                     sessionPrice30: this.sessionPrice30Cents / 100,
-                    sessionPrice60: this.sessionPrice60Cents / 100
+                    sessionPrice60: this.sessionPrice60Cents / 100,
+                    bonoPrice30: this.bonoPrice30Cents / 100,
+                    bonoPrice60: this.bonoPrice60Cents / 100
                 });
             },
             error: (error) => {
@@ -881,6 +885,16 @@ export class CalendarComponent implements OnInit, OnDestroy {
             ? `Sesión ${minutes}min (${paidLabel})` 
             : `Bono ${sessionsInBono} sesiones de ${minutes}min (${paidLabel})`;
         
+        // Calcular precio según tipo y duración
+        let priceCents = 0;
+        if (type === 'sesion') {
+            // Sesión suelta: precio de sesión individual
+            priceCents = minutes === 60 ? this.sessionPrice60Cents : this.sessionPrice30Cents;
+        } else {
+            // Bono: precio del bono completo
+            priceCents = minutes === 60 ? this.bonoPrice60Cents : this.bonoPrice30Cents;
+        }
+        
         const creditPack = {
             patientId: patient.id!,
             type: type,
@@ -888,7 +902,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
             quantity: quantity,
             paid: paid,
             notes: `Creado rápidamente desde agenda`,
-            priceCents: 0 // Precio por defecto, se puede ajustar después
+            priceCents: priceCents // Precio configurado para cálculos correctos
         };
         
         this.creditService.createCreditPack(creditPack).subscribe({
@@ -1476,6 +1490,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // Precio por duración por defecto (en céntimos) - se carga dinámicamente desde config
     private sessionPrice30Cents = 3500; // 35€ por defecto, se actualiza desde config
     private sessionPrice60Cents = 6500; // 65€ por defecto, se actualiza desde config
+    private bonoPrice30Cents = 15500; // 155€ por defecto (bono 5x30min)
+    private bonoPrice60Cents = 29000; // 290€ por defecto (bono 5x60min)
     private pricesLoaded = false;
 
     // Calcula el precio (en céntimos) estimado para una cita
@@ -1485,25 +1501,48 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const status = this.getAppointmentPaymentStatus(appointment);
         if (status !== 'paid') return 0;
 
-        // Si la cita tiene priceCents definido directamente, usarlo
+        // Si la cita tiene priceCents definido directamente y es válido, usarlo
         if (appointment.priceCents && appointment.priceCents > 0) {
             return appointment.priceCents;
         }
 
-        // Si existe una redención de pack/bono, calcular el precio proporcional
-        // basándose en el precio del pack en el momento de su creación
+        // Obtener información del pack/redemption si existe
         const redemptions = appointment.creditRedemptions || [];
         if (redemptions.length > 0) {
             const r = redemptions[0];
             const pack = (r as any).creditPack || {};
-            const priceCents = Number(pack?.priceCents ?? pack?.price_cents ?? pack?.price ?? 0) || 0;
+            const packPriceCents = Number(pack?.priceCents ?? pack?.price_cents ?? 0) || 0;
             const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
             const unitsUsed = Number(r.unitsUsed || 0);
+            const packLabel = String(pack?.label || '');
             
-            // Si el pack tiene precio y unidades, calcular proporcionalmente
-            // Ejemplo: Bono 5x30min por 135â‚¬ = 27â‚¬ por sesión
-            if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
-                return Math.round(unitsUsed * (priceCents / unitsTotal));
+            // Si el pack tiene precio válido guardado, calcular proporcionalmente
+            if (packPriceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
+                return Math.round(unitsUsed * (packPriceCents / unitsTotal));
+            }
+            
+            // Si el pack NO tiene precio guardado (priceCents = 0), inferir del tipo
+            // Esto ocurre cuando la BD no tiene la columna price_cents
+            if (unitsTotal > 0 && unitsUsed > 0) {
+                let inferredPackPrice = 0;
+                
+                // Detectar tipo de pack por label o unitsTotal
+                if (packLabel.includes('Sesión') || unitsTotal <= 2) {
+                    // Sesión suelta: usar precio de sesión según duración
+                    const mins = Number(appointment.durationMinutes || 30);
+                    inferredPackPrice = mins >= 60 ? this.sessionPrice60Cents : this.sessionPrice30Cents;
+                    // Para sesión de 60min, unitsTotal=2, así que precio por unidad = precio/2
+                    return Math.round(unitsUsed * (inferredPackPrice / unitsTotal));
+                } else if (packLabel.includes('Bono') || unitsTotal >= 5) {
+                    // Bono: detectar si es de 30 o 60 minutos
+                    const unitMinutes = Number(pack?.unitMinutes ?? pack?.unit_minutes ?? 30);
+                    if (unitMinutes === 60 || packLabel.includes('60')) {
+                        inferredPackPrice = this.bonoPrice60Cents;
+                    } else {
+                        inferredPackPrice = this.bonoPrice30Cents;
+                    }
+                    return Math.round(unitsUsed * (inferredPackPrice / unitsTotal));
+                }
             }
         }
 
