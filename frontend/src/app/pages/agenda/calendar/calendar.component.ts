@@ -1551,11 +1551,21 @@ export class CalendarComponent implements OnInit, OnDestroy {
         return euros.replace('.', ',') + ' €';
     }
 
-    // Verificar si una cita proviene de un bono/pack
+    // Verificar si una cita proviene de un bono/pack (no sesión suelta)
+    // Un "bono" real tiene unitsTotal > 1 (ej: Bono 5x30min)
+    // Una "sesión suelta" tiene unitsTotal = 1 (ej: Sesión 1x30min)
     isAppointmentFromPack(appointment: Appointment): boolean {
         if (!appointment) return false;
         const redemptions = appointment.creditRedemptions || [];
-        return redemptions.length > 0;
+        if (redemptions.length === 0) return false;
+        
+        // Revisar si el pack asociado es un bono real (más de 1 unidad total)
+        const r = redemptions[0];
+        const pack = (r as any).creditPack || {};
+        const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
+        
+        // Si tiene más de 1 unidad total, es un bono real
+        return unitsTotal > 1;
     }
 
     // Obtener información del pack/bono de una cita

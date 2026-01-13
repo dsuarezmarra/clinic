@@ -342,13 +342,42 @@ class AppointmentService {
       }
     }
 
-    // Cargar precios configurados para guardar el precio actual en la cita
-    // Esto "congela" el precio en el momento de creación
-    const { price30Cents, price60Cents } = await loadConfiguredPrices(this.prisma);
-    const appointmentPriceCents = finalDuration >= 60 ? price60Cents : price30Cents;
-    console.log(`[CREATE APPOINTMENT] Precio congelado: ${appointmentPriceCents/100}€ (${finalDuration}min)`);
+    // Calcular precio para esta cita
+    // Si consume crédito (viene de un bono), calculamos precio proporcional del pack
+    // Si no, usamos el precio de sesión individual
+    let appointmentPriceCents = 0;
+    
+    if (consumesCredit && patientId) {
+      // Buscar el pack que se va a usar para obtener su precio
+      const requiredUnits = this._calculateRequiredUnits(finalDuration);
+      const rawPacks = await this.prisma.creditPack.findMany({ 
+        where: { patientId } 
+      });
+      
+      const availablePack = this._sortCreditPacks(
+        rawPacks
+          .map(pack => this._normalizeCreditPack(pack))
+          .filter(pack => pack.unitsRemaining >= requiredUnits)
+      )[0];
+      
+      if (availablePack && availablePack.priceCents > 0 && availablePack.unitsTotal > 0) {
+        // Precio proporcional: (precio del pack / unidades totales) * unidades usadas
+        appointmentPriceCents = Math.round(requiredUnits * (availablePack.priceCents / availablePack.unitsTotal));
+        console.log(`[CREATE APPOINTMENT] Precio de BONO: ${appointmentPriceCents/100}€ (${availablePack.priceCents/100}€ / ${availablePack.unitsTotal} * ${requiredUnits})`);
+      } else {
+        // Fallback a precio de sesión si el pack no tiene precio definido
+        const { price30Cents, price60Cents } = await loadConfiguredPrices(this.prisma);
+        appointmentPriceCents = finalDuration >= 60 ? price60Cents : price30Cents;
+        console.log(`[CREATE APPOINTMENT] Precio de SESIÓN (fallback): ${appointmentPriceCents/100}€`);
+      }
+    } else {
+      // Sesión suelta: usar precio de sesión individual
+      const { price30Cents, price60Cents } = await loadConfiguredPrices(this.prisma);
+      appointmentPriceCents = finalDuration >= 60 ? price60Cents : price30Cents;
+      console.log(`[CREATE APPOINTMENT] Precio de SESIÓN: ${appointmentPriceCents/100}€ (${finalDuration}min)`);
+    }
 
-    // Crear cita en transacci�n
+    // Crear cita en transacción
     return await this.prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.create({
         data: {
@@ -356,7 +385,7 @@ class AppointmentService {
           end: this._toUTC(endMoment.toDate()),
           patientId,
           durationMinutes: finalDuration,
-          priceCents: appointmentPriceCents, // Guardar precio en el momento de creación
+          priceCents: appointmentPriceCents, // Guardar precio correcto (proporcional si es bono)
           consumesCredit,
           notes
         },
