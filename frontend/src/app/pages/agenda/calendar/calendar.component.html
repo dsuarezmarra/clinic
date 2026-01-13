@@ -418,7 +418,20 @@
                     <div class="form-text">Horas permitidas: 09:00 - 22:00 en pasos de 30 minutos</div>
                 </div>
 
+                <!-- Importe de la cita -->
                 <div class="mb-3">
+                    <label class="form-label">
+                        <i class="bi bi-currency-euro me-1"></i>Importe de esta sesión
+                    </label>
+                    <p class="form-control-plaintext fw-bold text-primary">
+                        {{ formatPriceCents(appointmentPriceCents(editingAppointment)) }}
+                        <span *ngIf="isAppointmentFromPack(editingAppointment)" class="badge bg-info ms-2">
+                            <i class="bi bi-ticket-perforated me-1"></i>Bono
+                        </span>
+                    </p>
+                    <div class="form-text" *ngIf="isAppointmentFromPack(editingAppointment)">
+                        Precio proporcional del bono ({{ getPackInfo(editingAppointment) }})
+                    </div>
                 </div>
                 
                 <!-- Campo de notas/observaciones -->

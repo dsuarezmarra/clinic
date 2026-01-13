@@ -1,6 +1,41 @@
 const { Readable } = require('stream');
 const prisma = require('./database');
 
+// Precios por defecto para sesiones individuales (en céntimos)
+// Estos se usan como fallback cuando no hay pack/bono asociado
+const DEFAULT_SESSION_PRICE_30_CENTS = 3500; // 35€
+const DEFAULT_SESSION_PRICE_60_CENTS = 6500; // 65€
+
+/**
+ * Carga los precios configurados desde la base de datos
+ */
+async function loadConfiguredPrices() {
+    try {
+        const configs = await prisma.configuration.findMany({
+            where: {
+                key: { in: ['sessionPrice30', 'sessionPrice60'] }
+            }
+        });
+        
+        let price30 = DEFAULT_SESSION_PRICE_30_CENTS;
+        let price60 = DEFAULT_SESSION_PRICE_60_CENTS;
+        
+        for (const config of configs) {
+            if (config.key === 'sessionPrice30' && config.value) {
+                price30 = Math.round(parseFloat(config.value) * 100);
+            }
+            if (config.key === 'sessionPrice60' && config.value) {
+                price60 = Math.round(parseFloat(config.value) * 100);
+            }
+        }
+        
+        return { price30, price60 };
+    } catch (error) {
+        console.error('Error cargando precios configurados:', error);
+        return { price30: DEFAULT_SESSION_PRICE_30_CENTS, price60: DEFAULT_SESSION_PRICE_60_CENTS };
+    }
+}
+
 /**
  * Generates a sequential invoice number for export purposes
  * Format: "YY/NNN" where YY are the last two digits of the year and NNN is sequential
@@ -51,6 +86,10 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
 
     console.log(`📊 Generando reporte para ${year}-${month}: ${start.toISOString()} a ${end.toISOString()}`);
 
+    // Cargar precios configurados desde la BD
+    const { price30, price60 } = await loadConfiguredPrices();
+    console.log(`💰 Precios configurados: 30min=${price30/100}€, 60min=${price60/100}€`);
+
     // Initialize invoice counter for sequential numbering
     let invoiceSequence = 1;
     const appointments = await prisma.appointment.findMany({
@@ -89,8 +128,8 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
         for (const apt of appointments) {
             // Calculate price based on how the appointment was paid:
             // 1. If paid with a credit pack/bono: calculate proportionally from pack price
-            //    Example: 5x30min pack for 135€ = 27€ per session
-            // 2. If paid individually: use sessionPrice30 (30€) or sessionPrice60 (55€)
+            //    Example: 5x30min pack for 155€ = 31€ per session
+            // 2. If paid individually: use configured prices
             let priceCents = 0;
             
             if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
@@ -106,9 +145,9 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                 }
             }
             
-            // Fallback: individual session pricing
+            // Fallback: individual session pricing (usar precios configurados)
             if (!priceCents) {
-                priceCents = apt.durationMinutes >= 60 ? 5500 : 3000;
+                priceCents = apt.durationMinutes >= 60 ? price60 : price30;
             }
 
             // Update appointment with calculated price
@@ -169,8 +208,8 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
         for (const apt of appointments) {
             // Calculate price based on how the appointment was paid:
             // 1. If paid with a credit pack/bono: calculate proportionally from pack price
-            //    Example: 5x30min pack for 135€ = 27€ per session
-            // 2. If paid individually: use sessionPrice30 (30€) or sessionPrice60 (55€)
+            //    Example: 5x30min pack for 155€ = 31€ per session
+            // 2. If paid individually: use configured prices
             let priceCents = 0;
             
             if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
@@ -186,9 +225,9 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                 }
             }
             
-            // Fallback: individual session pricing
+            // Fallback: individual session pricing (usar precios configurados)
             if (!priceCents) {
-                priceCents = apt.durationMinutes >= 60 ? 5500 : 3000;
+                priceCents = apt.durationMinutes >= 60 ? price60 : price30;
             }
 
             // Update appointment with calculated price

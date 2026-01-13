@@ -8,6 +8,7 @@ import { Appointment, CreateAppointmentRequest } from '../../../models/appointme
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
 import { ClientConfigService } from '../../../services/client-config.service';
+import { ConfigService } from '../../../services/config.service';
 import { CreditService } from '../../../services/credit.service';
 import { EventBusService } from '../../../services/event-bus.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -463,7 +464,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         private notificationService: NotificationService,
         private router: Router,
         private eventBusService: EventBusService,
-        private clientConfigService: ClientConfigService
+        private clientConfigService: ClientConfigService,
+        private configService: ConfigService
     ) {
         this.generateTimeSlots();
     }
@@ -513,6 +515,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit() {
+        this.loadPrices(); // Cargar precios configurados
         this.loadAppointments();
         this.loadPatients();
         
@@ -521,6 +524,29 @@ export class CalendarComponent implements OnInit, OnDestroy {
             console.log('Calendar: Pack payment status changed:', change);
             // Actualizar las citas que usan este pack
             this.updateAppointmentPaymentStatus(change.packId, change.paid);
+        });
+    }
+
+    /**
+     * Carga los precios configurados para usar en los cálculos de totales
+     */
+    loadPrices() {
+        this.configService.getPrices().subscribe({
+            next: (prices: any) => {
+                // Convertir euros a céntimos
+                this.sessionPrice30Cents = Math.round((prices.sessionPrice30 || 35) * 100);
+                this.sessionPrice60Cents = Math.round((prices.sessionPrice60 || 65) * 100);
+                this.pricesLoaded = true;
+                console.log('📊 Precios cargados para cálculos:', {
+                    sessionPrice30: this.sessionPrice30Cents / 100,
+                    sessionPrice60: this.sessionPrice60Cents / 100
+                });
+            },
+            error: (error) => {
+                console.error('Error cargando precios:', error);
+                // Mantener precios por defecto en caso de error
+                this.pricesLoaded = true;
+            }
         });
     }
 
@@ -1447,9 +1473,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
         return `${year}-${month}-${day}T${hours}:${minutes}`;
     }
 
-    // Precio por duración por defecto (en céntimos)
-    private DEFAULT_PRICE_30 = 3000; // 30â‚¬
-    private DEFAULT_PRICE_60 = 5500; // 55â‚¬
+    // Precio por duración por defecto (en céntimos) - se carga dinámicamente desde config
+    private sessionPrice30Cents = 3500; // 35€ por defecto, se actualiza desde config
+    private sessionPrice60Cents = 6500; // 65€ por defecto, se actualiza desde config
+    private pricesLoaded = false;
 
     // Calcula el precio (en céntimos) estimado para una cita
     appointmentPriceCents(appointment: Appointment): number {
@@ -1483,8 +1510,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         // Fallback: usar precio de sesión individual según duración
         // (esto se aplica cuando se paga sin bono)
         const mins = Number(appointment.durationMinutes || 0);
-        if (mins >= 60) return this.DEFAULT_PRICE_60;
-        return this.DEFAULT_PRICE_30;
+        if (mins >= 60) return this.sessionPrice60Cents;
+        return this.sessionPrice30Cents;
     }
 
     // Suma total de precios (en céntimos) para un día
@@ -1522,6 +1549,32 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (cents === null || cents === undefined || !cents) return '0 €';
         const euros = (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);
         return euros.replace('.', ',') + ' €';
+    }
+
+    // Verificar si una cita proviene de un bono/pack
+    isAppointmentFromPack(appointment: Appointment): boolean {
+        if (!appointment) return false;
+        const redemptions = appointment.creditRedemptions || [];
+        return redemptions.length > 0;
+    }
+
+    // Obtener información del pack/bono de una cita
+    getPackInfo(appointment: Appointment): string {
+        if (!appointment) return '';
+        const redemptions = appointment.creditRedemptions || [];
+        if (redemptions.length === 0) return '';
+        
+        const r = redemptions[0];
+        const pack = (r as any).creditPack || {};
+        const priceCents = Number(pack?.priceCents ?? pack?.price_cents ?? pack?.price ?? 0) || 0;
+        const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
+        const mins = Number(pack?.minutesPerUnit ?? pack?.minutes_per_unit ?? 30) || 30;
+        
+        if (priceCents > 0 && unitsTotal > 0) {
+            const pricePerSession = Math.round(priceCents / unitsTotal) / 100;
+            return `${unitsTotal}×${mins}min = ${(priceCents/100).toFixed(0)}€ → ${pricePerSession.toFixed(2)}€/sesión`;
+        }
+        return `${unitsTotal}×${mins}min`;
     }
 
     getMinForDate(dateTime: string): string {

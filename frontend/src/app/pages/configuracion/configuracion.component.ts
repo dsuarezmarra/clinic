@@ -100,6 +100,8 @@ export class ConfiguracionComponent implements OnInit {
   switchToPricesTab() {
     console.log('🏷️ Cambiando a pestaña de Precios');
     this.activeTab = 'prices';
+    // Indicar que estamos cargando antes de empezar
+    this.loadingPrices = true;
     // Siempre cargar los precios actuales para mostrar los valores vigentes
     this.loadPrices();
   }
@@ -139,10 +141,10 @@ export class ConfiguracionComponent implements OnInit {
 
   private createPricesForm(): FormGroup {
     return this.fb.group({
-      sessionPrice30: [25, [Validators.required, Validators.min(0)]],
-      sessionPrice60: [45, [Validators.required, Validators.min(0)]],
-      bonoPrice30: [100, [Validators.required, Validators.min(0)]],
-      bonoPrice60: [180, [Validators.required, Validators.min(0)]]
+      sessionPrice30: [null, [Validators.required, Validators.min(0)]],
+      sessionPrice60: [null, [Validators.required, Validators.min(0)]],
+      bonoPrice30: [null, [Validators.required, Validators.min(0)]],
+      bonoPrice60: [null, [Validators.required, Validators.min(0)]]
     });
   }
 

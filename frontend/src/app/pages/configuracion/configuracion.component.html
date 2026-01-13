@@ -109,7 +109,15 @@
                                 afectarán a nuevos packs creados.</small>
                         </div>
                         <div class="card-body">
-                            <form [formGroup]="pricesForm">
+                            <!-- Spinner mientras se cargan los precios -->
+                            <div *ngIf="loadingPrices" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando precios...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Cargando precios...</p>
+                            </div>
+                            
+                            <form [formGroup]="pricesForm" *ngIf="!loadingPrices">
                                 <div class="row">
                                     <!-- Precios de Sesiones -->
                                     <div class="col-md-6">
