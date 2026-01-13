@@ -30,32 +30,32 @@ BEGIN
     SELECT value INTO v_config_value FROM configurations_masajecorporaldeportivo WHERE key = 'bonoPrice60';
     IF v_config_value IS NOT NULL THEN v_bono_60 := (v_config_value::NUMERIC * 100)::INTEGER; END IF;
 
-    -- Actualizar sesiones de 30min
+    -- Actualizar sesiones de 30min (columna es "unitMinutes" en camelCase)
     UPDATE credit_packs_masajecorporaldeportivo 
     SET price_cents = v_session_30 
-    WHERE label LIKE 'Sesión%' AND unit_minutes = 30 AND (price_cents IS NULL OR price_cents = 0);
+    WHERE label LIKE 'Sesión%' AND "unitMinutes" = 30 AND (price_cents IS NULL OR price_cents = 0);
 
     -- Actualizar sesiones de 60min
     UPDATE credit_packs_masajecorporaldeportivo 
     SET price_cents = v_session_60 
-    WHERE label LIKE 'Sesión%' AND unit_minutes = 60 AND (price_cents IS NULL OR price_cents = 0);
+    WHERE label LIKE 'Sesión%' AND "unitMinutes" = 60 AND (price_cents IS NULL OR price_cents = 0);
 
     -- Actualizar bonos de 30min (5 unidades)
     UPDATE credit_packs_masajecorporaldeportivo 
     SET price_cents = v_bono_30 
-    WHERE label LIKE 'Bono%' AND units_total = 5 AND (price_cents IS NULL OR price_cents = 0);
+    WHERE label LIKE 'Bono%' AND "unitsTotal" = 5 AND (price_cents IS NULL OR price_cents = 0);
 
     -- Actualizar bonos de 60min (10 unidades)
     UPDATE credit_packs_masajecorporaldeportivo 
     SET price_cents = v_bono_60 
-    WHERE label LIKE 'Bono%' AND units_total = 10 AND (price_cents IS NULL OR price_cents = 0);
+    WHERE label LIKE 'Bono%' AND "unitsTotal" = 10 AND (price_cents IS NULL OR price_cents = 0);
     
     RAISE NOTICE 'Precios usados: Sesión 30m=%, Sesión 60m=%, Bono 30m=%, Bono 60m=%', 
                  v_session_30, v_session_60, v_bono_30, v_bono_60;
 END $$;
 
 -- 3. Verificar resultados
-SELECT id, label, units_total, unit_minutes, price_cents, paid 
+SELECT id, label, "unitsTotal", "unitMinutes", price_cents, paid 
 FROM credit_packs_masajecorporaldeportivo 
-ORDER BY created_at DESC 
+ORDER BY "createdAt" DESC 
 LIMIT 20;

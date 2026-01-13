@@ -1512,8 +1512,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (redemptions.length > 0) {
             const r = redemptions[0];
             const pack = (r as any).creditPack || {};
-            const packPriceCents = Number(pack?.priceCents ?? pack?.price_cents ?? 0) || 0;
-            const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
+            // Usar price_cents primero (migración), luego priceCents (legacy) - usar || para considerar 0 como "no definido"
+            const packPriceCents = Number(pack?.price_cents || pack?.priceCents || 0);
+            const unitsTotal = Number(pack?.unitsTotal || pack?.units_total || 0);
             const unitsUsed = Number(r.unitsUsed || 0);
             
             // Calcular proporcionalmente basado en el precio guardado del pack
