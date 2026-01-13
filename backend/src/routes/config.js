@@ -222,12 +222,12 @@ router.get('/working-hours/:date', async (req, res, next) => {
 // RUTAS PARA GESTIÓN DE PRECIOS
 // ============================================================================
 
-// Precios por defecto del sistema
+// Precios por defecto del sistema (actualizados a los valores actuales)
 const DEFAULT_PRICES = {
-  sessionPrice30: 25, // €25 sesión de 30 min
-  sessionPrice60: 45, // €45 sesión de 60 min  
-  bonoPrice30: 100,   // €100 bono 5×30min
-  bonoPrice60: 180    // €180 bono 5×60min
+  sessionPrice30: 35, // €35 sesión de 30 min
+  sessionPrice60: 65, // €65 sesión de 60 min  
+  bonoPrice30: 155,   // €155 bono 5×30min
+  bonoPrice60: 290    // €290 bono 5×60min
 };
 
 // GET /api/meta/prices - Obtener precios actuales

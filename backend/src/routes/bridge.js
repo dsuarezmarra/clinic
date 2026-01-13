@@ -2210,9 +2210,9 @@ const DEFAULT_CONFIG = {
 
 const DEFAULT_PRICES = {
   sessionPrice30: 35,
-  sessionPrice60: 60,
-  bonoPrice30: 150,
-  bonoPrice60: 260
+  sessionPrice60: 65,
+  bonoPrice30: 155,
+  bonoPrice60: 290
 };
 
 // GET /api/meta/config - Obtener configuración
@@ -2464,12 +2464,12 @@ router.get('/reports/billing', async (req, res) => {
 
 // Helper: Calcular precio de una cita (MULTI-TENANT COMPATIBLE)
 function calculateAppointmentPrice(appointment, tableSuffix) {
-  const DEFAULT_PRICE_30 = 3000; // 30€
-  const DEFAULT_PRICE_60 = 5500; // 55€
+  const DEFAULT_PRICE_30 = 3500; // 35€ (actualizado)
+  const DEFAULT_PRICE_60 = 6500; // 65€ (actualizado)
   
   if (!appointment) return 0;
   
-  // Si tiene priceCents directamente
+  // Si tiene priceCents directamente (precio guardado en el momento de creación)
   if (appointment.priceCents && appointment.priceCents > 0) {
     return appointment.priceCents;
   }
@@ -2489,7 +2489,7 @@ function calculateAppointmentPrice(appointment, tableSuffix) {
     }
   }
   
-  // Fallback: precio según duración
+  // Fallback: precio según duración (usado solo para citas antiguas sin priceCents)
   const mins = Number(appointment.durationMinutes || 0);
   return mins >= 60 ? DEFAULT_PRICE_60 : DEFAULT_PRICE_30;
 }

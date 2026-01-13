@@ -3,14 +3,57 @@ const moment = require('moment-timezone');
 
 const TIMEZONE = 'Europe/Madrid';
 
+// Precios por defecto (en euros) - usados como fallback si no hay configuraciÃ³n
+const DEFAULT_SESSION_PRICE_30 = 35; // â‚¬35 sesiÃ³n de 30 min
+const DEFAULT_SESSION_PRICE_60 = 65; // â‚¬65 sesiÃ³n de 60 min
+
 /**
- * Servicio centralizado para gestión de citas y consumo de créditos
- * Principios de diseño:
- * - Estado calculado: El estado "pagado" se calcula dinámicamente basado en credit_packs.paid
- * - Transacciones atómicas: Las operaciones críticas usan transacciones para mantener consistencia
- * - Idempotencia: Las operaciones pueden ejecutarse múltiples veces sin efectos secundarios
- * - Separación de responsabilidades: Cada método tiene una responsabilidad clara
- * - Multi-tenant: Acepta cliente de BD como parámetro para soporte multi-tenant
+ * Carga los precios configurados desde la base de datos
+ * @param {Object} prismaClient - Cliente de BD
+ * @returns {Object} { price30Cents, price60Cents }
+ */
+async function loadConfiguredPrices(prismaClient) {
+  try {
+    const configs = await prismaClient.configuration.findMany({
+      where: {
+        key: { in: ['sessionPrice30', 'sessionPrice60'] }
+      }
+    });
+    
+    let price30 = DEFAULT_SESSION_PRICE_30;
+    let price60 = DEFAULT_SESSION_PRICE_60;
+    
+    for (const config of configs) {
+      if (config.key === 'sessionPrice30' && config.value) {
+        price30 = parseFloat(config.value) || DEFAULT_SESSION_PRICE_30;
+      }
+      if (config.key === 'sessionPrice60' && config.value) {
+        price60 = parseFloat(config.value) || DEFAULT_SESSION_PRICE_60;
+      }
+    }
+    
+    // Convertir a cÃ©ntimos
+    return {
+      price30Cents: Math.round(price30 * 100),
+      price60Cents: Math.round(price60 * 100)
+    };
+  } catch (error) {
+    console.error('Error cargando precios configurados:', error);
+    return {
+      price30Cents: DEFAULT_SESSION_PRICE_30 * 100,
+      price60Cents: DEFAULT_SESSION_PRICE_60 * 100
+    };
+  }
+}
+
+/**
+ * Servicio centralizado para gestiï¿½n de citas y consumo de crï¿½ditos
+ * Principios de diseï¿½o:
+ * - Estado calculado: El estado "pagado" se calcula dinï¿½micamente basado en credit_packs.paid
+ * - Transacciones atï¿½micas: Las operaciones crï¿½ticas usan transacciones para mantener consistencia
+ * - Idempotencia: Las operaciones pueden ejecutarse mï¿½ltiples veces sin efectos secundarios
+ * - Separaciï¿½n de responsabilidades: Cada mï¿½todo tiene una responsabilidad clara
+ * - Multi-tenant: Acepta cliente de BD como parï¿½metro para soporte multi-tenant
  */
 class AppointmentService {
   /**
@@ -21,7 +64,7 @@ class AppointmentService {
   }
 
   /**
-   * Crea una nueva instancia del servicio con un cliente de BD específico
+   * Crea una nueva instancia del servicio con un cliente de BD especï¿½fico
    * @param {Object} prismaClient - Cliente de base de datos tenant-aware
    */
   static withClient(prismaClient) {
@@ -114,10 +157,10 @@ class AppointmentService {
     return creditPacks.reduce((total, pack) => total + pack.unitsRemaining, 0);
   }
 
-  // ===== GESTIÓN DE CRÉDITOS =====
+  // ===== GESTIï¿½N DE CRï¿½DITOS =====
 
   /**
-   * Consume créditos para una cita de forma idempotente
+   * Consume crï¿½ditos para una cita de forma idempotente
    */
   async consumeCredits(patientId, appointmentId, durationMinutes, transaction = null) {
     const tx = transaction || this.prisma;
@@ -208,7 +251,7 @@ class AppointmentService {
   }
 
   /**
-   * Revierte el consumo de créditos
+   * Revierte el consumo de crï¿½ditos
    */
   async revertCredits(appointmentId, transaction = null) {
     const tx = transaction || this.prisma;
@@ -258,7 +301,7 @@ class AppointmentService {
     const startMoment = moment.tz(start, TIMEZONE);
     let endMoment = moment.tz(end, TIMEZONE);
 
-    // Auto-detectar duración de 60min si hay packs disponibles
+    // Auto-detectar duraciï¿½n de 60min si hay packs disponibles
     let finalDuration = durationMinutes;
     if (consumesCredit && patientId) {
       const sixtyMinPack = await this.prisma.creditPack.findFirst({
@@ -299,7 +342,13 @@ class AppointmentService {
       }
     }
 
-    // Crear cita en transacción
+    // Cargar precios configurados para guardar el precio actual en la cita
+    // Esto "congela" el precio en el momento de creaciÃ³n
+    const { price30Cents, price60Cents } = await loadConfiguredPrices(this.prisma);
+    const appointmentPriceCents = finalDuration >= 60 ? price60Cents : price30Cents;
+    console.log(`[CREATE APPOINTMENT] Precio congelado: ${appointmentPriceCents/100}â‚¬ (${finalDuration}min)`);
+
+    // Crear cita en transacciï¿½n
     return await this.prisma.$transaction(async (tx) => {
       const appointment = await tx.appointment.create({
         data: {
@@ -307,6 +356,7 @@ class AppointmentService {
           end: this._toUTC(endMoment.toDate()),
           patientId,
           durationMinutes: finalDuration,
+          priceCents: appointmentPriceCents, // Guardar precio en el momento de creaciÃ³n
           consumesCredit,
           notes
         },
@@ -380,7 +430,7 @@ class AppointmentService {
     });
 
     return await this.prisma.$transaction(async (tx) => {
-      // 1. Revertir créditos si es necesario (solo para cambios estructurales en citas no pagadas)
+      // 1. Revertir crï¿½ditos si es necesario (solo para cambios estructurales en citas no pagadas)
       if (hasStructuralChanges && currentAppointment.consumesCredit && !currentlyPaid) {
         console.log(`[UPDATE APPOINTMENT] Revirtiendo crÃ©ditos para cambios estructurales`);
         await this.revertCredits(id, tx);
@@ -514,7 +564,7 @@ class AppointmentService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      // Revertir créditos si es necesario
+      // Revertir crï¿½ditos si es necesario
       if (appointment.consumesCredit && appointment.patientId) {
         await this.revertCredits(id, tx);
       }
