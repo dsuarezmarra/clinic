@@ -1495,18 +1495,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
     private pricesLoaded = false;
 
     // Calcula el precio (en céntimos) estimado para una cita
+    // IMPORTANTE: El precio se lee del pack (price_cents), que se congela al momento de creación
     appointmentPriceCents(appointment: Appointment): number {
         if (!appointment) return 0;
         // Sólo contabilizamos citas pagadas
         const status = this.getAppointmentPaymentStatus(appointment);
         if (status !== 'paid') return 0;
 
-        // Si la cita tiene priceCents definido directamente y es válido, usarlo
+        // Si la cita tiene priceCents definido directamente, usarlo (precio congelado)
         if (appointment.priceCents && appointment.priceCents > 0) {
             return appointment.priceCents;
         }
 
-        // Obtener información del pack/redemption si existe
+        // Obtener precio del pack asociado (congelado en el momento de creación del pack)
         const redemptions = appointment.creditRedemptions || [];
         if (redemptions.length > 0) {
             const r = redemptions[0];
@@ -1514,43 +1515,20 @@ export class CalendarComponent implements OnInit, OnDestroy {
             const packPriceCents = Number(pack?.priceCents ?? pack?.price_cents ?? 0) || 0;
             const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
             const unitsUsed = Number(r.unitsUsed || 0);
-            const packLabel = String(pack?.label || '');
             
-            // Si el pack tiene precio válido guardado, calcular proporcionalmente
+            // Calcular proporcionalmente basado en el precio guardado del pack
             if (packPriceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
                 return Math.round(unitsUsed * (packPriceCents / unitsTotal));
             }
             
-            // Si el pack NO tiene precio guardado (priceCents = 0), inferir del tipo
-            // Esto ocurre cuando la BD no tiene la columna price_cents
-            if (unitsTotal > 0 && unitsUsed > 0) {
-                let inferredPackPrice = 0;
-                
-                // Detectar tipo de pack por label o unitsTotal
-                if (packLabel.includes('Sesión') || unitsTotal <= 2) {
-                    // Sesión suelta: usar precio de sesión según duración
-                    const mins = Number(appointment.durationMinutes || 30);
-                    inferredPackPrice = mins >= 60 ? this.sessionPrice60Cents : this.sessionPrice30Cents;
-                    // Para sesión de 60min, unitsTotal=2, así que precio por unidad = precio/2
-                    return Math.round(unitsUsed * (inferredPackPrice / unitsTotal));
-                } else if (packLabel.includes('Bono') || unitsTotal >= 5) {
-                    // Bono: detectar si es de 30 o 60 minutos
-                    const unitMinutes = Number(pack?.unitMinutes ?? pack?.unit_minutes ?? 30);
-                    if (unitMinutes === 60 || packLabel.includes('60')) {
-                        inferredPackPrice = this.bonoPrice60Cents;
-                    } else {
-                        inferredPackPrice = this.bonoPrice30Cents;
-                    }
-                    return Math.round(unitsUsed * (inferredPackPrice / unitsTotal));
-                }
-            }
+            // Si el pack no tiene precio (columna no existe o es 0), mostrar 0
+            // Esto indica que se necesita ejecutar la migración SQL
+            console.warn(`Pack ${pack.label || pack.id} sin precio guardado. Ejecutar migración SQL.`);
+            return 0;
         }
 
-        // Fallback: usar precio de sesión individual según duración
-        // (esto se aplica cuando se paga sin bono)
-        const mins = Number(appointment.durationMinutes || 0);
-        if (mins >= 60) return this.sessionPrice60Cents;
-        return this.sessionPrice30Cents;
+        // Sin pack asociado y sin precio en la cita = 0
+        return 0;
     }
 
     // Suma total de precios (en céntimos) para un día
