@@ -8,6 +8,7 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { routes } from './app.routes';
 import { EncodingInterceptor } from './interceptors/encoding.interceptor';
 import { tenantInterceptor } from './interceptors/tenant.interceptor';
+import { authInterceptor } from './interceptors/auth.interceptor';
 
 registerLocaleData(localeEs);
 
@@ -17,7 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideClientHydration(),
     provideHttpClient(
       withFetch(),
-      withInterceptors([tenantInterceptor])  // Solo tenant interceptor (sin auth)
+      withInterceptors([tenantInterceptor, authInterceptor])  // Tenant + Auth interceptors
     ),
     {
       provide: HTTP_INTERCEPTORS,
