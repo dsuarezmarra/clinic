@@ -46,9 +46,10 @@ export class LoginComponent implements OnInit {
     // Obtener returnUrl de los query params
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/inicio';
 
-    // Mostrar mensaje si la sesiÃ³n expirÃ³
-    if (this.route.snapshot.queryParams['sessionExpired'] === 'true') {
-      this.errorMessage = 'Tu sesiÃ³n ha expirado. Por favor, inicia sesiÃ³n nuevamente.';
+    // Mostrar mensaje si la sesión expiró
+    const sessionExpired = this.route.snapshot.queryParams['sessionExpired'];
+    if (sessionExpired === 'true' || sessionExpired === 'expired') {
+      this.errorMessage = 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
     }
   }
 

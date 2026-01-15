@@ -4,10 +4,15 @@ const prisma = require('../services/database');
 // Helper: prefer injected Supabase shim (req.prisma) otherwise fallback to Prisma
 const getDb = (req) => req.prisma || prisma;
 const { upload } = require('../middleware/fileUpload');
+const { requireAuth } = require('../middleware/auth');
 const path = require('path');
 const fs = require('fs');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de pacientes requieren autenticación
+router.use(requireAuth);
 
 function sanitizeDni(dni) {
   if (!dni) return null;

@@ -7,8 +7,13 @@ const getDb = (req) => req.prisma || prisma;
 // Helper: obtener servicio de citas con cliente tenant-aware
 const getAppointmentService = (req) => AppointmentService.withClient(getDb(req));
 const moment = require('moment-timezone');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de citas requieren autenticación
+router.use(requireAuth);
 
 // GET /api/appointments/all - Obtener todas las citas sin filtro de fechas
 router.get('/all', async (req, res, next) => {

@@ -3,8 +3,13 @@ const { body, validationResult } = require('express-validator');
 const prisma = require('../services/database');
 // Helper: prefer injected Supabase shim (req.prisma) otherwise fallback to Prisma
 const getDb = (req) => req.prisma || prisma;
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de configuración requieren autenticación
+router.use(requireAuth);
 
 // Middleware para validar errores
 const validate = (req, res, next) => {

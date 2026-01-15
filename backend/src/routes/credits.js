@@ -3,8 +3,13 @@ const { body, param, query, validationResult } = require('express-validator');
 const prisma = require('../services/database');
 // Helper: use injected Supabase shim if available on the request, otherwise fall back to Prisma
 const getDb = (req) => req.prisma || prisma;
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÃ“N GLOBAL =====
+// Todas las rutas de crÃ©ditos requieren autenticaciÃ³n
+router.use(requireAuth);
 
 // Middleware para validar errores
 const validate = (req, res, next) => {
@@ -210,17 +215,17 @@ router.get('/', [
   }
 });
 
-// POST /api/credits/batch - Obtener créditos de múltiples pacientes en una sola petición
+// POST /api/credits/batch - Obtener crï¿½ditos de mï¿½ltiples pacientes en una sola peticiï¿½n
 router.post('/batch', [
-  body('patientIds').isArray({ min: 1, max: 100 }).withMessage('Se requiere un array de IDs de pacientes (máx 100)'),
-  body('patientIds.*').isUUID().withMessage('Cada ID debe ser un UUID válido')
+  body('patientIds').isArray({ min: 1, max: 100 }).withMessage('Se requiere un array de IDs de pacientes (mï¿½x 100)'),
+  body('patientIds.*').isUUID().withMessage('Cada ID debe ser un UUID vï¿½lido')
 ], validate, async (req, res, next) => {
   try {
     const { patientIds } = req.body;
 
     console.log(`[credits/batch] Fetching credits for ${patientIds.length} patients`);
 
-    // Obtener todos los packs de créditos para los pacientes solicitados
+    // Obtener todos los packs de crï¿½ditos para los pacientes solicitados
     const allPacks = await getDb(req).credit_packs.findMany({
       where: { 
         patientId: { in: patientIds }
@@ -255,7 +260,7 @@ router.post('/batch', [
         result[pid].totalCredits += Number(pack.unitsTotal) || 0;
         result[pid].activeCredits += unitsRemaining;
         
-        // Solo sumar precio de packs con créditos restantes
+        // Solo sumar precio de packs con crï¿½ditos restantes
         if (unitsRemaining > 0) {
           result[pid].totalPriceCents += priceCents;
           if (!pack.paid) {

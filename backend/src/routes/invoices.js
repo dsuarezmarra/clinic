@@ -7,6 +7,11 @@
 const express = require('express');
 const router = express.Router();
 const invoiceService = require('../services/invoice.service');
+const { requireAuth } = require('../middleware/auth');
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de facturas requieren autenticación
+router.use(requireAuth);
 
 /**
  * POST /api/invoices/generate

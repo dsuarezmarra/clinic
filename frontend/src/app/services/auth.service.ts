@@ -38,6 +38,12 @@ export class AuthService {
   private readonly SUPABASE_URL = 'https://kctoxebchyrgkwofdkht.supabase.co';
   private readonly SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtjdG94ZWJjaHlyZ2t3b2Zka2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY0MTgxNDYsImV4cCI6MjA4MTk5NDE0Nn0.WAvvg89qBQ_APPR4TKeVMd9ARBn2tbkRoW3kVLCOTJ0';
 
+  // ===== CONFIGURACIÓN DE SEGURIDAD DE SESIÓN =====
+  // Duración máxima de sesión: 30 días (1 mes aproximadamente)
+  private readonly SESSION_MAX_DURATION_DAYS = 30;
+  // Clave para guardar timestamp de inicio de sesión
+  private readonly SESSION_START_KEY = 'clinic_session_start';
+
   constructor(
     private router: Router,
     private clientConfig: ClientConfigService
@@ -56,11 +62,53 @@ export class AuthService {
   }
 
   /**
+   * Verifica si la sesión ha expirado (más de 30 días desde el login)
+   */
+  private checkSessionExpiration(): boolean {
+    const sessionStart = localStorage.getItem(this.SESSION_START_KEY);
+    
+    if (!sessionStart) {
+      // Si no hay fecha de inicio, la sesión es antigua (pre-actualización)
+      // Forzar re-login por seguridad
+      return true;
+    }
+    
+    const now = Date.now();
+    const sessionStartTime = parseInt(sessionStart);
+    const daysSinceLogin = (now - sessionStartTime) / (1000 * 60 * 60 * 24);
+    
+    if (daysSinceLogin > this.SESSION_MAX_DURATION_DAYS) {
+      console.log(`[AuthService] Sesión expirada: ${Math.floor(daysSinceLogin)} días desde el login`);
+      return true;
+    }
+    
+    console.log(`[AuthService] Sesión válida: ${Math.floor(daysSinceLogin)} días de ${this.SESSION_MAX_DURATION_DAYS}`);
+    return false;
+  }
+
+  /**
+   * Limpia los datos de sesión del localStorage
+   */
+  private clearSessionData(): void {
+    localStorage.removeItem(this.SESSION_START_KEY);
+  }
+
+  /**
    * Inicializa la autenticación verificando si hay una sesión guardada
    */
   private async initializeAuth(): Promise<void> {
     try {
       this.isLoadingSubject.next(true);
+
+      // Verificar si la sesión ha expirado antes de restaurarla
+      if (this.checkSessionExpiration()) {
+        await this.supabase.auth.signOut();
+        this.clearSessionData();
+        this.currentUserSubject.next(null);
+        console.log('[AuthService] Sesión previa expirada, requiere nuevo login');
+        this.isLoadingSubject.next(false);
+        return;
+      }
 
       // Obtener sesión actual
       const { data: { session }, error } = await this.supabase.auth.getSession();
@@ -143,6 +191,9 @@ export class AuthService {
       const authUser = this.mapUserToAuthUser(data.user);
       this.currentUserSubject.next(authUser);
 
+      // ===== REGISTRAR INICIO DE SESIÓN PARA CONTROL DE EXPIRACIÓN (30 días) =====
+      localStorage.setItem(this.SESSION_START_KEY, Date.now().toString());
+
       console.log('[AuthService] Login successful:', authUser.email);
 
       return {
@@ -166,6 +217,7 @@ export class AuthService {
   async logout(): Promise<void> {
     try {
       await this.supabase.auth.signOut();
+      this.clearSessionData();
       this.currentUserSubject.next(null);
       this.router.navigate(['/login']);
       console.log('[AuthService] Logout successful');

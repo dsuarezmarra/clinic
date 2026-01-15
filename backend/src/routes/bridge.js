@@ -5,6 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const { loadTenant } = require('../middleware/tenant');
+const { requireAuth } = require('../middleware/auth');
 
 // Log de versión al cargar el módulo
 console.log('🔄 bridge.js VERSION 2.4.2 cargado - CSV billing SELECT fixed');
@@ -104,7 +105,7 @@ function deleteEmbeddedProperty(obj, baseTableName, suffix) {
 }
 
 // ============================================================
-// VERSION ENDPOINT
+// VERSION ENDPOINT (PÚBLICO - NO REQUIERE AUTH)
 // ============================================================
 
 // GET /api/version - Devolver versión del bridge
@@ -114,6 +115,46 @@ router.get('/version', (req, res) => {
     description: 'Multi-tenant completo - patient_files y configurations migradas correctamente',
     timestamp: new Date().toISOString()
   });
+});
+
+// ============================================================
+// MIDDLEWARE DE AUTENTICACIÓN GLOBAL
+// ============================================================
+// CRÍTICO: Todas las rutas de datos requieren autenticación
+// Excepciones explícitas:
+// - /version (público)
+// - /backup/cron (usa CRON_SECRET)
+// - /whatsapp-reminders/cron (usa CRON_SECRET)
+// - /meta/locations (datos públicos de municipios)
+// - /tenants (usado para verificar disponibilidad)
+router.use((req, res, next) => {
+  // Rutas públicas que NO requieren autenticación
+  const publicPaths = [
+    '/version',
+    '/meta/locations',
+    '/tenants'
+  ];
+  
+  // Rutas de cron que usan CRON_SECRET en lugar de JWT
+  const cronPaths = [
+    '/backup/cron',
+    '/whatsapp-reminders/cron'
+  ];
+  
+  const path = req.path;
+  
+  // Si es ruta pública, permitir sin auth
+  if (publicPaths.some(p => path === p || path.startsWith(p + '/'))) {
+    return next();
+  }
+  
+  // Si es ruta de cron, permitir (tiene su propia validación con CRON_SECRET)
+  if (cronPaths.some(p => path === p)) {
+    return next();
+  }
+  
+  // Para todas las demás rutas, requerir autenticación JWT
+  return requireAuth(req, res, next);
 });
 
 // ============================================================

@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const { generateMonthlyBillingCsvStream } = require('../services/reportService');
+const { requireAuth } = require('../middleware/auth');
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de reportes requieren autenticación
+router.use(requireAuth);
 
 // GET /api/reports/billing?year=YYYY&month=MM
 router.get('/billing', async (req, res, next) => {

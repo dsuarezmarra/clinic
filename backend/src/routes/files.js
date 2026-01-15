@@ -6,14 +6,19 @@ const crypto = require('crypto');
 const prisma = require('../services/database');
 // Helper: prefer injected Supabase shim (req.prisma) otherwise fallback to Prisma
 const getDb = (req) => req.prisma || prisma;
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÃ“N GLOBAL =====
+// Todas las rutas de archivos requieren autenticaciÃ³n
+router.use(requireAuth);
 
 // Directorio base de uploads (resuelto una sola vez)
 const UPLOADS_BASE_DIR = path.resolve(__dirname, '../../uploads');
 
 /**
- * Valida que un path esté dentro del directorio de uploads permitido
+ * Valida que un path estï¿½ dentro del directorio de uploads permitido
  * Previene ataques de Path Traversal (../../etc/passwd)
  */
 function isPathSafe(filePath) {
@@ -23,7 +28,7 @@ function isPathSafe(filePath) {
 }
 
 /**
- * Valida formato UUID v4 para prevenir inyección en IDs
+ * Valida formato UUID v4 para prevenir inyecciï¿½n en IDs
  */
 function isValidUUID(str) {
   if (!str || typeof str !== 'string') return false;
@@ -32,11 +37,11 @@ function isValidUUID(str) {
 }
 
 /**
- * Valida ID genérico (UUID o texto alfanumérico)
+ * Valida ID genï¿½rico (UUID o texto alfanumï¿½rico)
  */
 function isValidId(str) {
   if (!str || typeof str !== 'string') return false;
-  // Acepta UUID o string alfanumérico de hasta 50 caracteres
+  // Acepta UUID o string alfanumï¿½rico de hasta 50 caracteres
   return isValidUUID(str) || /^[a-zA-Z0-9_-]{1,50}$/.test(str);
 }
 
@@ -190,9 +195,9 @@ router.get('/:fileId/download', async (req, res) => {
     try {
         const { fileId } = req.params;
 
-        // Validar formato del ID para prevenir inyección
+        // Validar formato del ID para prevenir inyecciï¿½n
         if (!isValidId(fileId)) {
-            return res.status(400).json({ error: 'ID de archivo inválido' });
+            return res.status(400).json({ error: 'ID de archivo invï¿½lido' });
         }
 
         const file = await getDb(req).patientFile.findUnique({
@@ -203,14 +208,14 @@ router.get('/:fileId/download', async (req, res) => {
             return res.status(404).json({ error: 'Archivo no encontrado' });
         }
 
-        // Validar que el path esté dentro del directorio permitido (previene Path Traversal)
+        // Validar que el path estï¿½ dentro del directorio permitido (previene Path Traversal)
         if (!isPathSafe(file.storedPath)) {
             console.error(`?? Intento de Path Traversal detectado: ${file.storedPath}`);
-            return res.status(400).json({ error: 'Ruta de archivo inválida' });
+            return res.status(400).json({ error: 'Ruta de archivo invï¿½lida' });
         }
 
         if (!fs.existsSync(file.storedPath)) {
-            return res.status(404).json({ error: 'El archivo físico no existe' });
+            return res.status(404).json({ error: 'El archivo fï¿½sico no existe' });
         }
 
         // Sanitizar nombre de archivo en header para prevenir header injection
@@ -226,14 +231,14 @@ router.get('/:fileId/download', async (req, res) => {
     }
 });
 
-// Vista previa de archivo (para imágenes)
+// Vista previa de archivo (para imï¿½genes)
 router.get('/:fileId/preview', async (req, res) => {
     try {
         const { fileId } = req.params;
 
-        // Validar formato del ID para prevenir inyección
+        // Validar formato del ID para prevenir inyecciï¿½n
         if (!isValidId(fileId)) {
-            return res.status(400).json({ error: 'ID de archivo inválido' });
+            return res.status(400).json({ error: 'ID de archivo invï¿½lido' });
         }
 
         const file = await getDb(req).patientFile.findUnique({
@@ -244,14 +249,14 @@ router.get('/:fileId/preview', async (req, res) => {
             return res.status(404).json({ error: 'Archivo no encontrado' });
         }
 
-        // Validar que el path esté dentro del directorio permitido (previene Path Traversal)
+        // Validar que el path estï¿½ dentro del directorio permitido (previene Path Traversal)
         if (!isPathSafe(file.storedPath)) {
             console.error(`?? Intento de Path Traversal detectado: ${file.storedPath}`);
-            return res.status(400).json({ error: 'Ruta de archivo inválida' });
+            return res.status(400).json({ error: 'Ruta de archivo invï¿½lida' });
         }
 
         if (!fs.existsSync(file.storedPath)) {
-            return res.status(404).json({ error: 'El archivo físico no existe' });
+            return res.status(404).json({ error: 'El archivo fï¿½sico no existe' });
         }
 
         res.setHeader('Content-Type', file.mimeType);
@@ -269,9 +274,9 @@ router.delete('/:fileId', async (req, res) => {
     try {
         const { fileId } = req.params;
 
-        // Validar formato del ID para prevenir inyección
+        // Validar formato del ID para prevenir inyecciï¿½n
         if (!isValidId(fileId)) {
-            return res.status(400).json({ error: 'ID de archivo inválido' });
+            return res.status(400).json({ error: 'ID de archivo invï¿½lido' });
         }
 
         const file = await getDb(req).patientFile.findUnique({
@@ -282,13 +287,13 @@ router.delete('/:fileId', async (req, res) => {
             return res.status(404).json({ error: 'Archivo no encontrado' });
         }
 
-        // Validar que el path esté dentro del directorio permitido antes de eliminar
+        // Validar que el path estï¿½ dentro del directorio permitido antes de eliminar
         if (!isPathSafe(file.storedPath)) {
             console.error(`?? Intento de Path Traversal en DELETE detectado: ${file.storedPath}`);
-            return res.status(400).json({ error: 'Ruta de archivo inválida' });
+            return res.status(400).json({ error: 'Ruta de archivo invï¿½lida' });
         }
 
-        // Eliminar archivo físico
+        // Eliminar archivo fï¿½sico
         if (fs.existsSync(file.storedPath)) {
             fs.unlinkSync(file.storedPath);
         }

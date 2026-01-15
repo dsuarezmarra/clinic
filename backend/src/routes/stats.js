@@ -4,18 +4,23 @@ const moment = require('moment-timezone');
 
 // Helper: prefer injected Supabase shim (req.prisma) otherwise fallback to Prisma
 const getDb = (req) => req.prisma || prisma;
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÃ“N GLOBAL =====
+// Todas las rutas de estadÃ­sticas requieren autenticaciÃ³n
+router.use(requireAuth);
 
 // Precios por defecto
 const DEFAULT_PRICE_30 = 3000; // 30?
 const DEFAULT_PRICE_60 = 5500; // 55?
 
 /**
- * Calcula el precio de una cita basándose en:
+ * Calcula el precio de una cita basï¿½ndose en:
  * 1. priceCents de la cita (si existe)
  * 2. Proporcional del creditPack (si tiene redemptions)
- * 3. Precio por defecto según duración
+ * 3. Precio por defecto segï¿½n duraciï¿½n
  */
 function calculateAppointmentPrice(appointment) {
   if (!appointment) return 0;
@@ -39,33 +44,33 @@ function calculateAppointmentPrice(appointment) {
     }
   }
   
-  // 3. Fallback: precio según duración
+  // 3. Fallback: precio segï¿½n duraciï¿½n
   const mins = Number(appointment.durationMinutes || 0);
   return mins >= 60 ? DEFAULT_PRICE_60 : DEFAULT_PRICE_30;
 }
 
 /**
- * Determina si una cita está pagada basándose en:
- * 1. Si tiene creditRedemptions y TODOS los packs están pagados
- * 2. Si tiene priceCents sin redemptions (sesión suelta pagada directamente)
+ * Determina si una cita estï¿½ pagada basï¿½ndose en:
+ * 1. Si tiene creditRedemptions y TODOS los packs estï¿½n pagados
+ * 2. Si tiene priceCents sin redemptions (sesiï¿½n suelta pagada directamente)
  */
 function isAppointmentPaid(appointment) {
   if (!appointment) return false;
   
   const redemptions = appointment.creditRedemptions || [];
   if (redemptions.length > 0) {
-    // Verificar que TODOS los packs estén pagados
+    // Verificar que TODOS los packs estï¿½n pagados
     return redemptions.every(r => r.creditPack?.paid === true);
   }
   
   // Si tiene priceCents sin redemptions, consideramos pendiente
-  // (una sesión suelta sin pack asociado está pendiente hasta que se pague)
+  // (una sesiï¿½n suelta sin pack asociado estï¿½ pendiente hasta que se pague)
   return false;
 }
 
 /**
  * GET /api/stats/dashboard
- * Obtiene estadísticas generales para el dashboard
+ * Obtiene estadï¿½sticas generales para el dashboard
  * Query params:
  *   - period: 'today' | 'week' | 'month' | 'year' (default: 'month')
  */
@@ -102,7 +107,7 @@ router.get('/dashboard', async (req, res, next) => {
     const startUTC = startDate.utc().toDate();
     const endUTC = endDate.utc().toDate();
 
-    // 1. Citas en el período
+    // 1. Citas en el perï¿½odo
     const appointments = await getDb(req).appointments.findMany({
       where: {
         start: {
@@ -137,7 +142,7 @@ router.get('/dashboard', async (req, res, next) => {
       const priceCents = calculateAppointmentPrice(apt);
       totalRevenueCents += priceCents;
       
-      // Determinar si está pagada
+      // Determinar si estï¿½ pagada
       if (isAppointmentPaid(apt)) {
         paidRevenueCents += priceCents;
       } else {
@@ -148,7 +153,7 @@ router.get('/dashboard', async (req, res, next) => {
     // 5. Total de pacientes
     const totalPatients = await getDb(req).patients.count();
 
-    // 6. Pacientes nuevos en el período
+    // 6. Pacientes nuevos en el perï¿½odo
     const newPatients = await getDb(req).patients.count({
       where: {
         createdAt: {
@@ -158,7 +163,7 @@ router.get('/dashboard', async (req, res, next) => {
       }
     });
 
-    // 7. Packs de créditos activos
+    // 7. Packs de crï¿½ditos activos
     const activePacks = await getDb(req).credit_packs.count({
       where: {
         unitsRemaining: {
@@ -177,14 +182,14 @@ router.get('/dashboard', async (req, res, next) => {
       }
     });
 
-    // 9. Distribución de citas por día de la semana (para gráfico)
+    // 9. Distribuciï¿½n de citas por dï¿½a de la semana (para grï¿½fico)
     const appointmentsByDay = [0, 0, 0, 0, 0, 0, 0]; // Lun-Dom
     appointments.forEach(apt => {
       const dayIndex = moment(apt.start).isoWeekday() - 1; // 0 = Lunes
       appointmentsByDay[dayIndex]++;
     });
 
-    // 10. Ingresos por semana del mes (para gráfico)
+    // 10. Ingresos por semana del mes (para grï¿½fico)
     const revenueByWeek = [0, 0, 0, 0, 0];
     appointments.forEach(apt => {
       const weekOfMonth = Math.ceil(moment(apt.start).date() / 7) - 1;
@@ -193,7 +198,7 @@ router.get('/dashboard', async (req, res, next) => {
       }
     });
 
-    // 11. Próximas citas de hoy
+    // 11. Prï¿½ximas citas de hoy
     const todayStart = now.clone().startOf('day').utc().toDate();
     const todayEnd = now.clone().endOf('day').utc().toDate();
     
@@ -256,7 +261,7 @@ router.get('/dashboard', async (req, res, next) => {
       },
       charts: {
         appointmentsByDay: {
-          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+          labels: ['Lun', 'Mar', 'Miï¿½', 'Jue', 'Vie', 'Sï¿½b', 'Dom'],
           data: appointmentsByDay
         },
         revenueByWeek: {
@@ -281,7 +286,7 @@ function formatCurrency(cents) {
   return euros.replace('.', ',') + ' \u20ac';
 }
 
-// Helper: etiqueta del período
+// Helper: etiqueta del perï¿½odo
 function getPeriodLabel(period, start, end) {
   switch (period) {
     case 'today':

@@ -1,8 +1,13 @@
 const express = require('express');
 const path = require('path');
 const { DatabaseBackup } = require('../../scripts/backup');
+const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de backup requieren autenticación
+router.use(requireAuth);
 
 /**
  * Valida que el nombre de archivo sea seguro (sin path traversal)

@@ -7,6 +7,11 @@
 const express = require('express');
 const router = express.Router();
 const emailService = require('../services/email.service');
+const { requireAuth } = require('../middleware/auth');
+
+// ===== MIDDLEWARE DE AUTENTICACIÓN GLOBAL =====
+// Todas las rutas de email requieren autenticación
+router.use(requireAuth);
 
 /**
  * GET /api/email/status
