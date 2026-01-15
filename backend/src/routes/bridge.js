@@ -2482,8 +2482,9 @@ router.get('/reports/billing', async (req, res) => {
       for (const apt of appointments || []) {
         const patient = getEmbeddedProperty(apt, 'patients', req.tableSuffix);
         const date = new Date(apt.start);
-        const dateStr = date.toLocaleDateString('es-ES');
-        const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        // IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
+        const dateStr = date.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
+        const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
         const duration = apt.durationMinutes || 0;
         const type = getAppointmentType(apt, req.tableSuffix);
         const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);

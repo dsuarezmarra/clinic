@@ -48,18 +48,26 @@ function formatPhoneForWhatsApp(phone) {
 }
 
 // Función para formatear fecha en español
+// IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
 function formatDateSpanish(date) {
-  const days = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-  
   const d = new Date(date);
-  return `${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]}`;
+  return d.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'Europe/Madrid'
+  });
 }
 
 // Función para formatear hora
+// IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
 function formatTime(date) {
   const d = new Date(date);
-  return d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleTimeString('es-ES', { 
+    hour: '2-digit', 
+    minute: '2-digit',
+    timeZone: 'Europe/Madrid'
+  });
 }
 
 // Helper para obtener el cliente de base de datos correcto

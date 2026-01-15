@@ -52,12 +52,14 @@ function formatPrice(cents) {
 
 /**
  * Formatea fecha en formato español
+ * IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
  */
 function formatDate(date) {
     return new Date(date).toLocaleDateString('es-ES', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: 'Europe/Madrid'
     });
 }
 

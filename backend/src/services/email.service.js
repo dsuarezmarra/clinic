@@ -155,15 +155,18 @@ async function sendAppointmentConfirmation(options) {
     }
 
     const appointmentDate = new Date(appointment.start);
+    // IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
     const dateStr = appointmentDate.toLocaleDateString('es-ES', {
         weekday: 'long',
         day: 'numeric',
         month: 'long',
-        year: 'numeric'
+        year: 'numeric',
+        timeZone: 'Europe/Madrid'
     });
     const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Europe/Madrid'
     });
 
     const content = `
@@ -216,14 +219,17 @@ async function sendAppointmentReminder(options) {
     }
 
     const appointmentDate = new Date(appointment.start);
+    // IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
     const dateStr = appointmentDate.toLocaleDateString('es-ES', {
         weekday: 'long',
         day: 'numeric',
-        month: 'long'
+        month: 'long',
+        timeZone: 'Europe/Madrid'
     });
     const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Europe/Madrid'
     });
 
     const content = `
@@ -271,14 +277,17 @@ async function sendAppointmentCancellation(options) {
     }
 
     const appointmentDate = new Date(appointment.start);
+    // IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
     const dateStr = appointmentDate.toLocaleDateString('es-ES', {
         weekday: 'long',
         day: 'numeric',
-        month: 'long'
+        month: 'long',
+        timeZone: 'Europe/Madrid'
     });
     const timeStr = appointmentDate.toLocaleTimeString('es-ES', {
         hour: '2-digit',
-        minute: '2-digit'
+        minute: '2-digit',
+        timeZone: 'Europe/Madrid'
     });
 
     const content = `
