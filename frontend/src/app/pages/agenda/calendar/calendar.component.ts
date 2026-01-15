@@ -1364,15 +1364,18 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (!phoneFormatted) return '';
         
         // Formatear fecha y hora de la cita
+        // IMPORTANTE: Especificar timezone Europe/Madrid para garantizar hora correcta
         const appointmentDate = new Date(appointment.start);
         const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
             weekday: 'long',
             day: 'numeric',
-            month: 'long'
+            month: 'long',
+            timeZone: 'Europe/Madrid'
         });
         const formattedTime = appointmentDate.toLocaleTimeString('es-ES', {
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            timeZone: 'Europe/Madrid'
         });
         
         // Emojis usando Unicode (igual que en WhatsAppReminderService)

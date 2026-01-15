@@ -79,15 +79,18 @@ export class WhatsAppReminderService {
     const dateTime = new Date(reminder.dateTime);
     
     // Formatear fecha y hora
+    // IMPORTANTE: Especificar timezone Europe/Madrid para garantizar hora correcta
     reminder.formattedDate = dateTime.toLocaleDateString('es-ES', {
       weekday: 'long',
       day: 'numeric',
-      month: 'long'
+      month: 'long',
+      timeZone: 'Europe/Madrid'
     });
     
     reminder.formattedTime = dateTime.toLocaleTimeString('es-ES', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'Europe/Madrid'
     });
 
     // Obtener solo el primer nombre
