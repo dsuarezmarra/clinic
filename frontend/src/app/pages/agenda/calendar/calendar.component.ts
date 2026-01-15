@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 // ...existing code... (PatientSelectorComponent removed because it's not used in the template)
 import { ConfirmModalComponent } from '../../../components/confirm-modal/confirm-modal.component';
+import { AuthService } from '../../../services/auth.service';
 import { Appointment, CreateAppointmentRequest } from '../../../models/appointment.model';
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
@@ -465,7 +466,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         private router: Router,
         private eventBusService: EventBusService,
         private clientConfigService: ClientConfigService,
-        private configService: ConfigService
+        private configService: ConfigService,
+        private authService: AuthService
     ) {
         this.generateTimeSlots();
     }
@@ -479,12 +481,17 @@ export class CalendarComponent implements OnInit, OnDestroy {
             
             console.log(`📊 Exportando CSV para ${tenantSlug}: ${url}`);
             
-            const resp = await fetch(url, { 
-                headers: { 
-                    'Accept': 'text/csv',
-                    'X-Tenant-Slug': tenantSlug
-                } 
-            });
+            // Obtener token JWT para autenticación
+            const token = await this.authService.getAccessToken();
+            const headers: HeadersInit = { 
+                'Accept': 'text/csv',
+                'X-Tenant-Slug': tenantSlug
+            };
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            
+            const resp = await fetch(url, { headers });
             if (!resp.ok) throw new Error('Error generando CSV');
 
             // Validate content-type to detect misrouted HTML responses (dev servers can return index.html)
