@@ -2,12 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, HostListener, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 // ...existing code... (PatientSelectorComponent removed because it's not used in the template)
 import { ConfirmModalComponent } from '../../../components/confirm-modal/confirm-modal.component';
-import { AuthService } from '../../../services/auth.service';
 import { Appointment, CreateAppointmentRequest } from '../../../models/appointment.model';
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
+import { AuthService } from '../../../services/auth.service';
+import { BillingVisibilityService } from '../../../services/billing-visibility.service';
 import { ClientConfigService } from '../../../services/client-config.service';
 import { ConfigService } from '../../../services/config.service';
 import { CreditService } from '../../../services/credit.service';
@@ -424,6 +426,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
     appointmentToDelete: string | null = null;
     deleteLoading = false;
 
+    // Billing visibility
+    billingVisible = false;
+    private billingSubscription?: Subscription;
+
     // Drag & Drop state
     draggedAppointment: Appointment | null = null;
     dropTargetSlot: { date: Date; time: string } | null = null;
@@ -467,7 +473,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
         private eventBusService: EventBusService,
         private clientConfigService: ClientConfigService,
         private configService: ConfigService,
-        private authService: AuthService
+        private authService: AuthService,
+        private billingVisibilityService: BillingVisibilityService
     ) {
         this.generateTimeSlots();
     }
@@ -525,6 +532,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.loadPrices(); // Cargar precios configurados
         this.loadAppointments();
         this.loadPatients();
+
+        // Suscribirse a cambios de visibilidad de facturación
+        this.billingSubscription = this.billingVisibilityService.visible$.subscribe(
+            visible => this.billingVisible = visible
+        );
         
         // Suscribirse a cambios de estado de pago
         this.eventBusService.packPaymentStatusChanged$.subscribe(change => {
@@ -564,6 +576,13 @@ export class CalendarComponent implements OnInit, OnDestroy {
     ngOnDestroy() {
         // Limpiar estado de drag al destruir el componente
         this.resetDragState();
+        // Desuscribirse de billing visibility
+        this.billingSubscription?.unsubscribe();
+    }
+
+    // Toggle billing visibility
+    toggleBillingVisibility(): void {
+        this.billingVisibilityService.toggle();
     }
 
 

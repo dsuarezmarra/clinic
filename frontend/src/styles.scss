@@ -669,3 +669,99 @@ a {
 .divider:not(:empty)::after {
     margin-left: 1rem;
 }
+
+/* ========================================
+   BILLING BLUR - Privacidad de datos
+   Sistema para ocultar cifras de facturación
+   con efecto blur estilo banca móvil
+   ======================================== */
+
+/* Contenedor de valor con blur */
+.billing-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+.billing-value.blurred .billing-amount {
+    filter: blur(8px);
+    user-select: none;
+    pointer-events: none;
+}
+
+.billing-amount {
+    transition: filter 0.3s ease;
+}
+
+/* Botón toggle para mostrar/ocultar */
+.billing-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #6c757d;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.billing-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--primary-color);
+}
+
+.billing-toggle-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-shadow);
+}
+
+.billing-toggle-btn i {
+    font-size: 1rem;
+}
+
+/* Versión compacta del toggle para uso inline */
+.billing-toggle-btn.compact {
+    width: 22px;
+    height: 22px;
+}
+
+.billing-toggle-btn.compact i {
+    font-size: 0.85rem;
+}
+
+/* Toggle global en header de estadísticas */
+.billing-visibility-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(108, 117, 125, 0.2);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.billing-visibility-toggle:hover {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.billing-visibility-toggle i {
+    font-size: 0.9rem;
+}
+
+/* Stat card con valor blurred */
+.stat-card .billing-value.blurred .stat-number {
+    filter: blur(8px);
+    user-select: none;
+}

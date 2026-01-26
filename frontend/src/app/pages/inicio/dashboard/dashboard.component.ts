@@ -1,10 +1,12 @@
 ﻿import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { Appointment, AppointmentStatus, CreateAppointmentRequest } from '../../../models/appointment.model';
 import { Patient } from '../../../models/patient.model';
 import { AppointmentService } from '../../../services/appointment.service';
+import { BillingVisibilityService } from '../../../services/billing-visibility.service';
 import { CreditService } from '../../../services/credit.service';
 import { EventBusService } from '../../../services/event-bus.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -20,7 +22,7 @@ import { CalendarComponent } from '../../agenda/calendar/calendar.component';
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
     @ViewChild(CalendarComponent) calendarComponent: CalendarComponent | undefined;
     @ViewChild('patientSearchInput') patientSearchInput!: ElementRef;
 
@@ -29,6 +31,10 @@ export class DashboardComponent implements OnInit {
     statsLoading = false;
     statsPeriod: StatsPeriod = 'month';
     showStats = false;
+
+    // Billing visibility
+    billingVisible = false;
+    private billingSubscription?: Subscription;
 
     // WhatsApp reminders
     whatsappReminders: WhatsAppReminder[] = [];
@@ -81,11 +87,16 @@ export class DashboardComponent implements OnInit {
         private creditService: CreditService,
         private eventBusService: EventBusService,
         private statsService: StatsService,
-        private whatsappReminderService: WhatsAppReminderService
+        private whatsappReminderService: WhatsAppReminderService,
+        private billingVisibilityService: BillingVisibilityService
     ) { }
     // export controls removed — use calendar monthly export
     ngAfterViewInit() {
         this.cdr.detectChanges();
+    }
+
+    ngOnDestroy() {
+        this.billingSubscription?.unsubscribe();
     }
 
     ngOnInit() {
@@ -94,6 +105,11 @@ export class DashboardComponent implements OnInit {
         this.generateTimeSlots();
         this.loadStats();
         this.loadWhatsAppReminders();
+
+        // Suscribirse a cambios de visibilidad de facturación
+        this.billingSubscription = this.billingVisibilityService.visible$.subscribe(
+            visible => this.billingVisible = visible
+        );
         
         // Suscribirse a cambios de estado de pago
         this.eventBusService.packPaymentStatusChanged$.subscribe(change => {
@@ -101,6 +117,11 @@ export class DashboardComponent implements OnInit {
             // Actualizar las citas que usan este pack
             this.updateAppointmentPaymentStatus(change.packId, change.paid);
         });
+    }
+
+    // Toggle billing visibility
+    toggleBillingVisibility(): void {
+        this.billingVisibilityService.toggle();
     }
 
     // Cargar recordatorios de WhatsApp pendientes

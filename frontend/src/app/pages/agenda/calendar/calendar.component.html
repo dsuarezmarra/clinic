@@ -42,11 +42,29 @@
             <h3 class="calendar-title mb-2 text-center">
                 <span *ngIf="viewMode === 'week'">
                     Semana del {{ formatDate(getWeekDays()[0]) }}
-                    <small class="text-muted ms-2">(Total semana: {{ formatPriceCents(getWeekTotal()) }})</small>
+                    <small class="text-muted ms-2">(Total semana: 
+                        <span class="billing-value" [class.blurred]="!billingVisible">
+                            <span class="billing-amount">{{ formatPriceCents(getWeekTotal()) }}</span>
+                        </span>)
+                        <button class="billing-toggle-btn compact ms-1" 
+                                (click)="toggleBillingVisibility(); $event.stopPropagation()" 
+                                [title]="billingVisible ? 'Ocultar importe' : 'Mostrar importe'">
+                            <i class="bi" [class.bi-eye]="billingVisible" [class.bi-eye-slash]="!billingVisible"></i>
+                        </button>
+                    </small>
                 </span>
                 <span *ngIf="viewMode === 'day'">
                     {{ formatDate(currentDate) }}
-                    <small class="text-muted ms-2">(Total día: {{ formatPriceCents(getDayTotal(currentDate)) }})</small>
+                    <small class="text-muted ms-2">(Total día: 
+                        <span class="billing-value" [class.blurred]="!billingVisible">
+                            <span class="billing-amount">{{ formatPriceCents(getDayTotal(currentDate)) }}</span>
+                        </span>)
+                        <button class="billing-toggle-btn compact ms-1" 
+                                (click)="toggleBillingVisibility(); $event.stopPropagation()" 
+                                [title]="billingVisible ? 'Ocultar importe' : 'Mostrar importe'">
+                            <i class="bi" [class.bi-eye]="billingVisible" [class.bi-eye-slash]="!billingVisible"></i>
+                        </button>
+                    </small>
                 </span>
             </h3>
 
@@ -76,12 +94,23 @@
                 title="Año siguiente" aria-label="Ir al año siguiente">
                 <i class="bi bi-chevron-right" aria-hidden="true"></i>
             </button>
+            <!-- Toggle de visibilidad de facturación para vista mensual -->
+            <button class="billing-visibility-toggle ms-3" 
+                    (click)="toggleBillingVisibility()" 
+                    [title]="billingVisible ? 'Ocultar importes' : 'Mostrar importes'">
+                <i class="bi" [class.bi-eye]="billingVisible" [class.bi-eye-slash]="!billingVisible"></i>
+                <span>{{ billingVisible ? 'Ocultar €' : 'Mostrar €' }}</span>
+            </button>
         </div>
         <div class="year-months-grid-compact">
             <div *ngFor="let month of months; let monthIdx = index" class="month-block-compact">
                 <h6 class="text-center mb-1">
                     {{ month }}
-                    <small class="text-muted">({{ formatPriceCents(getMonthTotal(currentYear, monthIdx)) }})</small>
+                    <small class="text-muted">(
+                        <span class="billing-value" [class.blurred]="!billingVisible">
+                            <span class="billing-amount">{{ formatPriceCents(getMonthTotal(currentYear, monthIdx)) }}</span>
+                        </span>)
+                    </small>
                     <!-- Export buttons: accessible size (min 44px touch target) -->
                     <button class="btn btn-sm btn-outline-success ms-2 export-btn" 
                         aria-label="Exportar facturas por cita del mes de {{ month }}"
