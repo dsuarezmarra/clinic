@@ -508,3 +508,11 @@
     itemLabel="Paciente" [itemName]="getDeleteAppointmentPatientName()" confirmText="Eliminar" type="danger"
     [loading]="deleteLoading" (confirm)="confirmDeleteAppointment()" (cancel)="cancelDeleteAppointment()">
 </app-confirm-modal>
+
+<!-- Modal de confirmación para mover cita (drag & drop) -->
+<app-confirm-modal [isOpen]="showDragConfirm" title="Mover Cita"
+    [message]="'¿Está seguro de que desea mover esta cita?'"
+    [details]="'De: ' + formatDragDateTime(pendingDrop?.oldStart) + '\nA: ' + formatDragDateTime(pendingDrop?.newStart)"
+    itemLabel="Paciente" [itemName]="pendingDrop?.patientName || ''" confirmText="Mover" type="warning"
+    (confirm)="confirmDragDrop()" (cancel)="cancelDragDrop()">
+</app-confirm-modal>

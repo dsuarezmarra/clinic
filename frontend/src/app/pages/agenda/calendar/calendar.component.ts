@@ -281,7 +281,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         }
     }
 
-    // Ejecutar el drop de la cita
+    // Ejecutar el drop de la cita - ahora muestra modal de confirmación
     private executeDrop() {
         if (!this.draggedAppointment || !this.dropTargetSlot) {
             this.resetDragState();
@@ -309,13 +309,54 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const durationMs = oldEnd.getTime() - oldStart.getTime();
         const newEnd = new Date(newStart.getTime() + durationMs);
 
-        // Guardar referencia antes de resetear
-        const appointmentId = this.draggedAppointment.id;
+        // Obtener nombre del paciente para el modal
+        const patient = this.patients.find(p => p.id === this.draggedAppointment?.patientId);
+        const patientName = patient ? `${patient.firstName} ${patient.lastName}` : 'Paciente desconocido';
 
+        // Guardar datos pendientes para el modal de confirmación
+        this.pendingDrop = {
+            appointmentId: this.draggedAppointment.id,
+            patientName,
+            oldStart,
+            oldEnd,
+            newStart,
+            newEnd
+        };
+
+        // Resetear estado de drag y mostrar modal
         this.resetDragState();
+        this.showDragConfirm = true;
+    }
 
-        // Actualizar la cita
+    // Confirmar el movimiento de la cita
+    confirmDragDrop() {
+        if (!this.pendingDrop) return;
+
+        const { appointmentId, newStart, newEnd } = this.pendingDrop;
+        this.showDragConfirm = false;
+        this.pendingDrop = null;
+
+        // Ejecutar el movimiento
         this.moveAppointment(appointmentId, newStart, newEnd);
+    }
+
+    // Cancelar el movimiento de la cita
+    cancelDragDrop() {
+        this.showDragConfirm = false;
+        this.pendingDrop = null;
+    }
+
+    // Helper para formatear fecha/hora para el modal de confirmación
+    formatDragDateTime(date: Date | undefined): string {
+        if (!date) return '';
+        return date.toLocaleDateString('es-ES', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short'
+        }) + ' ' + date.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 
     // Cancelar el drag (mouse y touch)
@@ -425,6 +466,17 @@ export class CalendarComponent implements OnInit, OnDestroy {
     showDeleteConfirm = false;
     appointmentToDelete: string | null = null;
     deleteLoading = false;
+
+    // Drag confirmation modal
+    showDragConfirm = false;
+    pendingDrop: {
+        appointmentId: string;
+        patientName: string;
+        oldStart: Date;
+        oldEnd: Date;
+        newStart: Date;
+        newEnd: Date;
+    } | null = null;
 
     // Billing visibility
     billingVisible = false;
