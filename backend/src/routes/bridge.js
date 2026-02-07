@@ -2412,10 +2412,7 @@ router.put('/meta/config/prices', async (req, res) => {
   }
 });
 
-// TEST ENDPOINT: Verify ExcelJS
-router.get('/test-excel', async (req, res) => {
-  res.send('TEST_OK_NO_EXCEL_LIB');
-});
+
 
 // ================================================================================
 // REPORTS ENDPOINTS
@@ -2437,87 +2434,115 @@ router.get('/reports/billing', async (req, res) => {
       `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`
     );
 
+    const ExcelJS = require('exceljs');
+    const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.xlsx`;
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('FACTURA');
+
+    // Definir columnas (Mismas para ambos, pero ajustando para paciente)
+    worksheet.columns = [
+      { header: 'Nº Factura', key: 'numFactura', width: 12 },
+      { header: 'Fecha Factura', key: 'fechaFactura', width: groupBy === 'patient' ? 40 : 15 }, // Más ancho para fechas concatenadas
+      { header: 'Nombre Apellidos', key: 'nombre', width: 30 },
+      { header: 'Dirección', key: 'direccion', width: 30 },
+      { header: 'Ciudad', key: 'ciudad', width: 15 },
+      { header: 'Provincia', key: 'provincia', width: 15 },
+      { header: 'C Postal', key: 'cp', width: 10 },
+      { header: 'DNI', key: 'dni', width: 15 },
+      { header: 'Total Bruto', key: 'bruto', width: 12 },
+      { header: 'Iva', key: 'iva', width: 10 },
+      { header: 'Neto', key: 'neto', width: 12 }
+    ];
+
+    // Estilo para cabeceras
+    worksheet.getRow(1).font = { bold: true };
+
+    let invoiceNumber = 1;
+    const yearShort = String(year).slice(-2);
+
     if (groupBy === 'patient') {
-      const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
-      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.write('\uFEFF'); // BOM for Excel
-
-      // Agrupar por paciente
+      // OPCIÓN A: RESUMEN POR PACIENTE
+      // Agrupar citas por paciente
       const patientMap = new Map();
-
       for (const apt of appointments || []) {
         const patientId = apt.patientId;
         if (!patientMap.has(patientId)) {
           patientMap.set(patientId, {
-            patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix),
+            patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || {},
             appointments: []
           });
         }
         patientMap.get(patientId).appointments.push(apt);
       }
 
-      // Generar CSV agrupado por paciente
-      res.write('Paciente;DNI;Total Citas;Total Pagado (€);Total Pendiente (€);Total (€)\n');
-
+      // Iterar por paciente y generar filas
       for (const [patientId, data] of patientMap) {
         const patient = data.patient;
-        const apts = data.appointments;
+        const apts = data.appointments.sort((a, b) => new Date(a.start) - new Date(b.start));
 
-        let totalPaid = 0;
-        let totalPending = 0;
+        let totalBruto = 0;
+        let totalNeto = 0;
+        let totalIva = 0;
+        let isFullyPaid = true;
+        const dates = [];
 
         for (const apt of apts) {
-          const price = calculateAppointmentPrice(apt, req.tableSuffix);
-          const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);
+          // Fechas
+          const date = new Date(apt.start);
+          const fechaStr = date.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', day: '2-digit', month: '2-digit' });
+          dates.push(fechaStr);
 
-          if (isPaid) {
-            totalPaid += price;
-          } else {
-            totalPending += price;
+          // Precios
+          const priceCents = calculateAppointmentPrice(apt, req.tableSuffix);
+          const bruto = priceCents / 100;
+          const neto = bruto / 1.21;
+          const iva = bruto - neto;
+
+          totalBruto += bruto;
+          totalNeto += neto;
+          totalIva += iva;
+
+          // Estado de pago (si alguna no está pagada, el total cuenta como pendiente)
+          if (!getAppointmentPaidStatus(apt, req.tableSuffix)) {
+            isFullyPaid = false;
           }
         }
 
-        const total = totalPaid + totalPending;
-        const row = `${patient.firstName} ${patient.lastName};${patient.dni || ''};${apts.length};${(totalPaid / 100).toFixed(2)};${(totalPending / 100).toFixed(2)};${(total / 100).toFixed(2)}\n`;
-        res.write(row);
+        // Número de factura secuencial
+        const numFactura = `${yearShort}/${String(invoiceNumber).padStart(3, '0')}`;
+        const numFacturaDisplay = numFactura + (isFullyPaid ? '' : ' (PDTE)');
+
+        // Concatenar fechas únicas para no repetir si hay varias el mismo día (opcional, pero mejor)
+        const uniqueDates = [...new Set(dates)];
+
+        const row = worksheet.addRow({
+          numFactura: numFacturaDisplay,
+          fechaFactura: uniqueDates.join(', '), // Concatenar fechas
+          nombre: `${patient.firstName || ''} ${patient.lastName || ''}`.trim(),
+          direccion: patient.address || '',
+          ciudad: patient.city || '',
+          provincia: patient.province || '',
+          cp: patient.cp || '',
+          dni: patient.dni || '',
+          bruto: parseFloat(totalBruto.toFixed(2)),
+          iva: parseFloat(totalIva.toFixed(2)),
+          neto: parseFloat(totalNeto.toFixed(2))
+        });
+
+        // Estilo condicional para NO pagados
+        if (!isFullyPaid) {
+          row.font = { color: { argb: 'FFFF0000' } }; // Red
+          row.commit();
+        }
+
+        invoiceNumber++;
       }
+
     } else {
-      // Agrupar por cita - generar Excel con nueva estructura
-      const ExcelJS = require('exceljs');
-      const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.xlsx`;
-
-      const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet('FACTURA');
-
-      // Definir columnas
-      worksheet.columns = [
-        { header: 'Nº Factura', key: 'numFactura', width: 12 },
-        { header: 'Fecha Factura', key: 'fechaFactura', width: 14 },
-        { header: 'Nombre Apellidos', key: 'nombre', width: 30 },
-        { header: 'Dirección', key: 'direccion', width: 30 },
-        { header: 'Ciudad', key: 'ciudad', width: 15 },
-        { header: 'Provincia', key: 'provincia', width: 15 },
-        { header: 'C Postal', key: 'cp', width: 10 },
-        { header: 'DNI', key: 'dni', width: 15 },
-        { header: 'Total Bruto', key: 'bruto', width: 12 },
-        { header: 'Iva', key: 'iva', width: 10 },
-        { header: 'Neto', key: 'neto', width: 12 }
-      ];
-
-      // Estilo para cabeceras
-      worksheet.getRow(1).font = { bold: true };
-
+      // OPCIÓN B (EXISTENTE): DETALLE POR CITA
       // Ordenar citas por fecha
       const sortedAppointments = (appointments || []).sort((a, b) => new Date(a.start) - new Date(b.start));
-
-      // Generar filas
-      console.log('🧪 TEST: Bypassing Excel generation');
-      res.send('TEST_OK_BYPASS');
-      return;
-
-      let invoiceNumber = 1;
-      const yearShort = String(year).slice(-2);
 
       for (const apt of sortedAppointments) {
         try {
@@ -2526,7 +2551,7 @@ router.get('/reports/billing', async (req, res) => {
           // Formato de fecha: YYYY-MM-DD
           const fechaStr = date.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
 
-          // Calcular precios (mantener lógica existente)
+          // Calcular precios
           const priceCents = calculateAppointmentPrice(apt, req.tableSuffix);
           const bruto = priceCents / 100; // Precio bruto en euros
           const neto = bruto / 1.21; // Base imponible (sin IVA)
@@ -2535,10 +2560,11 @@ router.get('/reports/billing', async (req, res) => {
           // Número de factura: AÑO/SECUENCIAL (ej: 26/001)
           const numFactura = `${yearShort}/${String(invoiceNumber).padStart(3, '0')}`;
 
-          console.log(`Processing row ${invoiceNumber}: ${numFactura} - ${patient.firstName || 'Sin nombre'} ${patient.lastName || ''}`);
+          const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);
+          const numFacturaDisplay = numFactura + (isPaid ? '' : ' (PDTE)');
 
-          worksheet.addRow({
-            numFactura: numFactura,
+          const row = worksheet.addRow({
+            numFactura: numFacturaDisplay,
             fechaFactura: fechaStr,
             nombre: `${patient.firstName || ''} ${patient.lastName || ''}`.trim(),
             direccion: patient.address || '',
@@ -2551,48 +2577,40 @@ router.get('/reports/billing', async (req, res) => {
             neto: parseFloat(neto.toFixed(2))
           });
 
+          if (!isPaid) {
+            row.font = { color: { argb: 'FFFF0000' } }; // Red
+            row.commit();
+          }
+
           invoiceNumber++;
         } catch (rowError) {
           console.error(`❌ Error processing appointment ${apt.id}:`, rowError);
           // Continue with next row
         }
       }
-      console.log('Finished processing all rows. Generating buffer...'); // DEBUG LOG
-
-      // Formato numérico para columnas de precios
-      worksheet.getColumn('bruto').numFmt = '#,##0.00';
-      worksheet.getColumn('iva').numFmt = '#,##0.00';
-      worksheet.getColumn('neto').numFmt = '#,##0.00';
-
-      // Enviar Excel
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-
-      console.log(`📊 Generando Excel con ${sortedAppointments.length} filas...`);
-
-      try {
-        const buffer = await workbook.xlsx.writeBuffer();
-
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-        res.setHeader('Content-Length', buffer.length);
-
-        res.send(buffer);
-        console.log('✅ Excel generado y enviado correctamente (Buffer)');
-      } catch (excelError) {
-        console.error('❌ Error generando buffer de Excel:', excelError);
-        if (!res.headersSent) {
-          res.status(500).send('Error generando Excel');
-        }
-      }
-      return;
     }
+
+    // Formato numérico para columnas de precios
+    worksheet.getColumn('bruto').numFmt = '#,##0.00';
+    worksheet.getColumn('iva').numFmt = '#,##0.00';
+    worksheet.getColumn('neto').numFmt = '#,##0.00';
+
+    // Enviar Excel
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    console.log(`📊 Generando Excel (${groupBy}) con filas...`);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
+    console.log('✅ Excel generado y enviado correctamente (Buffer)');
+
   } catch (error) {
     console.error('Error generating billing report:', error);
     if (!res.headersSent) {
       res.status(500).send('Error interno del servidor');
     }
-    res.status(500).json({ error: error.message });
   }
 });
 

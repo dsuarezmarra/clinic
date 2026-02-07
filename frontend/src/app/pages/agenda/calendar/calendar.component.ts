@@ -487,7 +487,8 @@ export class CalendarComponent implements OnInit, OnDestroy {
             const url = `${apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
 
             // Determinar tipo de archivo esperado según groupBy
-            const isExcel = groupBy === 'appointment';
+            // Ambos 'appointment' y 'patient' son Excel ahora
+            const isExcel = ['appointment', 'patient'].includes(groupBy);
             const acceptHeader = isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
 
             console.log(`📊 Exportando ${isExcel ? 'Excel' : 'CSV'} para ${tenantSlug}: ${url}`);
