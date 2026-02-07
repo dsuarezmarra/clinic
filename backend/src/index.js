@@ -19,6 +19,7 @@ const statsRoutes = require('./routes/stats');
 const invoicesRoutes = require('./routes/invoices');
 const emailRoutes = require('./routes/email');
 const whatsappRemindersRoutes = require('./routes/whatsapp-reminders');
+const bridgeRoutes = require('./routes/bridge'); // Import bridge routes
 
 // Importar middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -48,7 +49,7 @@ app.use((req, res, next) => {
   res.header('Access-Control-Allow-Credentials', 'true');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Tenant-Slug, X-Requested-With, Accept');
-  
+
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
@@ -74,6 +75,7 @@ app.use('/api', injectDatabaseMiddleware);
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Rutas API
+app.use('/api', bridgeRoutes); // Prioridad para endpoints bridge
 app.use('/api/patients', patientsRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/credits', creditsRoutes);
@@ -113,9 +115,9 @@ app.use(errorHandler);
 async function startServer() {
   try {
     console.log('🚀 Iniciando servidor...');
-    
+
     const dbManager = await getDbManager();
-    
+
     // Iniciar backups automáticos
     try {
       const { backupScheduler } = require('../scripts/scheduler');

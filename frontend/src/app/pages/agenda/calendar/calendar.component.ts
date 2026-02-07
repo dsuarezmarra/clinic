@@ -28,7 +28,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // ========================================
     // SISTEMA DE DRAG & DROP (Mouse Events)
     // ========================================
-    
+
     // Estado del drag
     private dragStartPos: { x: number; y: number } | null = null;
     private dragThreshold = 8; // píxeles mínimos para considerar un drag
@@ -50,7 +50,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.dropTargetSlot = null;
         this.dragStartPos = null;
         this.lastDropTargetElement = null;
-        
+
         // Restaurar elemento arrastrado a su estado original
         if (this.draggedElement) {
             this.draggedElement.style.cssText = this.draggedElementOriginalStyles;
@@ -58,7 +58,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
             this.draggedElement = null;
             this.draggedElementOriginalStyles = '';
         }
-        
+
         document.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
         document.body.style.cursor = '';
         document.body.style.userSelect = '';
@@ -69,10 +69,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
         // Guardar estilos originales
         this.draggedElementOriginalStyles = element.style.cssText;
         this.draggedElement = element;
-        
+
         // Obtener dimensiones del elemento
         const rect = element.getBoundingClientRect();
-        
+
         // Hacer el elemento fixed y posicionarlo donde está
         element.style.cssText = `
             position: fixed !important;
@@ -89,7 +89,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         `;
         element.classList.add('dragging');
     }
-    
+
     // Mover elemento arrastrado
     private moveDraggingElement(x: number, y: number) {
         if (this.draggedElement) {
@@ -147,7 +147,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // ========================================
     // TOUCH EVENT HANDLERS (Mobile Support)
     // ========================================
-    
+
     // Referencia al elemento touch
     private touchedElement: HTMLElement | null = null;
 
@@ -166,14 +166,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (!this.isDragging && distance >= 10) {
             // Prevenir scroll inmediatamente
             event.preventDefault();
-            
+
             this.isDragging = true;
-            
+
             // Feedback háptico
             if (navigator.vibrate) {
                 navigator.vibrate(30);
             }
-            
+
             // Preparar el elemento para arrastrarlo
             if (this.touchedElement) {
                 this.startDraggingElement(this.touchedElement, touch.clientX, touch.clientY);
@@ -209,10 +209,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
         } else {
             this.resetDragState();
         }
-        
+
         this.touchedElement = null;
     };
-    
+
     // Limpiar listeners de touch
     private cleanupTouchListeners() {
         document.removeEventListener('touchmove', this.onTouchMoveDuringDrag);
@@ -230,19 +230,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (this.draggedElement) {
             this.draggedElement.style.pointerEvents = 'none';
         }
-        
+
         // Obtener el elemento directamente bajo el punto
         const elementUnder = document.elementFromPoint(x, y);
-        
+
         // Restaurar pointer-events
         if (this.draggedElement) {
             this.draggedElement.style.pointerEvents = 'none'; // mantener none para el drag
         }
-        
+
         // Buscar el time-slot más cercano subiendo por el árbol DOM
         let timeSlotElement: HTMLElement | null = null;
         let current = elementUnder;
-        
+
         while (current && current !== document.body) {
             if (current.classList.contains('time-slot') || current.classList.contains('time-slot-row')) {
                 timeSlotElement = current as HTMLElement;
@@ -250,28 +250,28 @@ export class CalendarComponent implements OnInit, OnDestroy {
             }
             current = current.parentElement;
         }
-        
+
         // Si encontramos el mismo slot que antes, no hacer nada (optimización)
         if (timeSlotElement === this.lastDropTargetElement) {
             return;
         }
-        
+
         // Limpiar el anterior
         if (this.lastDropTargetElement) {
             this.lastDropTargetElement.classList.remove('drop-target');
         }
-        
+
         this.dropTargetSlot = null;
         this.lastDropTargetElement = null;
 
         if (timeSlotElement) {
             timeSlotElement.classList.add('drop-target');
             this.lastDropTargetElement = timeSlotElement;
-            
+
             // Obtener datos del slot desde atributos data-*
             const dateStr = timeSlotElement.dataset['date'];
             const time = timeSlotElement.dataset['time'];
-            
+
             if (dateStr && time) {
                 this.dropTargetSlot = {
                     date: new Date(dateStr),
@@ -289,7 +289,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         }
 
         const { date, time } = this.dropTargetSlot;
-        
+
         // Verificar que el slot no esté ocupado por otra cita
         const existingAppointment = this.getAppointmentForTimeSlot(date, time);
         if (existingAppointment && existingAppointment.id !== this.draggedAppointment.id) {
@@ -302,7 +302,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const [hours, minutes] = time.split(':').map(Number);
         const newStart = new Date(date);
         newStart.setHours(hours, minutes, 0, 0);
-        
+
         // Calcular nueva fecha/hora de fin (mantener la misma duración)
         const oldStart = new Date(this.draggedAppointment.start);
         const oldEnd = new Date(this.draggedAppointment.end);
@@ -311,9 +311,9 @@ export class CalendarComponent implements OnInit, OnDestroy {
 
         // Guardar referencia antes de resetear
         const appointmentId = this.draggedAppointment.id;
-        
+
         this.resetDragState();
-        
+
         // Actualizar la cita
         this.moveAppointment(appointmentId, newStart, newEnd);
     }
@@ -379,13 +379,13 @@ export class CalendarComponent implements OnInit, OnDestroy {
                 return redemption.creditPack.paid ? 'paid' : 'pending';
             }
         }
-        
+
         // Si no tiene creditRedemptions pero tiene priceCents, considerar como pagada
         // (estas son citas creadas manualmente o citas independientes)
         if (appointment.priceCents && appointment.priceCents > 0) {
             return 'paid';
         }
-        
+
         return null;
     }
     currentDate = new Date();
@@ -397,7 +397,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
     @Input() hideHeader: boolean = false;
     @ViewChild('patientSearchInput') patientSearchInput!: ElementRef;
-    
+
     appointments: Appointment[] = [];
     patients: Patient[] = [];
     filteredPatients: Patient[] = [];
@@ -441,7 +441,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
     ];
-    
+
     // Cache de días de la semana para evitar re-renders
     private cachedWeekDays: Date[] = [];
     private cachedWeekStartDate: string = '';
@@ -450,16 +450,16 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const dayMapping = [6, 0, 1, 2, 3, 4, 5];
         return this.weekDays[dayMapping[dayIndex]];
     }
-    
+
     // TrackBy functions para optimizar ngFor
     trackByTimeSlot(index: number, timeSlot: string): string {
         return timeSlot;
     }
-    
+
     trackByDay(index: number, day: Date): string {
         return day.toISOString().split('T')[0];
     }
-    
+
     trackByAppointmentId(index: number, appointment: Appointment): string {
         return appointment.id;
     }
@@ -485,35 +485,44 @@ export class CalendarComponent implements OnInit, OnDestroy {
             const apiUrl = this.clientConfigService.getApiUrl();
             const tenantSlug = this.clientConfigService.getTenantSlug();
             const url = `${apiUrl}/reports/billing?year=${year}&month=${month}&groupBy=${groupBy}`;
-            
-            console.log(`📊 Exportando CSV para ${tenantSlug}: ${url}`);
-            
+
+            // Determinar tipo de archivo esperado según groupBy
+            const isExcel = groupBy === 'appointment';
+            const acceptHeader = isExcel ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : 'text/csv';
+
+            console.log(`📊 Exportando ${isExcel ? 'Excel' : 'CSV'} para ${tenantSlug}: ${url}`);
+
             // Obtener token JWT para autenticación
             const token = await this.authService.getAccessToken();
-            const headers: HeadersInit = { 
-                'Accept': 'text/csv',
+            const headers: HeadersInit = {
+                'Accept': acceptHeader,
                 'X-Tenant-Slug': tenantSlug
             };
             if (token) {
                 headers['Authorization'] = `Bearer ${token}`;
             }
-            
-            const resp = await fetch(url, { headers });
-            if (!resp.ok) throw new Error('Error generando CSV');
 
-            // Validate content-type to detect misrouted HTML responses (dev servers can return index.html)
+            const resp = await fetch(url, { headers });
+            if (!resp.ok) throw new Error('Error generando informe');
+
+            // Validate content-type según tipo esperado
             const contentType = resp.headers.get('Content-Type') || '';
-            if (!contentType.includes('text/csv') && !contentType.includes('application/csv') && !contentType.includes('application/octet-stream')) {
+            const validExcelTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/octet-stream'];
+            const validCsvTypes = ['text/csv', 'application/csv', 'application/octet-stream'];
+            const validTypes = isExcel ? validExcelTypes : validCsvTypes;
+
+            if (!validTypes.some(t => contentType.includes(t))) {
                 // Read text for debugging and show first chunk
                 const text = await resp.text();
                 const preview = text.slice(0, 1000);
-                console.error('CSV export returned unexpected Content-Type:', contentType, '\nPreview:', preview);
-                this.notificationService.showError('La exportación no devolvió CSV. Revisa la consola para detalles.');
+                console.error('Export returned unexpected Content-Type:', contentType, '\nPreview:', preview);
+                this.notificationService.showError('La exportación no devolvió el formato esperado. Revisa la consola para detalles.');
                 return;
             }
 
             const blob = await resp.blob();
-            const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
+            const extension = isExcel ? 'xlsx' : 'csv';
+            const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.${extension}`;
             const a = document.createElement('a');
             const objUrl = URL.createObjectURL(blob);
             a.href = objUrl;
@@ -537,7 +546,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.billingSubscription = this.billingVisibilityService.visible$.subscribe(
             visible => this.billingVisible = visible
         );
-        
+
         // Suscribirse a cambios de estado de pago
         this.eventBusService.packPaymentStatusChanged$.subscribe(change => {
             console.log('Calendar: Pack payment status changed:', change);
@@ -622,7 +631,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     // Actualizar el estado de pago de las citas que usan un pack específico
     updateAppointmentPaymentStatus(packId: string, paid: boolean) {
         console.log(`Updating payment status for pack ${packId} to ${paid}`);
-        
+
         // Actualizar las citas en memoria
         this.appointments.forEach(appointment => {
             if (appointment.creditRedemptions) {
@@ -713,14 +722,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
         const daysFromMonday = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
         startOfWeek.setDate(this.currentDate.getDate() - daysFromMonday);
         startOfWeek.setHours(0, 0, 0, 0);
-        
+
         const weekStartKey = startOfWeek.toISOString().split('T')[0];
-        
+
         // Usar cache si ya tenemos los días calculados para esta semana
         if (this.cachedWeekStartDate === weekStartKey && this.cachedWeekDays.length === 7) {
             return this.cachedWeekDays;
         }
-        
+
         // Calcular nuevos días
         const days: Date[] = [];
         for (let i = 0; i < 7; i++) {
@@ -728,11 +737,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
             day.setDate(startOfWeek.getDate() + i);
             days.push(day);
         }
-        
+
         // Guardar en cache
         this.cachedWeekDays = days;
         this.cachedWeekStartDate = weekStartKey;
-        
+
         return days;
     }
 
@@ -812,7 +821,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         this.loadPatients(); // Recarga la lista de pacientes para asegurar datos actualizados
         this.filteredPatients = [...this.patients];
         this.showPatientModal = true;
-        
+
         // Enfocar el input de búsqueda después de que el modal se muestre
         setTimeout(() => {
             if (this.patientSearchInput && this.patientSearchInput.nativeElement) {
@@ -832,26 +841,26 @@ export class CalendarComponent implements OnInit, OnDestroy {
                 next: (res: any) => {
                     console.log('📦 Credits received:', res);
                     const packs = res.creditPacks || [];
-                    
+
                     // ACTUALIZAR activeSessions del paciente seleccionado con el total de unidades restantes
                     const totalUnitsRemaining = packs.reduce((sum: number, p: any) => sum + (Number(p.unitsRemaining) || 0), 0);
                     if (this.selectedPatient) {
                         this.selectedPatient.activeSessions = totalUnitsRemaining;
                         console.log(`✅ activeSessions actualizado a ${totalUnitsRemaining} para ${this.selectedPatient.firstName}`);
                     }
-                    
+
                     // PRIORIDAD 1: Buscar packs PAGADOS
                     const paidPacks = packs.filter((p: any) => p.paid === true && p.unitsRemaining > 0);
                     console.log(`📦 Packs PAGADOS disponibles: ${paidPacks.length}`, paidPacks);
-                    
+
                     // PRIORIDAD 2: Si no hay pagados, buscar packs PENDIENTES
                     const pendingPacks = packs.filter((p: any) => p.paid === false && p.unitsRemaining > 0);
                     console.log(`📦 Packs PENDIENTES disponibles: ${pendingPacks.length}`, pendingPacks);
-                    
+
                     // Determinar qué pack usar para proponer duración
                     let packToUse = null;
                     let isPaid = false;
-                    
+
                     if (paidPacks.length > 0) {
                         packToUse = paidPacks[0]; // Más antiguo pagado
                         isPaid = true;
@@ -859,19 +868,19 @@ export class CalendarComponent implements OnInit, OnDestroy {
                         packToUse = pendingPacks[0]; // Más antiguo pendiente
                         isPaid = false;
                     }
-                    
+
                     if (!packToUse) {
                         this.proposedDuration = 30;
                         console.log('⚠️ No hay packs disponibles, proponiendo 30min por defecto');
                         return;
                     }
-                    
+
                     const unitMin = Number(packToUse.unitMinutes);
                     const unitsRem = Number(packToUse.unitsRemaining);
                     const paidLabel = isPaid ? 'PAGADO' : 'PENDIENTE';
-                    
+
                     console.log(`✅ Pack ${paidLabel} más antiguo: ${packToUse.label}, ${unitMin}min, ${unitsRem} units disponibles`);
-                    
+
                     // Proponer duración según el pack disponible
                     if (unitMin === 60 && unitsRem >= 2) {
                         this.proposedDuration = 60;
@@ -901,16 +910,16 @@ export class CalendarComponent implements OnInit, OnDestroy {
     quickCreateCredit(patient: Patient, type: 'sesion' | 'bono', minutes: 30 | 60, quantity: number, paid: boolean, event: Event) {
         event.stopPropagation(); // Prevenir selección del paciente
         event.preventDefault();
-        
+
         // Marcar que estamos creando para deshabilitar botones
         patient.isCreatingCredit = true;
-        
+
         const paidLabel = paid ? 'pagado' : 'pendiente';
         const sessionsInBono = minutes === 60 ? 5 : 5; // Ambos bonos tienen 5 sesiones
-        const label = type === 'sesion' 
-            ? `Sesión ${minutes}min (${paidLabel})` 
+        const label = type === 'sesion'
+            ? `Sesión ${minutes}min (${paidLabel})`
             : `Bono ${sessionsInBono} sesiones de ${minutes}min (${paidLabel})`;
-        
+
         // Calcular precio según tipo y duración
         let priceCents = 0;
         if (type === 'sesion') {
@@ -920,7 +929,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
             // Bono: precio del bono completo
             priceCents = minutes === 60 ? this.bonoPrice60Cents : this.bonoPrice30Cents;
         }
-        
+
         const creditPack = {
             patientId: patient.id!,
             type: type,
@@ -930,11 +939,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
             notes: `Creado rápidamente desde agenda`,
             priceCents: priceCents // Precio configurado para cálculos correctos
         };
-        
+
         this.creditService.createCreditPack(creditPack).subscribe({
             next: (result) => {
                 console.log('? Credit pack creado:', result);
-                
+
                 // Actualizar el contador de sesiones del paciente localmente
                 // La lógica debe coincidir con el backend:
                 // - Sesión: 1 unidad por sesión de 30min, 2 unidades por sesión de 60min
@@ -948,7 +957,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
                     addedUnits = minutes === 60 ? quantity * 10 : quantity * 5;
                 }
                 patient.activeSessions = (patient.activeSessions || 0) + addedUnits;
-                
+
                 // También actualizar en la lista filtrada y principal
                 const patientInList = this.patients.find(p => p.id === patient.id);
                 if (patientInList) {
@@ -958,12 +967,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
                 if (patientInFiltered) {
                     patientInFiltered.activeSessions = patient.activeSessions;
                 }
-                
+
                 // Si este paciente está seleccionado, actualizar también selectedPatient
                 if (this.selectedPatient && this.selectedPatient.id === patient.id) {
                     this.selectedPatient.activeSessions = patient.activeSessions;
                 }
-                
+
                 patient.isCreatingCredit = false;
                 this.notificationService.showSuccess(`${label} añadido a ${patient.firstName}`);
             },
@@ -989,10 +998,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
         for (const apt of this.appointments) {
             // Excluir la cita que estamos editando
             if (excludeId && apt.id === excludeId) continue;
-            
+
             const aptStart = new Date(apt.start);
             const aptEnd = new Date(apt.end);
-            
+
             if (this.hasTimeOverlap(newStart, newEnd, aptStart, aptEnd)) {
                 return apt;
             }
@@ -1040,7 +1049,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         console.log(`🕐 Creating appointment with duration: ${duration}min (proposedDuration=${this.proposedDuration})`);
         const endDateTime = new Date(startDateTime);
         endDateTime.setMinutes(endDateTime.getMinutes() + duration);
-        
+
         // Validar solapamiento antes de crear
         const overlappingApt = this.checkAppointmentOverlap(startDateTime, endDateTime);
         if (overlappingApt) {
@@ -1067,7 +1076,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
                 this.notificationService.showSuccess('Cita creada exitosamente');
                 this.closeModal();
                 this.loadPatients();
-                
+
                 // ⚡ ESPERAR a que loadAppointments() termine antes de resetear flag
                 // Esto previene errores de validación si el usuario crea otra cita inmediatamente
                 this.appointmentService.getAllAppointments().subscribe({
@@ -1134,13 +1143,13 @@ export class CalendarComponent implements OnInit, OnDestroy {
             const fullNameReverse = `${lastName} ${firstName}`;
             const phone = patient.phone || '';
             const email = this.normalizeText(patient.email || '');
-            
+
             return firstName.includes(searchTerm) ||
-                   lastName.includes(searchTerm) ||
-                   fullName.includes(searchTerm) ||
-                   fullNameReverse.includes(searchTerm) ||
-                   phone.includes(searchTerm) ||
-                   email.includes(searchTerm);
+                lastName.includes(searchTerm) ||
+                fullName.includes(searchTerm) ||
+                fullNameReverse.includes(searchTerm) ||
+                phone.includes(searchTerm) ||
+                email.includes(searchTerm);
         });
     }
 
@@ -1239,7 +1248,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if ((this as any).editingAppointment.status !== undefined) payload.status = (this as any).editingAppointment.status;
 
         console.info('[DEBUG] updateAppointment payload:', payload);
-        
+
         // Update the appointment only if there are changes
         if (Object.keys(payload).length === 0) {
             this.notificationService.showInfo('No hay cambios para guardar');
@@ -1350,10 +1359,10 @@ export class CalendarComponent implements OnInit, OnDestroy {
             time: this.selectedTimeSlot
         };
         sessionStorage.setItem('pendingAppointment', JSON.stringify(pendingAppointment));
-        
+
         // Cerramos el modal actual
         this.showPatientModal = false;
-        
+
         // Navegamos a la página de pacientes con query param para abrir el formulario
         this.router.navigate(['/pacientes'], { queryParams: { crear: 'true' } });
     }
@@ -1377,11 +1386,11 @@ export class CalendarComponent implements OnInit, OnDestroy {
     getWhatsAppReminderLink(appointment: Appointment): string {
         const patient = this.getPatientByAppointment(appointment);
         if (!patient?.phone) return '';
-        
+
         // Formatear teléfono para WhatsApp
         const phoneFormatted = this.formatPhoneForWhatsApp(patient.phone);
         if (!phoneFormatted) return '';
-        
+
         // Formatear fecha y hora de la cita
         // IMPORTANTE: Especificar timezone Europe/Madrid para garantizar hora correcta
         const appointmentDate = new Date(appointment.start);
@@ -1396,17 +1405,17 @@ export class CalendarComponent implements OnInit, OnDestroy {
             minute: '2-digit',
             timeZone: 'Europe/Madrid'
         });
-        
+
         // Emojis usando Unicode (igual que en WhatsAppReminderService)
         const waveEmoji = '\u{1F44B}'; // 👋
         const calendarEmoji = '\u{1F4C5}'; // 📅
         const clockEmoji = '\u{1F552}'; // 🕒
         const starEmoji = '\u{2B50}'; // ⭐
         const thumbsUpEmoji = '\u{1F44D}'; // 👍
-        
+
         // Mensaje de recordatorio (mismo formato que WhatsAppReminderService)
         const message = `${waveEmoji} Hola ${patient.firstName}!\n\n${calendarEmoji} Te recuerdo tu cita de masaje para el ${formattedDate} a las ${clockEmoji} ${formattedTime}.\n\nSi necesitas cambiarla o no puedes venir, por favor escríbeme.\n\n${starEmoji} Gracias! ${thumbsUpEmoji}`;
-        
+
         return `https://wa.me/${phoneFormatted}?text=${encodeURIComponent(message)}`;
     }
 
@@ -1415,25 +1424,25 @@ export class CalendarComponent implements OnInit, OnDestroy {
      */
     private formatPhoneForWhatsApp(phone: string): string {
         if (!phone) return '';
-        
+
         // Limpiar caracteres no numéricos
         const cleaned = phone.replace(/\D/g, '');
-        
+
         // Si tiene 9 dígitos, añadir prefijo español
         if (cleaned.length === 9) {
             return '34' + cleaned;
         }
-        
+
         // Si ya tiene prefijo español, devolverlo
         if (cleaned.startsWith('34')) {
             return cleaned;
         }
-        
+
         // Si empieza con 0034, quitar el 0
         if (cleaned.startsWith('0034')) {
             return cleaned.substring(2);
         }
-        
+
         return cleaned;
     }
 
@@ -1545,12 +1554,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
             const packPriceCents = Number(pack?.price_cents || pack?.priceCents || 0);
             const unitsTotal = Number(pack?.unitsTotal || pack?.units_total || 0);
             const unitsUsed = Number(r.unitsUsed || 0);
-            
+
             // Calcular proporcionalmente basado en el precio guardado del pack
             if (packPriceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
                 return Math.round(unitsUsed * (packPriceCents / unitsTotal));
             }
-            
+
             // Si el pack no tiene precio (columna no existe o es 0), mostrar 0
             // Esto indica que se necesita ejecutar la migración SQL
             console.warn(`Pack ${pack.label || pack.id} sin precio guardado. Ejecutar migración SQL.`);
@@ -1605,12 +1614,12 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (!appointment) return false;
         const redemptions = appointment.creditRedemptions || [];
         if (redemptions.length === 0) return false;
-        
+
         // Revisar si el pack asociado es un bono real (más de 1 unidad total)
         const r = redemptions[0];
         const pack = (r as any).creditPack || {};
         const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
-        
+
         // Si tiene más de 1 unidad total, es un bono real
         return unitsTotal > 1;
     }
@@ -1620,16 +1629,16 @@ export class CalendarComponent implements OnInit, OnDestroy {
         if (!appointment) return '';
         const redemptions = appointment.creditRedemptions || [];
         if (redemptions.length === 0) return '';
-        
+
         const r = redemptions[0];
         const pack = (r as any).creditPack || {};
         const priceCents = Number(pack?.priceCents ?? pack?.price_cents ?? pack?.price ?? 0) || 0;
         const unitsTotal = Number(pack?.unitsTotal ?? pack?.units_total ?? 0) || 0;
         const mins = Number(pack?.minutesPerUnit ?? pack?.minutes_per_unit ?? 30) || 30;
-        
+
         if (priceCents > 0 && unitsTotal > 0) {
             const pricePerSession = Math.round(priceCents / unitsTotal) / 100;
-            return `${unitsTotal}×${mins}min = ${(priceCents/100).toFixed(0)}€ → ${pricePerSession.toFixed(2)}€/sesión`;
+            return `${unitsTotal}×${mins}min = ${(priceCents / 100).toFixed(0)}€ → ${pricePerSession.toFixed(2)}€/sesión`;
         }
         return `${unitsTotal}×${mins}min`;
     }
@@ -1674,7 +1683,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     onAppointmentMouseDown(event: MouseEvent, appointment: Appointment, day: Date, timeSlot: string) {
         // Solo botón izquierdo
         if (event.button !== 0) return;
-        
+
         // Solo permitir arrastrar desde el slot de inicio de la cita
         if (!this.isAppointmentStart(appointment, day, timeSlot)) {
             return;
@@ -1683,7 +1692,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
         // Guardar posición inicial y cita
         this.dragStartPos = { x: event.clientX, y: event.clientY };
         this.draggedAppointment = appointment;
-        
+
         // Agregar listeners para detectar drag
         document.addEventListener('mousemove', this.onMouseMoveDuringDrag);
         document.addEventListener('mouseup', this.onMouseUpDuringDrag);
@@ -1700,14 +1709,14 @@ export class CalendarComponent implements OnInit, OnDestroy {
         }
 
         event.stopPropagation();
-        
+
         const touch = event.touches[0];
-        
+
         // Guardar posición inicial, cita y elemento
         this.dragStartPos = { x: touch.clientX, y: touch.clientY };
         this.draggedAppointment = appointment;
         this.touchedElement = event.currentTarget as HTMLElement;
-        
+
         // Agregar listeners con passive: false para poder llamar preventDefault
         document.addEventListener('touchmove', this.onTouchMoveDuringDrag, { passive: false });
         document.addEventListener('touchend', this.onTouchEndDuringDrag, { passive: false });
@@ -1729,7 +1738,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
     private moveAppointment(appointmentId: string, newStart: Date, newEnd: Date) {
         const appointment = this.appointments.find(a => a.id === appointmentId);
         if (!appointment) return;
-        
+
         const updateData = {
             patientId: appointment.patient?.id || appointment.patientId,
             start: newStart.toISOString(),
@@ -1737,7 +1746,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
             notes: appointment.notes || '',
             priceCents: appointment.priceCents || 0
         };
-        
+
         this.appointmentService.updateAppointment(appointmentId, updateData).subscribe({
             next: () => {
                 this.notificationService.showSuccess('Cita reprogramada correctamente');
@@ -1755,7 +1764,7 @@ export class CalendarComponent implements OnInit, OnDestroy {
      */
     isDropTarget(date: Date, timeSlot: string): boolean {
         if (!this.dropTargetSlot) return false;
-        return this.dropTargetSlot.date.getTime() === date.getTime() && 
-               this.dropTargetSlot.time === timeSlot;
+        return this.dropTargetSlot.date.getTime() === date.getTime() &&
+            this.dropTargetSlot.time === timeSlot;
     }
 }

@@ -10,12 +10,13 @@ const { requireAuth } = require('../middleware/auth');
 // Log de versión al cargar el módulo
 console.log('🔄 bridge.js VERSION 2.4.2 cargado - CSV billing SELECT fixed');
 const multer = require('multer');
+// const ExcelJS = require('exceljs'); // Moved to lazy load
 
 // Cargar locations.json una sola vez al inicio del módulo
 const LOCATIONS_DATA = require('../../assets/locations.json');
 
 // Configurar multer para manejar archivos en memoria
-const upload = multer({ 
+const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 500 * 1024 * 1024 } // 10MB límite
 });
@@ -24,13 +25,13 @@ const upload = multer({
 async function supabaseFetch(endpoint, options = {}) {
   const url = process.env.SUPABASE_URL?.trim();
   const key = process.env.SUPABASE_SERVICE_KEY?.trim();
-  
+
   if (!url || !key) {
     throw new Error('Supabase credentials not configured');
   }
-  
+
   const apiUrl = `${url}/rest/v1/${endpoint}`;
-  
+
   const response = await fetch(apiUrl, {
     ...options,
     headers: {
@@ -41,27 +42,27 @@ async function supabaseFetch(endpoint, options = {}) {
       ...(options.headers || {})
     }
   });
-  
+
   // Solo intentar parsear JSON si hay contenido
   let data = null;
   const contentType = response.headers.get('content-type');
   const contentLength = response.headers.get('content-length');
-  
+
   if (contentType?.includes('application/json') && contentLength !== '0') {
     const text = await response.text();
     if (text) {
       data = JSON.parse(text);
     }
   }
-  
+
   if (!response.ok) {
     throw new Error(data?.message || `Supabase error: ${response.status}`);
   }
-  
+
   // Extraer count de content-range header si existe
   const contentRange = response.headers.get('content-range');
   const total = contentRange ? parseInt(contentRange.split('/')[1]) : null;
-  
+
   return { data, total, status: response.status };
 }
 
@@ -110,7 +111,7 @@ function deleteEmbeddedProperty(obj, baseTableName, suffix) {
 
 // GET /api/version - Devolver versión del bridge
 router.get('/version', (req, res) => {
-  res.json({ 
+  res.json({
     version: '2.4.0',
     description: 'Multi-tenant completo - patient_files y configurations migradas correctamente',
     timestamp: new Date().toISOString()
@@ -132,27 +133,28 @@ router.use((req, res, next) => {
   const publicPaths = [
     '/version',
     '/meta/locations',
-    '/tenants'
+    '/tenants',
+    '/test-excel'
   ];
-  
+
   // Rutas de cron que usan CRON_SECRET en lugar de JWT
   const cronPaths = [
     '/backup/cron',
     '/whatsapp-reminders/cron'
   ];
-  
+
   const path = req.path;
-  
+
   // Si es ruta pública, permitir sin auth
   if (publicPaths.some(p => path === p || path.startsWith(p + '/'))) {
     return next();
   }
-  
+
   // Si es ruta de cron, permitir (tiene su propia validación con CRON_SECRET)
   if (cronPaths.some(p => path === p)) {
     return next();
   }
-  
+
   // Para todas las demás rutas, requerir autenticación JWT
   return requireAuth(req, res, next);
 });
@@ -203,70 +205,70 @@ router.get('/patients', async (req, res) => {
   try {
     const { search, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
-    
+
     let patients, total;
-    
+
     if (search) {
       // BÚSQUEDA ACCENT-INSENSITIVE: traer TODOS los pacientes y filtrar en JavaScript
       // porque PostgreSQL ilike NO es accent-insensitive por defecto
       console.log(`[SEARCH] Búsqueda accent-insensitive para: "${search}"`);
-      
+
       const endpoint = `${req.getTable('patients')}?select=*,${req.getTable('credit_packs')}(unitsRemaining)&order=firstName.asc,lastName.asc`;
-      
+
       const { data: allPatients } = await supabaseFetch(endpoint, {
         headers: { 'Prefer': 'count=exact' }
       });
-      
+
       console.log(`[SEARCH] Total pacientes en BD: ${allPatients?.length || 0}`);
-      
+
       // Filtrar con normalización de acentos
       const filteredPatients = (allPatients || []).filter(patient => {
         const matchFirst = matchesSearch(patient.firstName, search);
         const matchLast = matchesSearch(patient.lastName, search);
         const matchPhone = patient.phone && patient.phone.includes(search);
-        
+
         // Buscar también en nombre completo (firstName + lastName y viceversa)
         const fullName = `${patient.firstName || ''} ${patient.lastName || ''}`;
         const fullNameReverse = `${patient.lastName || ''} ${patient.firstName || ''}`;
         const matchFullName = matchesSearch(fullName, search);
         const matchFullNameReverse = matchesSearch(fullNameReverse, search);
-        
+
         return matchFirst || matchLast || matchPhone || matchFullName || matchFullNameReverse;
       });
-      
+
       console.log(`[SEARCH] Pacientes filtrados: ${filteredPatients.length}`);
-      
+
       total = filteredPatients.length;
       // Aplicar paginación después del filtrado
       patients = filteredPatients.slice(offset, offset + parseInt(limit));
     } else {
       // Sin búsqueda: usar paginación normal de Supabase
       const endpoint = `${req.getTable('patients')}?select=*,${req.getTable('credit_packs')}(unitsRemaining)&order=firstName.asc,lastName.asc&limit=${limit}&offset=${offset}`;
-      
+
       const result = await supabaseFetch(endpoint, {
         headers: { 'Prefer': 'count=exact' }
       });
-      
+
       patients = result.data || [];
       total = result.total || 0;
     }
-    
+
     // Calcular activeSessions para cada paciente
     const patientsWithActiveSessions = (patients || []).map(patient => {
       // Usar helper para obtener credit_packs con sufijo correcto
       const packsKey = getTablePropertyKey('credit_packs', req.tableSuffix);
       const packs = Array.isArray(patient[packsKey]) ? patient[packsKey] : [];
       const totalUnitsRemaining = packs.reduce((sum, pack) => sum + (Number(pack.unitsRemaining) || 0), 0);
-      
+
       // Eliminar la propiedad embedded con sufijo
       delete patient[packsKey];
-      
+
       return {
         ...patient,
         activeSessions: totalUnitsRemaining
       };
     });
-    
+
     res.json({
       patients: patientsWithActiveSessions,
       pagination: {
@@ -290,10 +292,10 @@ router.get('/patients', async (req, res) => {
 router.get('/patients/:patientId/files', async (req, res) => {
   try {
     const { patientId } = req.params;
-    
+
     const endpoint = `${req.getTable('patient_files')}?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
-    
+
     res.json(files || []);
   } catch (error) {
     console.error('Error fetching patient files:', error);
@@ -306,7 +308,7 @@ router.post('/patients/:patientId/files', async (req, res) => {
   try {
     const { patientId } = req.params;
     const { originalName, storedPath, mimeType, size, category, description, checksum } = req.body;
-    
+
     // Guardar metadata en la tabla patient_files usando las columnas correctas
     const fileData = {
       patientId,
@@ -319,12 +321,12 @@ router.post('/patients/:patientId/files', async (req, res) => {
       checksum: checksum || null,
       createdAt: new Date().toISOString()
     };
-    
+
     const { data } = await supabaseFetch(req.getTable('patient_files'), {
       method: 'POST',
       body: JSON.stringify(fileData)
     });
-    
+
     res.status(201).json(data[0]);
   } catch (error) {
     console.error('Error uploading file:', error);
@@ -336,13 +338,13 @@ router.post('/patients/:patientId/files', async (req, res) => {
 router.delete('/patients/:patientId/files/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
-    
+
     const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting file:', error);
@@ -354,14 +356,14 @@ router.delete('/patients/:patientId/files/:fileId', async (req, res) => {
 router.get('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const endpoint = `${req.getTable('patients')}?id=eq.${id}&select=*`;
     const { data } = await supabaseFetch(endpoint);
-    
+
     if (!data || data.length === 0) {
       return res.status(404).json({ error: 'Paciente no encontrado' });
     }
-    
+
     res.json(data[0]);
   } catch (error) {
     console.error('Error fetching patient:', error);
@@ -373,12 +375,12 @@ router.get('/patients/:id', async (req, res) => {
 router.post('/patients', async (req, res) => {
   try {
     const patientData = req.body;
-    
+
     const { data } = await supabaseFetch(`${req.getTable('patients')}`, {
       method: 'POST',
       body: JSON.stringify(patientData)
     });
-    
+
     res.status(201).json(data[0]);
   } catch (error) {
     console.error('Error creating patient:', error);
@@ -391,17 +393,17 @@ router.put('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
+
     const endpoint = `${req.getTable('patients')}?id=eq.${id}`;
     const { data } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(updates)
     });
-    
+
     if (!data || data.length === 0) {
       return res.status(404).json({ error: 'Paciente no encontrado' });
     }
-    
+
     res.json(data[0]);
   } catch (error) {
     console.error('Error updating patient:', error);
@@ -413,13 +415,13 @@ router.put('/patients/:id', async (req, res) => {
 router.delete('/patients/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const endpoint = `${req.getTable('patients')}?id=eq.${id}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting patient:', error);
@@ -436,10 +438,10 @@ router.get('/appointments', async (req, res) => {
   try {
     const { from, to, patientId, page = 1, limit = 100 } = req.query;
     const offset = (page - 1) * limit;
-    
+
     // Incluir relaciones: patient, creditRedemptions con creditPack
     let endpoint = `${req.getTable('appointments')}?select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.asc&limit=${limit}&offset=${offset}`;
-    
+
     // Filtros
     if (from) {
       endpoint += `&start=gte.${from}`;
@@ -450,11 +452,11 @@ router.get('/appointments', async (req, res) => {
     if (patientId) {
       endpoint += `&patientId=eq.${patientId}`;
     }
-    
+
     const { data: appointments, total } = await supabaseFetch(endpoint, {
       headers: { 'Prefer': 'count=exact' }
     });
-    
+
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => {
       const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
@@ -466,7 +468,7 @@ router.get('/appointments', async (req, res) => {
           creditPackId: cr.creditPackId || cr.credit_pack_id
         };
       });
-      
+
       const result = {
         ...apt,
         start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
@@ -474,13 +476,13 @@ router.get('/appointments', async (req, res) => {
         patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
         creditRedemptions: redemptions
       };
-      
+
       deleteEmbeddedProperty(result, 'patients', req.tableSuffix);
       deleteEmbeddedProperty(result, 'credit_redemptions', req.tableSuffix);
-      
+
       return result;
     });
-    
+
     res.json({
       appointments: mapped,
       pagination: {
@@ -502,11 +504,11 @@ router.get('/appointments/all', async (req, res) => {
     // Incluir relaciones: patient, creditRedemptions con creditPack
     const endpoint = `${req.getTable('appointments')}?select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
-    
+
     console.log('🔍 [GET /appointments/all] Raw appointments from Supabase:', JSON.stringify(appointments, null, 2));
     console.log('🔍 [GET /appointments/all] tableSuffix:', req.tableSuffix);
     console.log('🔍 [GET /appointments/all] credit_redemptions key:', getTablePropertyKey('credit_redemptions', req.tableSuffix));
-    
+
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => {
       console.log('🔍 [GET /appointments/all] Processing appointment:', apt.id);
@@ -522,7 +524,7 @@ router.get('/appointments/all', async (req, res) => {
           creditPackId: cr.creditPackId || cr.credit_pack_id
         };
       });
-      
+
       const result = {
         ...apt,
         start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
@@ -530,13 +532,13 @@ router.get('/appointments/all', async (req, res) => {
         patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
         creditRedemptions: redemptions
       };
-      
+
       deleteEmbeddedProperty(result, 'patients', req.tableSuffix);
       deleteEmbeddedProperty(result, 'credit_redemptions', req.tableSuffix);
-      
+
       return result;
     });
-    
+
     res.json(mapped);
   } catch (error) {
     console.error('Error fetching all appointments:', error);
@@ -548,15 +550,15 @@ router.get('/appointments/all', async (req, res) => {
 router.get('/appointments/conflicts/check', async (req, res) => {
   try {
     const { start, end, excludeId } = req.query;
-    
+
     let endpoint = `${req.getTable('appointments')}?start=lte.${end}&end=gte.${start}&select=id,start,end,patientId`;
-    
+
     if (excludeId) {
       endpoint += `&id=neq.${excludeId}`;
     }
-    
+
     const { data: conflicts } = await supabaseFetch(endpoint);
-    
+
     res.json({
       hasConflict: conflicts && conflicts.length > 0,
       conflicts: conflicts || []
@@ -571,11 +573,11 @@ router.get('/appointments/conflicts/check', async (req, res) => {
 router.get('/appointments/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
-    
+
     // Incluir relaciones: patient, creditRedemptions con creditPack
     const endpoint = `${req.getTable('appointments')}?patientId=eq.${patientId}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))&order=start.desc`;
     const { data: appointments } = await supabaseFetch(endpoint);
-    
+
     // Mapear las relaciones a los nombres esperados por el frontend
     const mapped = (appointments || []).map(apt => {
       const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
@@ -587,7 +589,7 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
           creditPackId: cr.creditPackId || cr.credit_pack_id
         };
       });
-      
+
       const result = {
         ...apt,
         start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
@@ -595,13 +597,13 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
         patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
         creditRedemptions: redemptions
       };
-      
+
       deleteEmbeddedProperty(result, 'patients', req.tableSuffix);
       deleteEmbeddedProperty(result, 'credit_redemptions', req.tableSuffix);
-      
+
       return result;
     });
-    
+
     // Ya no necesitamos este forEach, el delete se hace arriba
     mapped.forEach(apt => {
       if (apt.creditRedemptions) {
@@ -610,7 +612,7 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
         });
       }
     });
-    
+
     res.json(mapped);
   } catch (error) {
     console.error('Error fetching patient appointments:', error);
@@ -622,15 +624,15 @@ router.get('/appointments/patient/:patientId', async (req, res) => {
 router.get('/appointments/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Incluir relaciones: patient, creditRedemptions con creditPack
     const endpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`;
     const { data } = await supabaseFetch(endpoint);
-    
+
     if (!data || data.length === 0) {
       return res.status(404).json({ error: 'Cita no encontrada' });
     }
-    
+
     // Mapear las relaciones a los nombres esperados por el frontend
     const apt = data[0];
     const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
@@ -642,7 +644,7 @@ router.get('/appointments/:id', async (req, res) => {
         creditPackId: cr.creditPackId || cr.credit_pack_id
       };
     });
-    
+
     const mapped = {
       ...apt,
       start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
@@ -650,10 +652,10 @@ router.get('/appointments/:id', async (req, res) => {
       patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
       creditRedemptions: redemptions
     };
-    
+
     deleteEmbeddedProperty(mapped, 'patients', req.tableSuffix);
     deleteEmbeddedProperty(mapped, 'credit_redemptions', req.tableSuffix);
-    
+
     res.json(mapped);
   } catch (error) {
     console.error('Error fetching appointment:', error);
@@ -665,24 +667,24 @@ router.get('/appointments/:id', async (req, res) => {
 router.post('/appointments', async (req, res) => {
   try {
     const { patientId, start, end, durationMinutes = 30, consumesCredit = true, notes } = req.body;
-    
+
     // 0. Validar que no haya solapamiento con otras citas
     const startTime = new Date(start).toISOString();
     const endTime = new Date(end).toISOString();
-    
+
     // Buscar citas que se solapen: 
     // Una cita se solapa si: start < existingEnd AND end > existingStart
     const { data: overlappingAppts } = await supabaseFetch(
       `${req.getTable('appointments')}?start=lt.${endTime}&end=gt.${startTime}`
     );
-    
+
     if (overlappingAppts && overlappingAppts.length > 0) {
-      return res.status(409).json({ 
+      return res.status(409).json({
         error: 'Ya existe una cita en ese horario',
         overlapping: overlappingAppts[0]
       });
     }
-    
+
     // 1. Crear la cita
     const { data: appointments } = await supabaseFetch(`${req.getTable('appointments')}`, {
       method: 'POST',
@@ -695,13 +697,13 @@ router.post('/appointments', async (req, res) => {
         notes
       })
     });
-    
+
     const appointment = appointments[0];
-    
+
     // 2. Si debe consumir créditos, procesarlos
     if (consumesCredit && patientId && appointment && appointment.id) {
       const requiredUnits = durationMinutes === 60 ? 2 : 1;
-      
+
       // Obtener packs disponibles del paciente ordenados (pagados primero, luego por fecha)
       const { data: rawPacks } = await supabaseFetch(
         `${req.getTable('credit_packs')}?patientId=eq.${patientId}&unitsRemaining=gt.0&order=paid.desc,createdAt.asc`
@@ -716,14 +718,14 @@ router.post('/appointments', async (req, res) => {
         unitMinutes: Number(p.unitMinutes) || 30,
         createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : null
       }));
-      
+
       console.log('📦 Packs disponibles para consumir (ordenados por paid DESC, createdAt ASC):');
       if (packs && packs.length > 0) {
         packs.forEach((pack, index) => {
           console.log(`  ${index + 1}. ${pack.label} | Paid: ${pack.paid} | Units: ${pack.unitsRemaining} | Created: ${pack.createdAt}`);
         });
       }
-      
+
       if (!packs || packs.length === 0) {
         // Eliminar la cita si no hay créditos
         await supabaseFetch(`${req.getTable('appointments')}?id=eq.${appointment.id}`, {
@@ -731,53 +733,53 @@ router.post('/appointments', async (req, res) => {
         });
         return res.status(400).json({ error: 'Créditos insuficientes' });
       }
-      
+
       // Función helper para verificar si un pack PUEDE cumplir SOLO la cita completa
       const canPackFulfillAppointment = (pack, requiredUnits) => {
         const isSession60 = pack.label?.startsWith('Sesión') && pack.unitMinutes === 60;
         const isBono60 = pack.label?.startsWith('Bono') && pack.unitMinutes === 60;
-        
+
         // REGLA 1: Packs de 60min son INDIVISIBLES (requieren 2 unidades completas)
         if (isSession60 || isBono60) {
           // Para una cita de 60min (requiredUnits=2), necesitamos al menos 2 unidades
           // Para una cita de 30min (requiredUnits=1), NO se puede usar pack de 60min
           return requiredUnits === 2 && pack.unitsRemaining >= 2;
         }
-        
+
         // REGLA 2: Packs de 30min son flexibles (pueden cumplir cualquier requisito)
         return pack.unitsRemaining >= requiredUnits;
       };
-      
+
       // REGLA CRÍTICA: Cada cita consume de UN SOLO pack
       // Buscar EL PRIMER pack que pueda cumplir TODA la cita (PAGADOS primero, luego PENDIENTES)
       console.log(`🎯 Buscando UN SOLO pack que pueda cumplir ${requiredUnits} unidades...`);
-      
+
       let selectedPack = null;
-      
+
       // PRIMERA PASADA: Buscar en packs PAGADOS
       console.log('🔄 Buscando en packs PAGADOS...');
       for (const pack of packs) {
         if (!pack.paid) continue; // Solo pagados
-        
+
         const canFulfill = canPackFulfillAppointment(pack, requiredUnits);
         console.log(`  📦 "${pack.label}" (${pack.unitMinutes}min) - ${pack.unitsRemaining} units disponibles - ¿Puede cumplir? ${canFulfill ? '✅ SÍ' : '❌ NO'}`);
-        
+
         if (canFulfill) {
           selectedPack = pack;
           console.log(`  ✅ Pack PAGADO seleccionado: "${pack.label}"`);
           break;
         }
       }
-      
+
       // SEGUNDA PASADA: Si no hay pack pagado, buscar en PENDIENTES
       if (!selectedPack) {
         console.log('🔄 No hay pack PAGADO disponible. Buscando en packs PENDIENTES...');
         for (const pack of packs) {
           if (pack.paid) continue; // Solo pendientes
-          
+
           const canFulfill = canPackFulfillAppointment(pack, requiredUnits);
           console.log(`  📦 "${pack.label}" (${pack.unitMinutes}min) - ${pack.unitsRemaining} units disponibles - ¿Puede cumplir? ${canFulfill ? '✅ SÍ' : '❌ NO'}`);
-          
+
           if (canFulfill) {
             selectedPack = pack;
             console.log(`  ⚠️  Pack PENDIENTE seleccionado: "${pack.label}"`);
@@ -785,18 +787,18 @@ router.post('/appointments', async (req, res) => {
           }
         }
       }
-      
+
       // Si no hay ningún pack que pueda cumplir SOLO la cita, rechazar
       if (!selectedPack) {
         await supabaseFetch(`${req.getTable('appointments')}?id=eq.${appointment.id}`, {
           method: 'DELETE'
         });
         console.log('❌ No hay ningún pack que pueda cumplir la cita COMPLETA');
-        return res.status(400).json({ 
-          error: 'No hay ningún pack disponible que pueda cumplir esta cita completa. Los packs no se pueden mezclar.' 
+        return res.status(400).json({
+          error: 'No hay ningún pack disponible que pueda cumplir esta cita completa. Los packs no se pueden mezclar.'
         });
       }
-      
+
       // Crear UNA SOLA redemption del pack seleccionado
       console.log(`💳 Creando redemption de ${requiredUnits} unidades del pack "${selectedPack.label}"...`);
       const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
@@ -807,7 +809,7 @@ router.post('/appointments', async (req, res) => {
           unitsUsed: requiredUnits
         })
       });
-      
+
       // Actualizar unitsRemaining del pack
       await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${selectedPack.id}`, {
         method: 'PATCH',
@@ -815,23 +817,23 @@ router.post('/appointments', async (req, res) => {
           unitsRemaining: selectedPack.unitsRemaining - requiredUnits
         })
       });
-      
+
       console.log(`✅ Cita creada usando SOLO el pack "${selectedPack.label}" (${selectedPack.paid ? 'PAGADO' : 'PENDIENTE'})`);
     }
-    
+
     // 3. Obtener la cita completa con todas sus relaciones para devolverla
     // (igual que en GET /appointments/all para consistencia)
     console.log('🔄 Fetching complete appointment with creditRedemptions...');
     const endpoint = `${req.getTable('appointments')}?id=eq.${appointment.id}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`;
     const { data: fullAppointments } = await supabaseFetch(endpoint);
-    
+
     console.log('📦 fullAppointments received:', JSON.stringify(fullAppointments, null, 2));
-    
+
     if (!fullAppointments || fullAppointments.length === 0) {
       console.error('❌ No fullAppointments found after creation');
       return res.status(500).json({ error: 'Error al obtener la cita creada' });
     }
-    
+
     // Mapear las relaciones a los nombres esperados por el frontend
     const apt = fullAppointments[0];
     const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
@@ -843,7 +845,7 @@ router.post('/appointments', async (req, res) => {
         creditPackId: cr.creditPackId || cr.credit_pack_id
       };
     });
-    
+
     const mapped = {
       ...apt,
       start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
@@ -851,10 +853,10 @@ router.post('/appointments', async (req, res) => {
       patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
       creditRedemptions: redemptions
     };
-    
+
     deleteEmbeddedProperty(mapped, 'patients', req.tableSuffix);
     deleteEmbeddedProperty(mapped, 'credit_redemptions', req.tableSuffix);
-    
+
     console.log('✅ Returning mapped appointment with creditRedemptions:', mapped.creditRedemptions?.length || 0);
     res.status(201).json(mapped);
   } catch (error) {
@@ -868,26 +870,26 @@ router.put('/appointments/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    
+
     console.log('PUT /appointments/:id - Updating appointment:', id);
     console.log('Update payload:', JSON.stringify(updates, null, 2));
-    
+
     // Filtrar campos permitidos para actualización
     const allowedFields = ['start', 'end', 'durationMinutes', 'notes', 'status'];
     const filteredUpdates = {};
-    
+
     allowedFields.forEach(field => {
       if (updates[field] !== undefined) {
         filteredUpdates[field] = updates[field];
       }
     });
-    
+
     console.log('Filtered updates:', JSON.stringify(filteredUpdates, null, 2));
-    
+
     if (Object.keys(filteredUpdates).length === 0) {
       return res.status(400).json({ error: 'No hay campos válidos para actualizar' });
     }
-    
+
     // Validar solapamiento si se está cambiando el horario
     if (filteredUpdates.start || filteredUpdates.end) {
       // Obtener la cita actual para tener start/end completos
@@ -895,51 +897,51 @@ router.put('/appointments/:id', async (req, res) => {
       if (!currentAppt || currentAppt.length === 0) {
         return res.status(404).json({ error: 'Cita no encontrada' });
       }
-      
+
       const newStart = filteredUpdates.start || currentAppt[0].start;
       const newEnd = filteredUpdates.end || currentAppt[0].end;
       const startTime = new Date(newStart).toISOString();
       const endTime = new Date(newEnd).toISOString();
-      
+
       // Buscar citas que se solapen (excluyendo la cita actual)
       const { data: overlappingAppts } = await supabaseFetch(
         `${req.getTable('appointments')}?start=lt.${endTime}&end=gt.${startTime}&id=neq.${id}`
       );
-      
+
       if (overlappingAppts && overlappingAppts.length > 0) {
-        return res.status(409).json({ 
+        return res.status(409).json({
           error: 'Ya existe una cita en ese horario',
           overlapping: overlappingAppts[0]
         });
       }
     }
-    
+
     const endpoint = `${req.getTable('appointments')}?id=eq.${id}`;
     const { data, error } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify(filteredUpdates)
     });
-    
+
     if (error) {
       console.error('Supabase error:', error);
       return res.status(500).json({ error: error.message || 'Error al actualizar en Supabase' });
     }
-    
+
     if (!data || data.length === 0) {
       console.log('No data returned - appointment not found');
       return res.status(404).json({ error: 'Cita no encontrada' });
     }
-    
+
     console.log('Appointment updated successfully:', data[0]);
-    
+
     // Obtener la cita completa con todas sus relaciones para devolverla
     const fullEndpoint = `${req.getTable('appointments')}?id=eq.${id}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`;
     const { data: fullAppointments } = await supabaseFetch(fullEndpoint);
-    
+
     if (!fullAppointments || fullAppointments.length === 0) {
       return res.json(data[0]); // Fallback a la cita básica si falla el fetch completo
     }
-    
+
     // Mapear las relaciones a los nombres esperados por el frontend
     const apt = fullAppointments[0];
     const redemptions = (getEmbeddedProperty(apt, 'credit_redemptions', req.tableSuffix) || []).map(cr => {
@@ -951,7 +953,7 @@ router.put('/appointments/:id', async (req, res) => {
         creditPackId: cr.creditPackId || cr.credit_pack_id
       };
     });
-    
+
     const mapped = {
       ...apt,
       start: apt.start && !apt.start.endsWith('Z') ? apt.start + 'Z' : apt.start,
@@ -959,10 +961,10 @@ router.put('/appointments/:id', async (req, res) => {
       patient: getEmbeddedProperty(apt, 'patients', req.tableSuffix) || null,
       creditRedemptions: redemptions
     };
-    
+
     deleteEmbeddedProperty(mapped, 'patients', req.tableSuffix);
     deleteEmbeddedProperty(mapped, 'credit_redemptions', req.tableSuffix);
-    
+
     res.json(mapped);
   } catch (error) {
     console.error('Error updating appointment:', error);
@@ -975,12 +977,12 @@ router.put('/appointments/:id', async (req, res) => {
 router.delete('/appointments/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // 1. Obtener los redemptions de la cita para revertir créditos
     const { data: redemptions } = await supabaseFetch(
       `${req.getTable('credit_redemptions')}?appointmentId=eq.${id}&select=*,${req.getTable('credit_packs')}(*)`
     );
-    
+
     // 2. Revertir créditos a los packs
     if (redemptions && redemptions.length > 0) {
       for (const redemption of redemptions) {
@@ -991,7 +993,7 @@ router.delete('/appointments/:id', async (req, res) => {
           const currentUnits = Number(pack.unitsRemaining) || 0;
           const unitsToRevert = Number(redemption.unitsUsed) || 0;
           const newUnits = currentUnits + unitsToRevert;
-          
+
           // Actualizar unitsRemaining del pack
           await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${pack.id}`, {
             method: 'PATCH',
@@ -1001,20 +1003,20 @@ router.delete('/appointments/:id', async (req, res) => {
           });
         }
       }
-      
+
       // 3. Eliminar los redemptions
       await supabaseFetch(`${req.getTable('credit_redemptions')}?appointmentId=eq.${id}`, {
         method: 'DELETE',
         headers: { 'Prefer': 'return=minimal' }
       });
     }
-    
+
     // 4. Eliminar la cita
     await supabaseFetch(`${req.getTable('appointments')}?id=eq.${id}`, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting appointment:', error);
@@ -1030,20 +1032,20 @@ router.delete('/appointments/:id', async (req, res) => {
 router.get('/credits', async (req, res) => {
   try {
     const { patientId } = req.query;
-    
+
     if (!patientId) {
       return res.status(400).json({ error: 'patientId es requerido' });
     }
-    
+
     // Obtener packs del paciente
     const packsEndpoint = `${req.getTable('credit_packs')}?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: packs } = await supabaseFetch(packsEndpoint);
-    
+
     // Calcular totales
     const totalUnits = packs.reduce((sum, p) => sum + (p.unitsTotal || 0), 0);
     const remainingUnits = packs.reduce((sum, p) => sum + (p.unitsRemaining || 0), 0);
     const usedUnits = totalUnits - remainingUnits;
-    
+
     // Convertir unidades a tiempo
     const formatTime = (units) => {
       const hours = Math.floor(units / 2);
@@ -1052,7 +1054,7 @@ router.get('/credits', async (req, res) => {
       if (hours > 0) return `${hours}h`;
       return `${minutes}m`;
     };
-    
+
     res.json({
       patientId,
       summary: {
@@ -1173,13 +1175,13 @@ router.post('/credits/packs', async (req, res) => {
 router.delete('/credits/packs/:packId', async (req, res) => {
   try {
     const { packId } = req.params;
-    
+
     const endpoint = `${req.getTable('credit_packs')}?id=eq.${packId}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting credit pack:', error);
@@ -1192,13 +1194,13 @@ router.patch('/credits/packs/:packId/payment', async (req, res) => {
   try {
     const { packId } = req.params;
     const { paid } = req.body;
-    
+
     const endpoint = `${req.getTable('credit_packs')}?id=eq.${packId}`;
     const { data } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify({ paid })
     });
-    
+
     res.json(data[0]);
   } catch (error) {
     console.error('Error updating payment status:', error);
@@ -1211,13 +1213,13 @@ router.patch('/credits/packs/:packId/units', async (req, res) => {
   try {
     const { packId } = req.params;
     const { unitsRemaining } = req.body;
-    
+
     const endpoint = `${req.getTable('credit_packs')}?id=eq.${packId}`;
     const { data } = await supabaseFetch(endpoint, {
       method: 'PATCH',
       body: JSON.stringify({ unitsRemaining })
     });
-    
+
     res.json(data[0]);
   } catch (error) {
     console.error('Error updating units:', error);
@@ -1229,7 +1231,7 @@ router.patch('/credits/packs/:packId/units', async (req, res) => {
 router.post('/credits/redeem', async (req, res) => {
   try {
     const { creditPackId, appointmentId, unitsUsed } = req.body;
-    
+
     // Crear redención
     const redemptionData = {
       creditPackId,
@@ -1237,25 +1239,25 @@ router.post('/credits/redeem', async (req, res) => {
       unitsUsed,
       createdAt: new Date().toISOString()
     };
-    
+
     const { data: redemption } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
       method: 'POST',
       body: JSON.stringify(redemptionData)
     });
-    
+
     // Actualizar unidades restantes del pack
     const packEndpoint = `${req.getTable('credit_packs')}?id=eq.${creditPackId}&select=unitsRemaining`;
     const { data: packs } = await supabaseFetch(packEndpoint);
-    
+
     if (packs && packs.length > 0) {
       const newUnitsRemaining = packs[0].unitsRemaining - unitsUsed;
-      
+
       await supabaseFetch(`${req.getTable('credit_packs')}?id=eq.${creditPackId}`, {
         method: 'PATCH',
         body: JSON.stringify({ unitsRemaining: newUnitsRemaining })
       });
     }
-    
+
     res.status(201).json(redemption[0]);
   } catch (error) {
     console.error('Error redeeming credits:', error);
@@ -1268,18 +1270,18 @@ router.get('/credits/history', async (req, res) => {
   try {
     const { patientId, page = 1, limit = 50 } = req.query;
     const offset = (page - 1) * limit;
-    
+
     if (!patientId) {
       return res.status(400).json({ error: 'patientId es requerido' });
     }
-    
+
     // Obtener redenciones con información de packs y citas
     const endpoint = `${req.getTable('credit_redemptions')}?select=*,${req.getTable('credit_packs')}!inner(patientId),${req.getTable('appointments')}(*)&${req.getTable('credit_packs')}.patientId=eq.${patientId}&order=createdAt.desc&limit=${limit}&offset=${offset}`;
-    
+
     const { data: redemptions, total } = await supabaseFetch(endpoint, {
       headers: { 'Prefer': 'count=exact' }
     });
-    
+
     res.json({
       redemptions,
       pagination: {
@@ -1303,10 +1305,10 @@ router.get('/credits/history', async (req, res) => {
 router.get('/files/patient/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
-    
+
     const endpoint = `${req.getTable('patient_files')}?patientId=eq.${patientId}&select=*&order=createdAt.desc`;
     const { data: files } = await supabaseFetch(endpoint);
-    
+
     // Para archivos de imagen, generar thumbnail más pequeño del storedPath
     const processedFiles = (files || []).map(file => {
       if (file.mimeType && file.mimeType.startsWith('image/') && file.storedPath) {
@@ -1315,7 +1317,7 @@ router.get('/files/patient/:patientId', async (req, res) => {
       }
       return file;
     });
-    
+
     res.json(processedFiles);
   } catch (error) {
     console.error('Error fetching files:', error);
@@ -1327,14 +1329,14 @@ router.get('/files/patient/:patientId', async (req, res) => {
 router.post('/files/patient/:patientId', upload.single('file'), async (req, res) => {
   try {
     const { patientId } = req.params;
-    
+
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
-    
+
     // Convertir archivo a Base64 para almacenar en storedPath
     const base64Data = req.file.buffer.toString('base64');
-    
+
     const fileData = {
       patientId,
       originalName: req.file.originalname,
@@ -1346,12 +1348,12 @@ router.post('/files/patient/:patientId', upload.single('file'), async (req, res)
       checksum: null,
       createdAt: new Date().toISOString()
     };
-    
+
     const { data } = await supabaseFetch(req.getTable('patient_files'), {
       method: 'POST',
       body: JSON.stringify(fileData)
     });
-    
+
     res.status(201).json(data[0]);
   } catch (error) {
     console.error('Error uploading file:', error);
@@ -1363,30 +1365,30 @@ router.post('/files/patient/:patientId', upload.single('file'), async (req, res)
 router.get('/files/:fileId/preview', async (req, res) => {
   try {
     const { fileId } = req.params;
-    
+
     const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
     const { data: files } = await supabaseFetch(endpoint);
-    
+
     if (!files || files.length === 0) {
       return res.status(404).json({ error: 'Archivo no encontrado' });
     }
-    
+
     const file = files[0];
-    
+
     // Extraer el Base64 del data URI
     let base64Data = file.storedPath;
     if (base64Data.includes(',')) {
       base64Data = base64Data.split(',')[1];
     }
-    
+
     // Convertir Base64 a Buffer
     const buffer = Buffer.from(base64Data, 'base64');
-    
+
     // Configurar headers para visualización inline
     res.setHeader('Content-Type', file.mimeType);
     res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file.originalName)}"`);
     res.setHeader('Content-Length', buffer.length);
-    
+
     res.send(buffer);
   } catch (error) {
     console.error('Error previewing file:', error);
@@ -1398,30 +1400,30 @@ router.get('/files/:fileId/preview', async (req, res) => {
 router.get('/files/:fileId/download', async (req, res) => {
   try {
     const { fileId } = req.params;
-    
+
     const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}&select=originalName,mimeType,storedPath`;
     const { data: files } = await supabaseFetch(endpoint);
-    
+
     if (!files || files.length === 0) {
       return res.status(404).json({ error: 'Archivo no encontrado' });
     }
-    
+
     const file = files[0];
-    
+
     // Extraer el Base64 del data URI (formato: data:mime;base64,xxxxx)
     let base64Data = file.storedPath;
     if (base64Data.includes(',')) {
       base64Data = base64Data.split(',')[1];
     }
-    
+
     // Convertir Base64 a Buffer
     const buffer = Buffer.from(base64Data, 'base64');
-    
+
     // Configurar headers para descarga
     res.setHeader('Content-Type', file.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(file.originalName)}"`);
     res.setHeader('Content-Length', buffer.length);
-    
+
     res.send(buffer);
   } catch (error) {
     console.error('Error downloading file:', error);
@@ -1433,13 +1435,13 @@ router.get('/files/:fileId/download', async (req, res) => {
 router.delete('/files/:fileId', async (req, res) => {
   try {
     const { fileId } = req.params;
-    
+
     const endpoint = `${req.getTable('patient_files')}?id=eq.${fileId}`;
     await supabaseFetch(endpoint, {
       method: 'DELETE',
       headers: { 'Prefer': 'return=minimal' }
     });
-    
+
     res.status(204).send();
   } catch (error) {
     console.error('Error deleting file:', error);
@@ -1457,7 +1459,7 @@ router.get('/config', async (req, res) => {
     // Buscar la configuración principal usando key='config'
     const endpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: configs } = await supabaseFetch(endpoint);
-    
+
     if (!configs || configs.length === 0) {
       // Devolver configuración por defecto
       return res.json({
@@ -1480,7 +1482,7 @@ router.get('/config', async (req, res) => {
         }
       });
     }
-    
+
     // Parsear el value que está en JSON
     const configData = JSON.parse(configs[0].value);
     res.json(configData);
@@ -1494,17 +1496,17 @@ router.get('/config', async (req, res) => {
 router.put('/config', async (req, res) => {
   try {
     const configData = req.body;
-    
+
     // Verificar si existe la configuración con key='config'
     const checkEndpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
-    
+
     // Convertir configData a JSON string para almacenar en la columna 'value'
     const configRecord = {
       key: 'config',
       value: JSON.stringify(configData)
     };
-    
+
     let result;
     if (existing && existing.length > 0) {
       // Actualizar usando key='config'
@@ -1522,7 +1524,7 @@ router.put('/config', async (req, res) => {
       });
       result = JSON.parse(data[0].value);
     }
-    
+
     res.json(result);
   } catch (error) {
     console.error('Error updating config:', error);
@@ -1552,15 +1554,15 @@ router.post('/config/reset', async (req, res) => {
         creditPack10: 280
       }
     };
-    
+
     const checkEndpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
-    
+
     const configRecord = {
       key: 'config',
       value: JSON.stringify(defaultConfig)
     };
-    
+
     let result;
     if (existing && existing.length > 0) {
       const updateEndpoint = `${req.getTable('configurations')}?key=eq.config`;
@@ -1576,7 +1578,7 @@ router.post('/config/reset', async (req, res) => {
       });
       result = JSON.parse(data[0].value);
     }
-    
+
     res.json(result);
   } catch (error) {
     console.error('Error resetting config:', error);
@@ -1588,21 +1590,21 @@ router.post('/config/reset', async (req, res) => {
 router.get('/config/working-hours/:date', async (req, res) => {
   try {
     const { date } = req.params;
-    
+
     // Obtener configuración usando key='config'
     const endpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: configs } = await supabaseFetch(endpoint);
-    
+
     if (!configs || configs.length === 0) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
-    
+
     // Parsear el value JSON
     const configData = JSON.parse(configs[0].value);
     const dayOfWeek = new Date(date).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
     const workingHours = configData.workingHours || {};
     const dayConfig = workingHours[dayOfWeek];
-    
+
     res.json({
       date,
       dayOfWeek,
@@ -1619,7 +1621,7 @@ router.get('/config/prices', async (req, res) => {
   try {
     const endpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: configs } = await supabaseFetch(endpoint);
-    
+
     if (!configs || configs.length === 0) {
       return res.json({
         session30min: 35,
@@ -1628,7 +1630,7 @@ router.get('/config/prices', async (req, res) => {
         creditPack10: 280
       });
     }
-    
+
     // Parsear el value JSON
     const configData = JSON.parse(configs[0].value);
     res.json(configData.prices || {});
@@ -1642,25 +1644,25 @@ router.get('/config/prices', async (req, res) => {
 router.put('/config/prices', async (req, res) => {
   try {
     const prices = req.body;
-    
+
     // Verificar que existe la configuración
     const checkEndpoint = `${req.getTable('configurations')}?key=eq.config&select=*`;
     const { data: existing } = await supabaseFetch(checkEndpoint);
-    
+
     if (!existing || existing.length === 0) {
       return res.status(404).json({ error: 'Configuración no encontrada' });
     }
-    
+
     // Parsear, actualizar y serializar
     const configData = JSON.parse(existing[0].value);
     configData.prices = prices;
-    
+
     const updateEndpoint = `${req.getTable('configurations')}?key=eq.config`;
     const { data } = await supabaseFetch(updateEndpoint, {
       method: 'PATCH',
       body: JSON.stringify({ value: JSON.stringify(configData) })
     });
-    
+
     res.json(prices);
   } catch (error) {
     console.error('Error updating prices:', error);
@@ -1690,21 +1692,21 @@ router.get('/meta/locations', async (req, res) => {
 router.get('/meta/locations/by-cp/:cp', async (req, res) => {
   try {
     const { cp } = req.params;
-    
+
     // Extraer los dos primeros dígitos del código postal
     const prefix = cp.substring(0, 2);
-    
+
     // Buscar provincia en prefixMap
     const province = LOCATIONS_DATA.prefixMap?.[prefix];
-    
+
     if (province) {
-      return res.json({ 
+      return res.json({
         cp,
         province,
-        prefix 
+        prefix
       });
     }
-    
+
     res.status(404).json({ error: 'Código postal no encontrado' });
   } catch (error) {
     console.error('Error fetching location by CP:', error);
@@ -1723,7 +1725,7 @@ router.get('/backup/cron', async (req, res) => {
     // Verificar que la llamada viene de Vercel Cron o tiene la clave correcta
     const authHeader = req.headers['authorization'];
     const cronSecret = process.env.CRON_SECRET;
-    
+
     // Vercel envía el header Authorization con el valor Bearer <CRON_SECRET>
     // Si no hay CRON_SECRET configurado, permitimos la ejecución (para desarrollo)
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
@@ -1735,14 +1737,14 @@ router.get('/backup/cron', async (req, res) => {
     }
 
     console.log('[CRON] Ejecutando backup automático multi-tenant...');
-    
+
     // Usar el script de backup multi-tenant
     const { DatabaseBackup } = require('../../scripts/backup');
     const backup = new DatabaseBackup();
     const result = await backup.createBackup('daily');
-    
+
     console.log('[CRON] Backup multi-tenant completado:', result);
-    
+
     res.json({
       success: true,
       message: 'Backup automático multi-tenant completado',
@@ -1764,21 +1766,21 @@ router.get('/backup/list', async (req, res) => {
   try {
     // Obtener tenant del header (opcional)
     const tenantSlug = req.headers['x-tenant-slug'];
-    
+
     // Construir query - filtrar por tenant si se proporciona
     let endpoint = 'backups_storage?select=*&order=created_at.desc';
     if (tenantSlug) {
       endpoint += `&tenant_slug=eq.${tenantSlug}`;
     }
-    
+
     // Obtener backups guardados en la tabla backups_storage
     const { data: backups, error } = await supabaseFetch(endpoint);
-    
+
     if (error) {
       console.error('Error fetching backups from database:', error);
       return res.json([]); // Devolver array vacío si hay error
     }
-    
+
     // Formatear backups para el frontend
     const formattedBackups = (backups || []).map(backup => {
       const createdDate = new Date(backup.created_at);
@@ -1796,7 +1798,7 @@ router.get('/backup/list', async (req, res) => {
         displayName: backup.filename
       };
     });
-    
+
     res.json(formattedBackups);
   } catch (error) {
     console.error('Error listing backups:', error);
@@ -1819,16 +1821,16 @@ router.get('/backup/stats', async (req, res) => {
   try {
     // Obtener tenant del header (opcional)
     const tenantSlug = req.headers['x-tenant-slug'];
-    
+
     // Construir query - filtrar por tenant si se proporciona
     let endpoint = 'backups_storage?select=*&order=created_at.desc';
     if (tenantSlug) {
       endpoint += `&tenant_slug=eq.${tenantSlug}`;
     }
-    
+
     // Obtener todos los backups de backups_storage
     const { data: backups, error } = await supabaseFetch(endpoint);
-    
+
     if (error) {
       console.error('Error fetching backup stats:', error);
       return res.json({
@@ -1839,12 +1841,12 @@ router.get('/backup/stats', async (req, res) => {
         oldestBackup: 'N/A'
       });
     }
-    
+
     const totalBackups = backups ? backups.length : 0;
     const totalSizeBytes = backups ? backups.reduce((sum, b) => sum + (b.size_bytes || 0), 0) : 0;
     const lastBackup = backups && backups.length > 0 ? backups[0].created_at : null;
     const oldestBackup = backups && backups.length > 0 ? backups[backups.length - 1].created_at : null;
-    
+
     res.json({
       totalBackups,
       totalSize: formatBytes(totalSizeBytes),
@@ -1869,7 +1871,7 @@ router.post('/backup/create', async (req, res) => {
       supabaseFetch(`${req.getTable('credit_redemptions')}?select=*`).then(r => r.data || []),
       supabaseFetch(`${req.getTable('patient_files')}?select=*`).then(r => r.data || [])
     ]);
-    
+
     // 2. Crear objeto backup
     const timestamp = new Date().toISOString();
     const fileName = `backup_${timestamp.replace(/[:.]/g, '-')}.json`;
@@ -1891,15 +1893,15 @@ router.post('/backup/create', async (req, res) => {
         files
       }
     };
-    
+
     // 3. Convertir a JSON y calcular tamaño
     const backupJson = JSON.stringify(backupData);
     const sizeBytes = new Blob([backupJson]).size;
-    
+
     // 4. Guardar en la tabla backups_storage (tabla central)
     const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug || 'unknown';
     const totalRecords = patients.length + appointments.length + creditPacks.length + redemptions.length + files.length;
-    
+
     const { data: savedBackup, error: saveError } = await supabaseFetch('backups_storage', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
@@ -1914,12 +1916,12 @@ router.post('/backup/create', async (req, res) => {
         data: backupData
       })
     });
-    
+
     if (saveError) {
       console.error('Error saving backup to database:', saveError);
       throw new Error('Error al guardar el backup en la base de datos');
     }
-    
+
     res.json({
       success: true,
       message: 'Backup creado exitosamente',
@@ -1932,7 +1934,7 @@ router.post('/backup/create', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating backup:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: error.message || 'Error al crear el backup'
     });
@@ -1958,34 +1960,34 @@ router.get('/backup/grouped', async (req, res) => {
   try {
     // Obtener tenant del header (opcional)
     const tenantSlug = req.headers['x-tenant-slug'];
-    
+
     // Construir query - filtrar por tenant si se proporciona
     let endpoint = 'backups_storage?select=*&order=created_at.desc';
     if (tenantSlug) {
       endpoint += `&tenant_slug=eq.${tenantSlug}`;
     }
-    
+
     // Obtener backups guardados de backups_storage
     const { data: backups, error } = await supabaseFetch(endpoint);
-    
+
     if (error) {
       console.error('Error fetching backups:', error);
       return res.json({});
     }
-    
+
     // Agrupar por fecha
     const grouped = {};
     (backups || []).forEach(backup => {
       const createdDate = new Date(backup.created_at);
       const dateKey = createdDate.toISOString().split('T')[0];
-      
+
       if (!grouped[dateKey]) {
         grouped[dateKey] = {
           date: dateKey,
           backups: []
         };
       }
-      
+
       grouped[dateKey].backups.push({
         id: backup.id,
         fileName: backup.filename,
@@ -2000,7 +2002,7 @@ router.get('/backup/grouped', async (req, res) => {
         displayName: backup.filename
       });
     });
-    
+
     res.json(grouped);
   } catch (error) {
     console.error('Error fetching grouped backups:', error);
@@ -2014,14 +2016,14 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     const { fileName } = req.params;
     const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug;
     console.log('🔄 Iniciando restauración del backup:', fileName, 'para tenant:', tenantSlug);
-    
+
     // 1. Obtener el backup de backups_storage
     let endpoint = `backups_storage?filename=eq.${encodeURIComponent(fileName)}`;
     if (tenantSlug) {
       endpoint += `&tenant_slug=eq.${tenantSlug}`;
     }
     const { data: backups, error: fetchError } = await supabaseFetch(endpoint);
-    
+
     if (fetchError || !backups || backups.length === 0) {
       console.error('❌ Backup no encontrado:', fileName);
       return res.status(404).json({
@@ -2029,10 +2031,10 @@ router.post('/backup/restore/:fileName', async (req, res) => {
         message: 'Backup no encontrado'
       });
     }
-    
+
     const backup = backups[0];
     const backupData = backup.data;
-    
+
     // 2. Validar formato del backup
     if (!backupData || !backupData.data || !backupData.version) {
       console.error('❌ Formato de backup inválido');
@@ -2041,9 +2043,9 @@ router.post('/backup/restore/:fileName', async (req, res) => {
         message: 'Formato de backup inválido'
       });
     }
-    
+
     const { patients = [], appointments = [], creditPacks = [], redemptions = [], files = [] } = backupData.data;
-    
+
     console.log('📊 Datos a restaurar:', {
       patients: patients.length,
       appointments: appointments.length,
@@ -2051,7 +2053,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       redemptions: redemptions.length,
       files: files.length
     });
-    
+
     // 3. Eliminar datos existentes (CUIDADO: Esta operación es destructiva)
     console.log('🗑️ Eliminando datos existentes...');
     await Promise.all([
@@ -2061,12 +2063,12 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       supabaseFetch(`${req.getTable('credit_packs')}?id=gt.0`, { method: 'DELETE' }),
       supabaseFetch(`${req.getTable('patients')}?id=gt.0`, { method: 'DELETE' })
     ]);
-    
+
     console.log('✅ Datos existentes eliminados');
-    
+
     // 4. Insertar datos del backup (en orden para respetar foreign keys)
     console.log('📥 Insertando datos del backup...');
-    
+
     // 4.1 Primero pacientes (no tienen dependencias)
     if (patients.length > 0) {
       const { error: patientsError } = await supabaseFetch(`${req.getTable('patients')}`, {
@@ -2080,7 +2082,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       }
       console.log(`✅ ${patients.length} pacientes restaurados`);
     }
-    
+
     // 4.2 Credit packs (dependen de pacientes)
     if (creditPacks.length > 0) {
       const { error: packsError } = await supabaseFetch(`${req.getTable('credit_packs')}`, {
@@ -2094,7 +2096,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       }
       console.log(`✅ ${creditPacks.length} bonos restaurados`);
     }
-    
+
     // 4.3 Appointments (dependen de pacientes y credit_packs)
     if (appointments.length > 0) {
       const { error: appointmentsError } = await supabaseFetch(`${req.getTable('appointments')}`, {
@@ -2108,7 +2110,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       }
       console.log(`✅ ${appointments.length} citas restauradas`);
     }
-    
+
     // 4.4 Credit redemptions (dependen de credit_packs y appointments)
     if (redemptions.length > 0) {
       const { error: redemptionsError } = await supabaseFetch(`${req.getTable('credit_redemptions')}`, {
@@ -2122,7 +2124,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       }
       console.log(`✅ ${redemptions.length} redenciones restauradas`);
     }
-    
+
     // 4.5 Patient files (dependen de pacientes)
     if (files.length > 0) {
       const { error: filesError } = await supabaseFetch(req.getTable('patient_files'), {
@@ -2136,9 +2138,9 @@ router.post('/backup/restore/:fileName', async (req, res) => {
       }
       console.log(`✅ ${files.length} archivos restaurados`);
     }
-    
+
     console.log('🎉 Backup restaurado exitosamente');
-    
+
     res.json({
       success: true,
       message: 'Backup restaurado exitosamente',
@@ -2152,7 +2154,7 @@ router.post('/backup/restore/:fileName', async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Error restoring backup:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
       message: error.message || 'Error al restaurar el backup'
     });
@@ -2164,20 +2166,20 @@ router.get('/backup/download/:fileName', async (req, res) => {
   try {
     const { fileName } = req.params;
     const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug;
-    
+
     // Buscar el backup en backups_storage
     let endpoint = `backups_storage?filename=eq.${encodeURIComponent(fileName)}`;
     if (tenantSlug) {
       endpoint += `&tenant_slug=eq.${tenantSlug}`;
     }
     const { data: backups, error } = await supabaseFetch(endpoint);
-    
+
     if (error || !backups || backups.length === 0) {
       return res.status(404).json({ error: 'Backup no encontrado' });
     }
-    
+
     const backup = backups[0];
-    
+
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
     res.json(backup.data);
@@ -2192,7 +2194,7 @@ router.delete('/backup/delete/:fileName', async (req, res) => {
   try {
     const { fileName } = req.params;
     const tenantSlug = req.headers['x-tenant-slug'] || req.tenantSlug;
-    
+
     // Eliminar el backup de backups_storage
     let endpoint = `backups_storage?filename=eq.${encodeURIComponent(fileName)}`;
     if (tenantSlug) {
@@ -2201,7 +2203,7 @@ router.delete('/backup/delete/:fileName', async (req, res) => {
     const { error } = await supabaseFetch(endpoint, {
       method: 'DELETE'
     });
-    
+
     if (error) {
       console.error('Error deleting backup:', error);
       return res.status(500).json({
@@ -2209,16 +2211,16 @@ router.delete('/backup/delete/:fileName', async (req, res) => {
         message: 'Error al eliminar el backup'
       });
     }
-    
+
     res.json({
       success: true,
       message: 'Backup eliminado correctamente'
     });
   } catch (error) {
     console.error('Error deleting backup:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -2260,7 +2262,7 @@ const DEFAULT_PRICES = {
 router.get('/meta/config', async (req, res) => {
   try {
     const { data: configs } = await supabaseFetch(`${req.getTable('configurations')}?select=*`);
-    
+
     const configObject = {};
     if (configs) {
       configs.forEach(config => {
@@ -2271,7 +2273,7 @@ router.get('/meta/config', async (req, res) => {
         }
       });
     }
-    
+
     const finalConfig = { ...DEFAULT_CONFIG, ...configObject };
     res.json(finalConfig);
   } catch (error) {
@@ -2284,14 +2286,14 @@ router.get('/meta/config', async (req, res) => {
 router.put('/meta/config', async (req, res) => {
   try {
     const updates = req.body;
-    
+
     // Actualizar cada configuración
     const promises = Object.keys(updates).map(async (key) => {
       const value = typeof updates[key] === 'object' ? JSON.stringify(updates[key]) : updates[key].toString();
-      
+
       // Buscar si existe
       const { data: existing } = await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`);
-      
+
       if (existing && existing.length > 0) {
         // Actualizar
         return await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`, {
@@ -2306,9 +2308,9 @@ router.put('/meta/config', async (req, res) => {
         });
       }
     });
-    
+
     await Promise.all(promises);
-    
+
     // Obtener configuración actualizada
     const { data: configs } = await supabaseFetch(`${req.getTable('configurations')}?select=*`);
     const configObject = {};
@@ -2321,7 +2323,7 @@ router.put('/meta/config', async (req, res) => {
         }
       });
     }
-    
+
     const finalConfig = { ...DEFAULT_CONFIG, ...configObject };
     res.json(finalConfig);
   } catch (error) {
@@ -2336,7 +2338,7 @@ router.get('/meta/config/prices', async (req, res) => {
     const priceKeys = ['sessionPrice30', 'sessionPrice60', 'bonoPrice30', 'bonoPrice60'];
     const keysParam = priceKeys.map(k => `"${k}"`).join(',');
     const { data: priceConfigs } = await supabaseFetch(`${req.getTable('configurations')}?key=in.(${keysParam})`);
-    
+
     const pricesObject = { ...DEFAULT_PRICES };
     if (priceConfigs) {
       priceConfigs.forEach(config => {
@@ -2347,7 +2349,7 @@ router.get('/meta/config/prices', async (req, res) => {
         }
       });
     }
-    
+
     res.json(pricesObject);
   } catch (error) {
     console.error('Error getting prices:', error);
@@ -2359,14 +2361,14 @@ router.get('/meta/config/prices', async (req, res) => {
 router.put('/meta/config/prices', async (req, res) => {
   try {
     const updates = req.body;
-    
+
     // Actualizar cada precio
     const promises = Object.keys(updates).map(async (key) => {
       const value = updates[key].toString();
-      
+
       // Buscar si existe
       const { data: existing } = await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`);
-      
+
       if (existing && existing.length > 0) {
         // Actualizar
         return await supabaseFetch(`${req.getTable('configurations')}?key=eq.${key}`, {
@@ -2381,14 +2383,14 @@ router.put('/meta/config/prices', async (req, res) => {
         });
       }
     });
-    
+
     await Promise.all(promises);
-    
+
     // Obtener precios actualizados
     const priceKeys = ['sessionPrice30', 'sessionPrice60', 'bonoPrice30', 'bonoPrice60'];
     const keysParam = priceKeys.map(k => `"${k}"`).join(',');
     const { data: priceConfigs } = await supabaseFetch(`${req.getTable('configurations')}?key=in.(${keysParam})`);
-    
+
     const pricesObject = { ...DEFAULT_PRICES };
     if (priceConfigs) {
       priceConfigs.forEach(config => {
@@ -2399,7 +2401,7 @@ router.put('/meta/config/prices', async (req, res) => {
         }
       });
     }
-    
+
     res.json({
       message: 'Precios actualizados correctamente',
       prices: pricesObject
@@ -2408,6 +2410,11 @@ router.put('/meta/config/prices', async (req, res) => {
     console.error('Error updating prices:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// TEST ENDPOINT: Verify ExcelJS
+router.get('/test-excel', async (req, res) => {
+  res.send('TEST_OK_NO_EXCEL_LIB');
 });
 
 // ================================================================================
@@ -2424,21 +2431,21 @@ router.get('/reports/billing', async (req, res) => {
     // Obtener todas las citas del mes con creditRedemptions y packs
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59);
-    
+
     // IMPORTANTE: Usar req.getTable() tanto en el endpoint base como en las relaciones del SELECT
     const { data: appointments } = await supabaseFetch(
       `${req.getTable('appointments')}?start=gte.${startDate.toISOString()}&start=lte.${endDate.toISOString()}&select=*,${req.getTable('patients')}(*),${req.getTable('credit_redemptions')}(*,${req.getTable('credit_packs')}(*))`
     );
 
-    const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.write('\uFEFF'); // BOM for Excel
-
     if (groupBy === 'patient') {
+      const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.csv`;
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.write('\uFEFF'); // BOM for Excel
+
       // Agrupar por paciente
       const patientMap = new Map();
-      
+
       for (const apt of appointments || []) {
         const patientId = apt.patientId;
         if (!patientMap.has(patientId)) {
@@ -2452,54 +2459,139 @@ router.get('/reports/billing', async (req, res) => {
 
       // Generar CSV agrupado por paciente
       res.write('Paciente;DNI;Total Citas;Total Pagado (€);Total Pendiente (€);Total (€)\n');
-      
+
       for (const [patientId, data] of patientMap) {
         const patient = data.patient;
         const apts = data.appointments;
-        
+
         let totalPaid = 0;
         let totalPending = 0;
-        
+
         for (const apt of apts) {
           const price = calculateAppointmentPrice(apt, req.tableSuffix);
           const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);
-          
+
           if (isPaid) {
             totalPaid += price;
           } else {
             totalPending += price;
           }
         }
-        
+
         const total = totalPaid + totalPending;
         const row = `${patient.firstName} ${patient.lastName};${patient.dni || ''};${apts.length};${(totalPaid / 100).toFixed(2)};${(totalPending / 100).toFixed(2)};${(total / 100).toFixed(2)}\n`;
         res.write(row);
       }
     } else {
-      // Agrupar por cita
-      res.write('Fecha;Hora;Paciente;DNI;Duración (min);Tipo;Estado Pago;Precio (€)\n');
-      
-      for (const apt of appointments || []) {
-        const patient = getEmbeddedProperty(apt, 'patients', req.tableSuffix);
-        const date = new Date(apt.start);
-        // IMPORTANTE: Especificar timezone Europe/Madrid para que funcione correctamente en Vercel (que corre en UTC)
-        const dateStr = date.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid' });
-        const timeStr = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Madrid' });
-        const duration = apt.durationMinutes || 0;
-        const type = getAppointmentType(apt, req.tableSuffix);
-        const isPaid = getAppointmentPaidStatus(apt, req.tableSuffix);
-        const paidStatus = isPaid ? 'Pagado' : 'Pendiente';
-        const price = calculateAppointmentPrice(apt, req.tableSuffix);
-        const priceEuros = (price / 100).toFixed(2);
-        
-        const row = `${dateStr};${timeStr};${patient.firstName} ${patient.lastName};${patient.dni || ''};${duration};${type};${paidStatus};${priceEuros}\n`;
-        res.write(row);
+      // Agrupar por cita - generar Excel con nueva estructura
+      const ExcelJS = require('exceljs');
+      const filename = `facturas-${groupBy}-${year}-${String(month).padStart(2, '0')}.xlsx`;
+
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet('FACTURA');
+
+      // Definir columnas
+      worksheet.columns = [
+        { header: 'Nº Factura', key: 'numFactura', width: 12 },
+        { header: 'Fecha Factura', key: 'fechaFactura', width: 14 },
+        { header: 'Nombre Apellidos', key: 'nombre', width: 30 },
+        { header: 'Dirección', key: 'direccion', width: 30 },
+        { header: 'Ciudad', key: 'ciudad', width: 15 },
+        { header: 'Provincia', key: 'provincia', width: 15 },
+        { header: 'C Postal', key: 'cp', width: 10 },
+        { header: 'DNI', key: 'dni', width: 15 },
+        { header: 'Total Bruto', key: 'bruto', width: 12 },
+        { header: 'Iva', key: 'iva', width: 10 },
+        { header: 'Neto', key: 'neto', width: 12 }
+      ];
+
+      // Estilo para cabeceras
+      worksheet.getRow(1).font = { bold: true };
+
+      // Ordenar citas por fecha
+      const sortedAppointments = (appointments || []).sort((a, b) => new Date(a.start) - new Date(b.start));
+
+      // Generar filas
+      console.log('🧪 TEST: Bypassing Excel generation');
+      res.send('TEST_OK_BYPASS');
+      return;
+
+      let invoiceNumber = 1;
+      const yearShort = String(year).slice(-2);
+
+      for (const apt of sortedAppointments) {
+        try {
+          const patient = getEmbeddedProperty(apt, 'patients', req.tableSuffix) || {};
+          const date = new Date(apt.start);
+          // Formato de fecha: YYYY-MM-DD
+          const fechaStr = date.toLocaleDateString('es-ES', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).split('/').reverse().join('-');
+
+          // Calcular precios (mantener lógica existente)
+          const priceCents = calculateAppointmentPrice(apt, req.tableSuffix);
+          const bruto = priceCents / 100; // Precio bruto en euros
+          const neto = bruto / 1.21; // Base imponible (sin IVA)
+          const iva = bruto - neto; // IVA (21%)
+
+          // Número de factura: AÑO/SECUENCIAL (ej: 26/001)
+          const numFactura = `${yearShort}/${String(invoiceNumber).padStart(3, '0')}`;
+
+          console.log(`Processing row ${invoiceNumber}: ${numFactura} - ${patient.firstName || 'Sin nombre'} ${patient.lastName || ''}`);
+
+          worksheet.addRow({
+            numFactura: numFactura,
+            fechaFactura: fechaStr,
+            nombre: `${patient.firstName || ''} ${patient.lastName || ''}`.trim(),
+            direccion: patient.address || '',
+            ciudad: patient.city || '',
+            provincia: patient.province || '',
+            cp: patient.cp || '',
+            dni: patient.dni || '',
+            bruto: parseFloat(bruto.toFixed(2)),
+            iva: parseFloat(iva.toFixed(2)),
+            neto: parseFloat(neto.toFixed(2))
+          });
+
+          invoiceNumber++;
+        } catch (rowError) {
+          console.error(`❌ Error processing appointment ${apt.id}:`, rowError);
+          // Continue with next row
+        }
       }
+      console.log('Finished processing all rows. Generating buffer...'); // DEBUG LOG
+
+      // Formato numérico para columnas de precios
+      worksheet.getColumn('bruto').numFmt = '#,##0.00';
+      worksheet.getColumn('iva').numFmt = '#,##0.00';
+      worksheet.getColumn('neto').numFmt = '#,##0.00';
+
+      // Enviar Excel
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+      console.log(`📊 Generando Excel con ${sortedAppointments.length} filas...`);
+
+      try {
+        const buffer = await workbook.xlsx.writeBuffer();
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', buffer.length);
+
+        res.send(buffer);
+        console.log('✅ Excel generado y enviado correctamente (Buffer)');
+      } catch (excelError) {
+        console.error('❌ Error generando buffer de Excel:', excelError);
+        if (!res.headersSent) {
+          res.status(500).send('Error generando Excel');
+        }
+      }
+      return;
     }
-    
-    res.end();
   } catch (error) {
     console.error('Error generating billing report:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Error interno del servidor');
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -2508,14 +2600,14 @@ router.get('/reports/billing', async (req, res) => {
 function calculateAppointmentPrice(appointment, tableSuffix) {
   const DEFAULT_PRICE_30 = 3500; // 35€ (actualizado)
   const DEFAULT_PRICE_60 = 6500; // 65€ (actualizado)
-  
+
   if (!appointment) return 0;
-  
+
   // Si tiene priceCents directamente (precio guardado en el momento de creación)
   if (appointment.priceCents && appointment.priceCents > 0) {
     return appointment.priceCents;
   }
-  
+
   // Si tiene creditRedemptions, calcular proporcional
   // IMPORTANTE: Usar getEmbeddedProperty para acceder a las propiedades con sufijo
   const redemptions = getEmbeddedProperty(appointment, 'credit_redemptions', tableSuffix) || [];
@@ -2525,12 +2617,12 @@ function calculateAppointmentPrice(appointment, tableSuffix) {
     const priceCents = Number(pack.priceCents) || 0;
     const unitsTotal = Number(pack.unitsTotal) || 0;
     const unitsUsed = Number(r.unitsUsed) || 0;
-    
+
     if (priceCents > 0 && unitsTotal > 0 && unitsUsed > 0) {
       return Math.round(unitsUsed * (priceCents / unitsTotal));
     }
   }
-  
+
   // Fallback: precio según duración (usado solo para citas antiguas sin priceCents)
   const mins = Number(appointment.durationMinutes || 0);
   return mins >= 60 ? DEFAULT_PRICE_60 : DEFAULT_PRICE_30;
@@ -2539,26 +2631,26 @@ function calculateAppointmentPrice(appointment, tableSuffix) {
 // Helper: Determinar si una cita está pagada (MULTI-TENANT COMPATIBLE)
 function getAppointmentPaidStatus(appointment, tableSuffix) {
   if (!appointment) return false;
-  
+
   const redemptions = getEmbeddedProperty(appointment, 'credit_redemptions', tableSuffix) || [];
   if (redemptions.length > 0) {
     const r = redemptions[0];
     const pack = getEmbeddedProperty(r, 'credit_packs', tableSuffix) || {};
     return pack.paid === true;
   }
-  
+
   // Si tiene priceCents sin redemptions, considerar como pagada
   if (appointment.priceCents && appointment.priceCents > 0) {
     return true;
   }
-  
+
   return false;
 }
 
 // Helper: Obtener tipo de cita (MULTI-TENANT COMPATIBLE)
 function getAppointmentType(appointment, tableSuffix) {
   if (!appointment) return '';
-  
+
   const redemptions = getEmbeddedProperty(appointment, 'credit_redemptions', tableSuffix) || [];
   if (redemptions.length > 0) {
     const r = redemptions[0];
@@ -2566,17 +2658,17 @@ function getAppointmentType(appointment, tableSuffix) {
     if (pack && pack.label) {
       return String(pack.label || '').trim();
     }
-    
+
     const unitsTotal = Number(pack.unitsTotal) || 0;
     const unitMinutes = Number(pack.unitMinutes) || 30;
-    
+
     if (unitsTotal > 0) {
       if (unitsTotal === 1 || unitsTotal === 2) return `Sesión ${unitMinutes}m`;
       const sessions = unitMinutes === 60 ? Math.round(unitsTotal / 2) : unitsTotal;
       return `Bono ${sessions}×${unitMinutes}m`;
     }
   }
-  
+
   const mins = Number(appointment.durationMinutes || 0);
   return mins >= 60 ? 'Sesión 60m' : `Sesión ${mins}m`;
 }
@@ -2595,11 +2687,11 @@ router.get('/stats/dashboard', loadTenant, async (req, res) => {
   try {
     const { period = 'month' } = req.query;
     const tableSuffix = req.tableSuffix; // From loadTenant middleware
-    
+
     // Calcular fechas según el período
     const now = new Date();
     let startDate, endDate;
-    
+
     switch (period) {
       case 'today':
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -2621,77 +2713,77 @@ router.get('/stats/dashboard', loadTenant, async (req, res) => {
         endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
         break;
     }
-    
+
     const startISO = startDate.toISOString();
     const endISO = endDate.toISOString();
-    
+
     // Obtener tabla de appointments con tenant suffix
     const appointmentsTable = tableSuffix ? `appointments_${tableSuffix}` : 'appointments';
     const redemptionsTable = tableSuffix ? `credit_redemptions_${tableSuffix}` : 'credit_redemptions';
     const creditPacksTable = tableSuffix ? `credit_packs_${tableSuffix}` : 'credit_packs';
     const patientsTable = tableSuffix ? `patients_${tableSuffix}` : 'patients';
-    
+
     // 1. Obtener citas del período con redemptions
     const selectFields = `id,start,end,durationMinutes,priceCents,patientId,${redemptionsTable}(id,unitsUsed,${creditPacksTable}(id,priceCents,unitsTotal,paid,label))`;
     const { data: appointments } = await supabaseFetch(
       `${appointmentsTable}?select=${encodeURIComponent(selectFields)}&start=gte.${startISO}&start=lte.${endISO}`,
       { method: 'GET' }
     );
-    
+
     // 2. Contar pacientes nuevos del período
     const { data: newPatients } = await supabaseFetch(
       `${patientsTable}?select=id&createdAt=gte.${startISO}&createdAt=lte.${endISO}`,
       { method: 'GET', headers: { 'Prefer': 'count=exact' } }
     );
-    
+
     // 2b. Contar total de pacientes
     const { data: allPatients, total: totalPatientsCount } = await supabaseFetch(
       `${patientsTable}?select=id`,
       { method: 'GET', headers: { 'Prefer': 'count=exact' } }
     );
-    
+
     // 3. Contar credit packs comprados en el período
     const { data: newCreditPacks } = await supabaseFetch(
       `${creditPacksTable}?select=id,priceCents,paid&purchaseDate=gte.${startISO}&purchaseDate=lte.${endISO}`,
       { method: 'GET' }
     );
-    
+
     // 3b. Obtener credit packs activos (unitsRemaining > 0)
     const { data: activeCreditPacks } = await supabaseFetch(
       `${creditPacksTable}?select=id,paid,unitsRemaining&unitsRemaining=gt.0`,
       { method: 'GET' }
     );
-    
+
     // Procesar estadísticas
     const totalAppointments = appointments?.length || 0;
     const completedAppointments = appointments?.filter(a => new Date(a.start) < now).length || 0;
     const pendingAppointments = totalAppointments - completedAppointments;
-    
+
     // Calcular ingresos
     let paidRevenueCents = 0;
     let pendingRevenueCents = 0;
-    
+
     appointments?.forEach(apt => {
       const priceCents = calculateAppointmentPrice(apt, tableSuffix);
       const isPaid = getAppointmentPaidStatus(apt, tableSuffix);
-      
+
       if (isPaid) {
         paidRevenueCents += priceCents;
       } else {
         pendingRevenueCents += priceCents;
       }
     });
-    
+
     // Credit packs vendidos en el período
     const creditPacksSold = newCreditPacks?.length || 0;
     const creditPacksRevenueCents = newCreditPacks?.reduce((sum, pack) => {
       return sum + (pack.paid ? (Number(pack.priceCents) || 0) : 0);
     }, 0) || 0;
-    
+
     // Credit packs activos y sin pagar
     const activePacksCount = activeCreditPacks?.length || 0;
     const unpaidPacksCount = activeCreditPacks?.filter(p => !p.paid).length || 0;
-    
+
     res.json({
       period,
       dateRange: {
@@ -2775,7 +2867,7 @@ router.get('/whatsapp-reminders/pending', loadTenant, async (req, res) => {
   try {
     const appointmentsTable = req.getTable('appointments');
     const patientsTable = req.getTable('patients');
-    
+
     const now = new Date();
     const in23Hours = new Date(now.getTime() + 23 * 60 * 60 * 1000);
     const in25Hours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
@@ -2849,11 +2941,11 @@ function formatPhoneForWhatsApp(phone) {
 router.post('/whatsapp-reminders/send', async (req, res) => {
   try {
     console.log('🔔 [CRON] Iniciando envío de recordatorios WhatsApp...');
-    
+
     // Verificar autorización del cron
     const authHeader = req.headers.authorization;
     const cronSecret = process.env.CRON_SECRET;
-    
+
     // En producción, verificar el secret
     if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
       console.warn('⚠️ Intento no autorizado de ejecutar cron de WhatsApp');
@@ -2862,7 +2954,7 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
 
     // Obtener todos los tenants activos
     const { data: tenantsData } = await supabaseFetch('tenants?is_active=eq.true');
-    
+
     if (!tenantsData || tenantsData.length === 0) {
       return res.json({
         success: true,
@@ -2880,7 +2972,7 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
       try {
         const appointmentsTable = `appointments_${tenant.slug}`;
         const patientsTable = `patients_${tenant.slug}`;
-        
+
         const now = new Date();
         const in23Hours = new Date(now.getTime() + 23 * 60 * 60 * 1000);
         const in25Hours = new Date(now.getTime() + 25 * 60 * 60 * 1000);
@@ -2907,10 +2999,10 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
         for (const apt of eligibleAppointments) {
           const phone = isSpanishMobile(apt.patient.phone) ? apt.patient.phone : apt.patient.phone2;
           const whatsappNumber = formatPhoneForWhatsApp(phone);
-          
+
           // Por ahora solo marcamos como enviado (la integración real con WhatsApp vendría después)
           console.log(`📱 [${tenant.slug}] Recordatorio para ${apt.patient.firstName} ${apt.patient.lastName} al ${whatsappNumber}`);
-          
+
           // Marcar como enviado en la DB
           await supabaseFetch(`${appointmentsTable}?id=eq.${apt.id}`, {
             method: 'PATCH',
@@ -2919,7 +3011,7 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
               whatsappReminderSentAt: new Date().toISOString()
             })
           });
-          
+
           sentForTenant++;
           totalSent++;
         }
@@ -2953,23 +3045,23 @@ router.post('/whatsapp-reminders/send', async (req, res) => {
 router.post('/whatsapp-reminders/test', async (req, res) => {
   try {
     const { phone, patientName, appointmentDate, appointmentTime } = req.body;
-    
+
     if (!phone) {
       return res.status(400).json({ error: 'Número de teléfono requerido' });
     }
 
     if (!isSpanishMobile(phone)) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'El número debe ser un móvil español (6xx o 7xx)',
-        phone 
+        phone
       });
     }
 
     const whatsappNumber = formatPhoneForWhatsApp(phone);
-    
+
     // Generar mensaje de prueba
     const message = `🔔 *Recordatorio de Cita*\n\nHola ${patientName || 'paciente'},\n\nTe recordamos tu cita:\n📅 ${appointmentDate || 'mañana'}\n⏰ ${appointmentTime || '10:00'}\n\nSi necesitas cambiarla, contáctanos.\n\n¡Te esperamos!`;
-    
+
     // Generar link de WhatsApp
     const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
