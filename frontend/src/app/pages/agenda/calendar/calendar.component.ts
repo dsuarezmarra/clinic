@@ -1121,6 +1121,22 @@ export class CalendarComponent implements OnInit, OnDestroy {
     }
 
     /**
+     * Navega a la página de Pacientes en modo edición para el paciente de la cita actual
+     */
+    editPatientFromAppointment() {
+        if (!this.editingAppointment?.patientId) {
+            this.notificationService.showError('No se encontró el paciente de esta cita');
+            return;
+        }
+        // Guardar el ID antes de cerrar el modal (closeModal() anula editingAppointment)
+        const patientId = this.editingAppointment.patientId;
+        // Cerrar el modal de edición de cita
+        this.closeModal();
+        // Navegar a la página de pacientes con query param para editar
+        this.router.navigate(['/pacientes'], { queryParams: { edit: patientId } });
+    }
+
+    /**
      * Normaliza un texto eliminando acentos y diacrñticos
      * para bñsqueda insensible a acentos
      */
