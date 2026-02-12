@@ -16,10 +16,10 @@ async function loadConfiguredPrices() {
                 key: { in: ['sessionPrice30', 'sessionPrice60'] }
             }
         });
-        
+
         let price30 = DEFAULT_SESSION_PRICE_30_CENTS;
         let price60 = DEFAULT_SESSION_PRICE_60_CENTS;
-        
+
         for (const config of configs) {
             if (config.key === 'sessionPrice30' && config.value) {
                 price30 = Math.round(parseFloat(config.value) * 100);
@@ -28,7 +28,7 @@ async function loadConfiguredPrices() {
                 price60 = Math.round(parseFloat(config.value) * 100);
             }
         }
-        
+
         return { price30, price60 };
     } catch (error) {
         console.error('Error cargando precios configurados:', error);
@@ -91,7 +91,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
 
     // Cargar precios configurados desde la BD
     const { price30, price60 } = await loadConfiguredPrices();
-    console.log(`💰 Precios configurados: 30min=${price30/100}€, 60min=${price60/100}€`);
+    console.log(`💰 Precios configurados: 30min=${price30 / 100}€, 60min=${price60 / 100}€`);
 
     // Initialize invoice counter for sequential numbering
     let invoiceSequence = 1;
@@ -122,7 +122,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
         const header = [
             'Nº Factura', 'Fecha Factura', 'Nombre', 'Apellidos',
             'Dirección', 'Ciudad', 'Provincia', 'C Postal', 'DNI',
-            'Teléfono', 'Total Bruto', 'Iva', 'Neto'
+            'Teléfono', 'Neto', 'Iva', 'Bruto'
         ];
         rows.push(header.join(separator));
 
@@ -134,7 +134,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
             //    Example: 5x30min pack for 155€ = 31€ per session
             // 2. If paid individually: use configured prices
             let priceCents = 0;
-            
+
             if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
                 const cr = apt.creditRedemptions[0];
                 if (cr && cr.creditPack && typeof cr.creditPack.priceCents === 'number' && cr.creditPack.unitsTotal) {
@@ -147,7 +147,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                     }
                 }
             }
-            
+
             // Fallback: individual session pricing (usar precios configurados)
             if (!priceCents) {
                 priceCents = apt.durationMinutes >= 60 ? price60 : price30;
@@ -172,7 +172,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                 const grossTotal = patientAppointments.reduce((sum, apt) => sum + (apt.priceCents || 0), 0);
                 const vatAmount = Math.round(grossTotal * 0.21);
                 const netAmount = grossTotal - vatAmount;
-                
+
                 // Generar número de factura secuencial
                 const invoiceNumber = generateSequentialInvoiceNumber(year, invoiceSequence++);
                 const patient = patientAppointments[0].patient || {};
@@ -188,9 +188,9 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                     patient.cp || '',
                     sanitizeDni(patient.dni),
                     sanitizePhone(patient.phone),
-                    centsToEuroString(grossTotal),
+                    centsToEuroString(netAmount),
                     centsToEuroString(vatAmount),
-                    centsToEuroString(netAmount)
+                    centsToEuroString(grossTotal)
                 ];
 
                 rows.push(row.join(separator));
@@ -204,7 +204,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
         const header = [
             'Nº Factura', 'Fecha Factura', 'Nombre', 'Apellidos',
             'Dirección', 'Ciudad', 'Provincia', 'C Postal', 'DNI',
-            'Teléfono', 'Total Bruto', 'Iva', 'Neto'
+            'Teléfono', 'Neto', 'Iva', 'Bruto'
         ];
         rows.push(header.join(separator));
 
@@ -214,7 +214,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
             //    Example: 5x30min pack for 155€ = 31€ per session
             // 2. If paid individually: use configured prices
             let priceCents = 0;
-            
+
             if (apt.creditRedemptions && apt.creditRedemptions.length > 0) {
                 const cr = apt.creditRedemptions[0];
                 if (cr && cr.creditPack && typeof cr.creditPack.priceCents === 'number' && cr.creditPack.unitsTotal) {
@@ -227,7 +227,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                     }
                 }
             }
-            
+
             // Fallback: individual session pricing (usar precios configurados)
             if (!priceCents) {
                 priceCents = apt.durationMinutes >= 60 ? price60 : price30;
@@ -240,7 +240,7 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                 // Generar número de factura secuencial
                 const invoiceNumber = generateSequentialInvoiceNumber(year, invoiceSequence++);
                 const patient = apt.patient || {};
-                
+
                 // Calcular IVA (21%)
                 const grossAmount = priceCents;
                 const vatAmount = Math.round(grossAmount * 0.21);
@@ -257,9 +257,9 @@ async function generateMonthlyBillingCsvStream({ year, month, groupBy = 'appoint
                     patient.cp || '',
                     sanitizeDni(patient.dni),
                     sanitizePhone(patient.phone),
-                    centsToEuroString(grossAmount),
+                    centsToEuroString(netAmount),
                     centsToEuroString(vatAmount),
-                    centsToEuroString(netAmount)
+                    centsToEuroString(grossAmount)
                 ];
 
                 rows.push(row.join(separator));

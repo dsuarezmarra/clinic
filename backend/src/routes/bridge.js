@@ -2450,9 +2450,9 @@ router.get('/reports/billing', async (req, res) => {
       { header: 'Provincia', key: 'provincia', width: 15 },
       { header: 'C Postal', key: 'cp', width: 10 },
       { header: 'DNI', key: 'dni', width: 15 },
-      { header: 'Total Bruto', key: 'bruto', width: 12 },
+      { header: 'Neto', key: 'neto', width: 12 },
       { header: 'Iva', key: 'iva', width: 10 },
-      { header: 'Neto', key: 'neto', width: 12 }
+      { header: 'Bruto', key: 'bruto', width: 12 }
     ];
 
     // Estilo para cabeceras
@@ -2525,9 +2525,9 @@ router.get('/reports/billing', async (req, res) => {
           provincia: patient.province || '',
           cp: patient.cp || '',
           dni: patient.dni || '',
-          bruto: parseFloat(totalBruto.toFixed(2)),
+          neto: parseFloat(totalNeto.toFixed(2)),
           iva: parseFloat(totalIva.toFixed(2)),
-          neto: parseFloat(totalNeto.toFixed(2))
+          bruto: parseFloat(totalBruto.toFixed(2))
         });
 
         // Estilo condicional para NO pagados
@@ -2572,9 +2572,9 @@ router.get('/reports/billing', async (req, res) => {
             provincia: patient.province || '',
             cp: patient.cp || '',
             dni: patient.dni || '',
-            bruto: parseFloat(bruto.toFixed(2)),
+            neto: parseFloat(neto.toFixed(2)),
             iva: parseFloat(iva.toFixed(2)),
-            neto: parseFloat(neto.toFixed(2))
+            bruto: parseFloat(bruto.toFixed(2))
           });
 
           if (!isPaid) {
@@ -2591,9 +2591,9 @@ router.get('/reports/billing', async (req, res) => {
     }
 
     // Formato numérico para columnas de precios
-    worksheet.getColumn('bruto').numFmt = '#,##0.00';
-    worksheet.getColumn('iva').numFmt = '#,##0.00';
     worksheet.getColumn('neto').numFmt = '#,##0.00';
+    worksheet.getColumn('iva').numFmt = '#,##0.00';
+    worksheet.getColumn('bruto').numFmt = '#,##0.00';
 
     // Enviar Excel
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
